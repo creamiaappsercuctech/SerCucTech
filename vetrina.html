@@ -1,48 +1,42 @@
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: #0b1020;
-  font-family: system-ui, sans-serif;
-}
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vetrina</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-#app {
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+<div id="app"></div>
 
-header {
-  padding: 12px;
-  text-align: center;
-  font-size: 22px;
-  font-weight: bold;
-}
+<script src="app.js"></script>
+<script>
+const id = new URLSearchParams(location.search).get("id");
+const all = loadAll();
+const v = all[id];
 
-main {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px;
+if(!v){
+  app.innerHTML = "<p>Vetrina non trovata</p>";
+}else{
+  app.innerHTML = `
+  <div style="
+    width:100vw;height:100vh;
+    background:${v.bgColor};
+    padding:20px;
+    overflow:auto">
+    <h1 style="color:${v.titleColor};font-size:${v.titleSize}px">
+      ${v.title}
+    </h1>
+    <p>${v.desc}</p>
+    ${v.files.map(f =>
+      f.type.startsWith("video")
+      ? `<video src="${f.data}" controls></video>`
+      : `<img src="${f.data}" style="width:100px">`
+    ).join("")}
+  </div>`;
 }
+</script>
 
-.vetrina {
-  margin-bottom: 20px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 8px;
-}
-
-.grid img, .grid video {
-  width: 100%;
-  height: 90px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-</style>
+</body>
+</html>
