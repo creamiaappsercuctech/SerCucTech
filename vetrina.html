@@ -20,25 +20,54 @@ function showFull(html){
   document.body.appendChild(w);
 }
 
+function setMeta(title, desc, imageUrl){
+  // OpenGraph base (alcuni client usano solo HTML statico, ma meglio averli)
+  const head = document.head;
+
+  const meta = (p,c)=>{ const m=document.createElement("meta"); m.setAttribute(p,c[0]); m.setAttribute("content",c[1]); head.appendChild(m); };
+
+  document.title = title || "Vetrina";
+  meta("property",["og:title", title || "SerCucTech Vetrina"]);
+  meta("property",["og:description", desc || ""]);
+  meta("property",["og:type", "website"]);
+  meta("property",["og:url", location.href]);
+  if(imageUrl) meta("property",["og:image", imageUrl]);
+}
+
 (async function(){
   const id = new URLSearchParams(location.search).get("id");
   if(!id){ app.innerHTML = "<div class='wrap card'>ID mancante</div>"; return; }
 
+  // OG image: se esiste data/ID-cover.jpg
+  const cover = `data/${encodeURIComponent(id)}-cover.jpg`;
+  setMeta(`SerCucTech – ${id}`, `Vetrina ${id}`, `${location.origin}${location.pathname.replace("vetrina.html","")}${cover}`);
+
   // 1) prova JSON pubblico
   let v = null;
+  let hasPublicJson = false;
   try{
     const r = await fetch(`data/${encodeURIComponent(id)}.json`, {cache:"no-store"});
-    if(r.ok) v = await r.json();
+    if(r.ok){ v = await r.json(); hasPublicJson = true; }
   }catch(e){}
 
-  // 2) fallback localStorage
+  // 2) fallback localStorage (solo sul tuo telefono)
   if(!v){
     const all = loadAll();
     v = all[id] || null;
   }
 
   if(!v){
-    app.innerHTML = `<div class='wrap card'>Vetrina <b>${id}</b> non trovata.</div>`;
+    app.innerHTML = `
+      <div class="wrap">
+        <div class="card">
+          <h3>Vetrina non trovata</h3>
+          <div class="small">
+            Questa vetrina non è visibile perché non esiste il file pubblico:
+            <b>/data/${id}.json</b><br><br>
+            ✅ Soluzione (admin): Esporta JSON e caricalo su GitHub in <b>data/${id}.json</b>.
+          </div>
+        </div>
+      </div>`;
     return;
   }
 
@@ -57,18 +86,19 @@ function showFull(html){
           ${v.title||id}
         </div>
         <div class="small">${v.desc||""}</div>
+        ${hasPublicJson ? "" : `<div class="small" style="margin-top:6px;opacity:.75">⚠ Questa vetrina è locale (non pubblicata).</div>`}
       </div>
 
       <div class="card" style="background:#0b1224">
         <button id="btnSpeak">▶ Ascolta presentazione</button>
-        <div class="small">La riproduzione automatica può dipendere dalle regole del browser.</div>
+        <div class="small">Nota: l’autoplay può essere bloccato dal browser finché non tocchi lo schermo.</div>
       </div>
 
       <div class="grid" id="grid"></div>
     </div>
   `;
 
-  // Media grid
+  // Media grid con fullscreen toggle
   const grid = document.getElementById("grid");
   (v.files||[]).forEach(f=>{
     if((f.type||"").startsWith("video")){
@@ -100,7 +130,7 @@ function showFull(html){
     if(!ok) alert("Sintesi vocale non disponibile su questo browser.");
   };
 
-  // Tentativo autoplay (può essere bloccato dal browser finché non tocchi)
+  // Tentativo autoplay
   playVoice();
 })();
 </script>
