@@ -2,13 +2,13 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>SerCucTech – Vetrina</title>
+<title>SerCucTech</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{margin:0;font-family:system-ui}
-.vetrina{min-height:100vh;padding:20px;background-size:cover}
+body{font-family:system-ui;margin:0}
+.v{min-height:100vh;padding:20px;background-size:cover}
 .media{display:grid;grid-template-columns:repeat(auto-fill,100px);gap:10px}
-.media img,.media video{width:100px;height:100px;object-fit:cover;cursor:pointer;border-radius:8px}
+.media img,.media video{width:100px;height:100px;object-fit:cover;cursor:pointer}
 .full{position:fixed;inset:0;background:black;display:flex;align-items:center;justify-content:center}
 .full img,.full video{max-width:90%;max-height:90%}
 </style>
@@ -18,26 +18,27 @@ body{margin:0;font-family:system-ui}
 <div id="app"></div>
 
 <script>
-const app = document.getElementById("app");
-const v = JSON.parse(localStorage.getItem("sercuctech_vetrina"));
+const params=new URLSearchParams(location.search);
+const id=params.get("vetrina");
+const data=JSON.parse(localStorage.getItem("vetrine")||"{}");
+const app=document.getElementById("app");
 
-if(!v){
-  app.innerHTML="<h2>Vetrina non disponibile</h2>";
+if(!id || !data[id]){
+  app.innerHTML="<h2>Vetrina non trovata</h2>";
 }else{
+  const v=data[id];
   const d=document.createElement("div");
-  d.className="vetrina";
+  d.className="v";
   d.style.backgroundColor=v.bgColor;
   d.style.backgroundImage=v.bgImage?`url(${v.bgImage})`:"none";
 
   d.innerHTML=`
     <h1 style="font-size:${v.titleSize}px;color:${v.titleColor}">${v.title}</h1>
-    <p>${v.description||""}</p>
+    <p>${v.desc||""}</p>
     <div class="media">
-      ${v.files.map(f=>`
-        ${f.type.startsWith("video")
-          ? `<video src="${f.data}" muted></video>`
-          : `<img src="${f.data}">`}
-      `).join("")}
+      ${v.files.map(f=>f.type.startsWith("video")
+        ? `<video src="${f.data}" muted></video>`
+        : `<img src="${f.data}">`).join("")}
     </div>
   `;
   app.appendChild(d);
