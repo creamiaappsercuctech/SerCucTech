@@ -1,19 +1,37 @@
-```html
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Vetrine</title>
-    <link rel="stylesheet" href="stile.css">
+<meta charset="UTF-8">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div id="out"></div>
 
-    <h1>Vetrine</h1>
-    <div id="listaVetrine"></div>
+<script>
+const id=new URLSearchParams(location.search).get("id");
+const v=JSON.parse(localStorage.vetrine||"[]")[id];
+if(!v){out.textContent="404";throw 0;}
 
-    <script src="db.js"></script>
-    <script src="script.js"></script>
-
+out.innerHTML=`<h1>${v.nome}</h1><p>${v.desc}</p>`;
+v.files.forEach(f=>{
+ let e;
+ if(f.type.startsWith("image")){
+  e=document.createElement("img");
+  e.src=f.data;
+ }
+ else if(f.type.startsWith("video")){
+  e=document.createElement("video");
+  e.src=f.data;
+  e.controls=true;
+ }
+ else{
+  e=document.createElement("a");
+  e.href=f.data;
+  e.download=f.name;
+  e.textContent=f.name;
+ }
+ out.appendChild(e);
+});
+</script>
 </body>
 </html>
-```
