@@ -1,50 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
 <meta charset="UTF-8">
-<link rel="stylesheet" href="style.css">
+<title>Admin – SerCucTech</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:system-ui;background:#0f172a;color:white;padding:20px}
+input,button,textarea{width:100%;margin:6px 0;padding:8px}
+.card{background:#020617;padding:15px;border-radius:12px}
+</style>
 </head>
 <body>
 
-<select onchange="localStorage.lang=this.value;location.reload()">
-<option value="it">Italiano</option>
-<option value="uk">Українська</option>
-<option value="en">English</option>
-<option value="ja">日本語</option>
-</select>
+<h2>Pannello Amministratore</h2>
 
-<h2 id="title"></h2>
-
-<input id="nome" placeholder="Nome vetrina">
+<div class="card">
+<h3>Vetrina</h3>
+<input id="title" placeholder="Titolo vetrina">
+<input type="number" id="titleSize" placeholder="Dimensione titolo (px)">
+<input type="color" id="titleColor">
+<input type="color" id="bgColor">
+<input type="file" id="bgImage">
 <textarea id="desc" placeholder="Descrizione"></textarea>
+</div>
+
+<div class="card">
+<h3>File (immagini / video)</h3>
 <input type="file" id="files" multiple>
-<button onclick="addVetrina()" id="save"></button>
+<button onclick="save()">Salva vetrina</button>
+</div>
 
-<hr>
-
-<div id="list"></div>
-
-<script src="lang.js"></script>
-<script src="script.js"></script>
 <script>
-title.textContent=t("admin");
-save.textContent=t("save");
+function save(){
+  const readerPromises=[];
+  [...files.files].forEach(f=>{
+    readerPromises.push(new Promise(res=>{
+      const r=new FileReader();
+      r.onload=()=>res({name:f.name,type:f.type,data:r.result});
+      r.readAsDataURL(f);
+    }));
+  });
 
-vetrine.forEach((v,i)=>{
- const d=document.createElement("div");
- d.innerHTML=`
- <b>${v.nome}</b>
- <button onclick="deleteVetrina(${i})">${t("delete")}</button>
- <a href="vetrina.html?id=${i}" target="_blank">${t("open")}</a>
- `;
- v.files.forEach((f,fi)=>{
-  d.innerHTML+=`
-  <div>${f.name}
-   <button onclick="deleteFile(${i},${fi})">❌</button>
-  </div>`;
- });
- list.appendChild(d);
-});
+  Promise.all(readerPromises).then(fileData=>{
+    const vetrina={
+      title:title.value,
+      titleSize:titleSize.value||32,
+      titleColor:titleColor.value||'#000000',
+      bgColor:bgColor.value||'#ffffff',
+      description:desc.value,
+      bgImage:bgImage.files[0]
+        ? URL.createObjectURL(bgImage.files[0])
+        : null,
+      files:fileData
+    };
+    localStorage.setItem('sercuctech_vetrina',JSON.stringify(vetrina));
+    alert("Vetrina salvata");
+  });
+}
 </script>
+
 </body>
 </html>
