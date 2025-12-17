@@ -5,9 +5,10 @@
 <title>Admin – SerCucTech</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{font-family:system-ui;background:#0f172a;color:white;padding:20px}
-input,button,textarea{width:100%;margin:6px 0;padding:8px}
-.card{background:#020617;padding:15px;border-radius:12px}
+body{font-family:system-ui;background:#0f172a;color:#fff;padding:20px}
+.card{background:#020617;padding:16px;border-radius:12px;margin-bottom:14px}
+input,textarea,button{width:100%;margin:6px 0;padding:10px}
+button{background:#2563eb;color:white;border:none;border-radius:8px}
 </style>
 </head>
 <body>
@@ -15,47 +16,71 @@ input,button,textarea{width:100%;margin:6px 0;padding:8px}
 <h2>Pannello Amministratore</h2>
 
 <div class="card">
-<h3>Vetrina</h3>
+<h3>Impostazioni Vetrina</h3>
 <input id="title" placeholder="Titolo vetrina">
-<input type="number" id="titleSize" placeholder="Dimensione titolo (px)">
-<input type="color" id="titleColor">
-<input type="color" id="bgColor">
-<input type="file" id="bgImage">
-<textarea id="desc" placeholder="Descrizione"></textarea>
+<input type="number" id="titleSize" placeholder="Dimensione titolo (px)" value="32">
+<label>Colore titolo</label>
+<input type="color" id="titleColor" value="#000000">
+<label>Colore sfondo</label>
+<input type="color" id="bgColor" value="#ffffff">
+<label>Immagine sfondo</label>
+<input type="file" id="bgImage" accept="image/*">
+<textarea id="description" placeholder="Descrizione vetrina"></textarea>
 </div>
 
 <div class="card">
-<h3>File (immagini / video)</h3>
-<input type="file" id="files" multiple>
-<button onclick="save()">Salva vetrina</button>
+<h3>Caricamento file (immagini / video)</h3>
+<input type="file" id="mediaFiles" multiple accept="image/*,video/*">
+<button onclick="uploadFiles()">📤 Carica file</button>
+<p id="status"></p>
 </div>
 
-<script>
-function save(){
-  const readerPromises=[];
-  [...files.files].forEach(f=>{
-    readerPromises.push(new Promise(res=>{
-      const r=new FileReader();
-      r.onload=()=>res({name:f.name,type:f.type,data:r.result});
-      r.readAsDataURL(f);
-    }));
-  });
+<button onclick="saveVetrina()">💾 Salva Vetrina</button>
 
-  Promise.all(readerPromises).then(fileData=>{
-    const vetrina={
-      title:title.value,
-      titleSize:titleSize.value||32,
-      titleColor:titleColor.value||'#000000',
-      bgColor:bgColor.value||'#ffffff',
-      description:desc.value,
-      bgImage:bgImage.files[0]
-        ? URL.createObjectURL(bgImage.files[0])
-        : null,
-      files:fileData
+<script>
+let uploadedFiles = [];
+
+function uploadFiles(){
+  const files = mediaFiles.files;
+  if(!files.length){
+    alert("Seleziona almeno un file");
+    return;
+  }
+
+  [...files].forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = () => {
+      uploadedFiles.push({
+        name: file.name,
+        type: file.type,
+        data: reader.result
+      });
+      status.textContent = uploadedFiles.length + " file caricati";
     };
-    localStorage.setItem('sercuctech_vetrina',JSON.stringify(vetrina));
-    alert("Vetrina salvata");
+    reader.readAsDataURL(file);
   });
+}
+
+function saveVetrina(){
+  if(!title.value){
+    alert("Inserisci un titolo");
+    return;
+  }
+
+  const vetrina = {
+    title: title.value,
+    titleSize: titleSize.value,
+    titleColor: titleColor.value,
+    bgColor: bgColor.value,
+    description: description.value,
+    bgImage: bgImage.files[0]
+      ? URL.createObjectURL(bgImage.files[0])
+      : null,
+    files: uploadedFiles
+  };
+
+  localStorage.setItem("sercuctech_vetrina", JSON.stringify(vetrina));
+  alert("✅ Vetrina salvata correttamente");
 }
 </script>
 
