@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SerCucTech – Vetrine</title>
+<meta property="og:title" content="SerCucTech – Vetrine">
+<meta property="og:description" content="Vetrine condivisibili online con presentazione vocale">
+<meta property="og:type" content="website">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,34 +14,39 @@
 <div class="wrap">
   <div class="card">
     <h2>SerCucTech – Vetrine</h2>
-    <p class="small">
-      <a href="admin.html">🔐 Amministrazione</a>
-    </p>
+    <div class="small"><a href="admin.html">🔐 Amministrazione</a></div>
   </div>
 
   <div class="card">
-    <h3>Vetrine disponibili</h3>
+    <h3>Vetrine (locale)</h3>
     <div id="list"></div>
-    <p class="small">
-      Le vetrine pubbliche funzionano se esiste il file <b>/data/ID.json</b>
-    </p>
+    <div class="small" style="margin-top:10px">
+      Per WhatsApp: pubblica sempre <b>/data/ID.json</b> (vedi admin).
+    </div>
   </div>
 </div>
 
 <script src="app.js"></script>
 <script>
 const list = document.getElementById("list");
-const all = JSON.parse(localStorage.getItem("sercuctech_vetrine") || "{}");
+const all = loadAll();
+const ids = Object.keys(all);
 
-if (!Object.keys(all).length) {
-  list.innerHTML = "<p class='small'>Nessuna vetrina locale.</p>";
-} else {
-  list.innerHTML = Object.keys(all).map(id => `
-    <div class="card">
-      <b>${id}</b><br>
-      <a href="vetrina.html?id=${id}">Apri vetrina</a>
-    </div>
-  `).join("");
+if(!ids.length){
+  list.innerHTML = "<div class='small'>Nessuna vetrina locale.</div>";
+}else{
+  const base = location.origin + location.pathname.replace("index.html","");
+  list.innerHTML = ids.map(id=>{
+    const link = `${base}vetrina.html?id=${encodeURIComponent(id)}`;
+    return `
+      <div class="card">
+        <b>${id}</b><br>
+        <a href="vetrina.html?id=${encodeURIComponent(id)}" target="_blank">Apri</a><br>
+        <span class="small">Link:</span><br>
+        <a href="${link}" target="_blank">${link}</a>
+      </div>
+    `;
+  }).join("");
 }
 </script>
 
