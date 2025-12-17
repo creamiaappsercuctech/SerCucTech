@@ -1,54 +1,141 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Admin SerCucTech</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{
+  font-family:system-ui;
+  background:#0f172a;
+  color:white;
+  padding:20px;
+}
+.card{
+  background:#020617;
+  padding:16px;
+  border-radius:12px;
+  margin-bottom:16px;
+}
+input, textarea, button{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+}
+button{
+  background:#2563eb;
+  border:none;
+  border-radius:8px;
+  color:white;
+}
+.hidden{
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Amministrazione SerCucTech</h2>
+
+<!-- LOGIN PIN -->
+<div class="card" id="loginBox">
+  <h3>Inserisci PIN</h3>
+  <input id="pinInput" type="password" placeholder="PIN amministratore">
+  <button id="loginBtn">Entra</button>
+</div>
+
+<!-- PANNELLO ADMIN -->
+<div id="adminPanel" class="hidden">
+
+  <div class="card">
+    <h3>Nuova Vetrina</h3>
+    <input id="vid" placeholder="ID vetrina (es: negozio1)">
+    <input id="title" placeholder="Titolo vetrina">
+    <textarea id="desc" placeholder="Descrizione"></textarea>
+
+    <input type="number" id="titleSize" value="32" placeholder="Dimensione titolo">
+    <label>Colore titolo</label>
+    <input type="color" id="titleColor" value="#000000">
+    <label>Colore sfondo</label>
+    <input type="color" id="bgColor" value="#ffffff">
+    <label>Immagine sfondo</label>
+    <input type="file" id="bgImage" accept="image/*">
+  </div>
+
+  <div class="card">
+    <h3>Carica file (immagini / video)</h3>
+    <input type="file" id="files" multiple accept="image/*,video/*">
+    <button id="uploadBtn">Carica file</button>
+    <p id="status"></p>
+  </div>
+
+  <button id="saveBtn">Salva Vetrina</button>
+
+</div>
+
 <script>
-const loginBox = document.getElementById("login");
-const panelBox = document.getElementById("panel");
-const pinInput = document.getElementById("pin");
+/* ===== INIZIALIZZAZIONE SICURA ===== */
 
-let uploaded = [];
-
-// PIN di default (puoi cambiarlo)
-if (!localStorage.getItem("admin_pin")) {
+// PIN di default
+if(!localStorage.getItem("admin_pin")){
   localStorage.setItem("admin_pin", "1234");
 }
 
-function login(){
-  const savedPin = localStorage.getItem("admin_pin");
+const loginBox = document.getElementById("loginBox");
+const adminPanel = document.getElementById("adminPanel");
+const pinInput = document.getElementById("pinInput");
+const loginBtn = document.getElementById("loginBtn");
+const uploadBtn = document.getElementById("uploadBtn");
+const saveBtn = document.getElementById("saveBtn");
+const status = document.getElementById("status");
 
+let uploadedFiles = [];
+
+/* ===== LOGIN ===== */
+loginBtn.onclick = () => {
+  const savedPin = localStorage.getItem("admin_pin");
   if(pinInput.value === savedPin){
-    loginBox.style.display = "none";
-    panelBox.style.display = "block";
+    loginBox.classList.add("hidden");
+    adminPanel.classList.remove("hidden");
   } else {
     alert("❌ PIN errato");
   }
-}
+};
 
-function addFiles(){
+/* ===== UPLOAD FILE ===== */
+uploadBtn.onclick = () => {
   const filesInput = document.getElementById("files");
-  const status = document.getElementById("status");
+  if(!filesInput.files.length){
+    alert("Seleziona almeno un file");
+    return;
+  }
 
   [...filesInput.files].forEach(file=>{
     const reader = new FileReader();
     reader.onload = () => {
-      uploaded.push({
-        name: file.name,
-        type: file.type,
-        data: reader.result
+      uploadedFiles.push({
+        name:file.name,
+        type:file.type,
+        data:reader.result
       });
-      status.textContent = "File caricati: " + uploaded.length;
+      status.textContent = "File caricati: " + uploadedFiles.length;
     };
     reader.readAsDataURL(file);
   });
-}
+};
 
-function save(){
+/* ===== SALVATAGGIO VETRINA ===== */
+saveBtn.onclick = () => {
   const vid = document.getElementById("vid").value;
   if(!vid){
-    alert("Inserisci ID vetrina");
+    alert("ID vetrina obbligatorio");
     return;
   }
 
-  const data = JSON.parse(localStorage.getItem("vetrine") || "{}");
+  const all = JSON.parse(localStorage.getItem("vetrine") || "{}");
 
-  data[vid] = {
+  all[vid] = {
     title: document.getElementById("title").value,
     desc: document.getElementById("desc").value,
     titleSize: document.getElementById("titleSize").value,
@@ -57,14 +144,17 @@ function save(){
     bgImage: document.getElementById("bgImage").files[0]
       ? URL.createObjectURL(document.getElementById("bgImage").files[0])
       : null,
-    files: uploaded
+    files: uploadedFiles
   };
 
-  localStorage.setItem("vetrine", JSON.stringify(data));
+  localStorage.setItem("vetrine", JSON.stringify(all));
 
   alert(
     "✅ Vetrina salvata!\n\nLink pubblico:\n" +
     "index.html?vetrina=" + vid
   );
-}
-      </script>
+};
+</script>
+
+</body>
+</html>
