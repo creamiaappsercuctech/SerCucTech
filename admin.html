@@ -1,86 +1,70 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-<meta charset="UTF-8">
-<title>Admin SerCucTech</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-body{font-family:system-ui;background:#0f172a;color:white;padding:20px}
-.card{background:#020617;padding:16px;border-radius:12px;margin-bottom:16px}
-input,textarea,button{width:100%;padding:10px;margin:6px 0}
-button{background:#2563eb;border:none;border-radius:8px;color:white}
-.small{font-size:12px;opacity:.8}
-</style>
-</head>
-<body>
-
-<h2>Admin SerCucTech</h2>
-
-<div class="card" id="login">
-<input id="pin" type="password" placeholder="PIN admin">
-<button onclick="login()">Entra</button>
-</div>
-
-<div id="panel" style="display:none">
-
-<div class="card">
-<h3>Nuova vetrina</h3>
-<input id="vid" placeholder="ID vetrina (es: negozio1)">
-<input id="title" placeholder="Titolo">
-<textarea id="desc" placeholder="Descrizione"></textarea>
-<input type="number" id="titleSize" value="32">
-<input type="color" id="titleColor" value="#000000">
-<input type="color" id="bgColor" value="#ffffff">
-<input type="file" id="bgImage" accept="image/*">
-</div>
-
-<div class="card">
-<h3>File</h3>
-<input type="file" id="files" multiple accept="image/*,video/*">
-<button onclick="addFiles()">Carica file</button>
-<p class="small" id="status"></p>
-</div>
-
-<button onclick="save()">Salva vetrina</button>
-
-</div>
-
 <script>
-const ADMIN_PIN = localStorage.getItem("admin_pin") || "1234";
-let uploaded=[];
+const loginBox = document.getElementById("login");
+const panelBox = document.getElementById("panel");
+const pinInput = document.getElementById("pin");
+
+let uploaded = [];
+
+// PIN di default (puoi cambiarlo)
+if (!localStorage.getItem("admin_pin")) {
+  localStorage.setItem("admin_pin", "1234");
+}
 
 function login(){
-  if(pin.value===ADMIN_PIN){
-    login.style.display="none";
-    panel.style.display="block";
-  } else alert("PIN errato");
+  const savedPin = localStorage.getItem("admin_pin");
+
+  if(pinInput.value === savedPin){
+    loginBox.style.display = "none";
+    panelBox.style.display = "block";
+  } else {
+    alert("❌ PIN errato");
+  }
 }
 
 function addFiles(){
-  [...files.files].forEach(f=>{
-    const r=new FileReader();
-    r.onload=()=>uploaded.push({name:f.name,type:f.type,data:r.result});
-    r.readAsDataURL(f);
+  const filesInput = document.getElementById("files");
+  const status = document.getElementById("status");
+
+  [...filesInput.files].forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = () => {
+      uploaded.push({
+        name: file.name,
+        type: file.type,
+        data: reader.result
+      });
+      status.textContent = "File caricati: " + uploaded.length;
+    };
+    reader.readAsDataURL(file);
   });
-  status.textContent="File caricati: "+uploaded.length;
 }
 
 function save(){
-  if(!vid.value){alert("ID vetrina obbligatorio");return;}
-  const all=JSON.parse(localStorage.getItem("vetrine")||"{}");
-  all[vid.value]={
-    title:title.value,
-    desc:desc.value,
-    titleSize:titleSize.value,
-    titleColor:titleColor.value,
-    bgColor:bgColor.value,
-    bgImage:bgImage.files[0]?URL.createObjectURL(bgImage.files[0]):null,
-    files:uploaded
-  };
-  localStorage.setItem("vetrine",JSON.stringify(all));
-  alert("Vetrina salvata\nLink:\nindex.html?vetrina="+vid.value);
-}
-</script>
+  const vid = document.getElementById("vid").value;
+  if(!vid){
+    alert("Inserisci ID vetrina");
+    return;
+  }
 
-</body>
-</html>
+  const data = JSON.parse(localStorage.getItem("vetrine") || "{}");
+
+  data[vid] = {
+    title: document.getElementById("title").value,
+    desc: document.getElementById("desc").value,
+    titleSize: document.getElementById("titleSize").value,
+    titleColor: document.getElementById("titleColor").value,
+    bgColor: document.getElementById("bgColor").value,
+    bgImage: document.getElementById("bgImage").files[0]
+      ? URL.createObjectURL(document.getElementById("bgImage").files[0])
+      : null,
+    files: uploaded
+  };
+
+  localStorage.setItem("vetrine", JSON.stringify(data));
+
+  alert(
+    "✅ Vetrina salvata!\n\nLink pubblico:\n" +
+    "index.html?vetrina=" + vid
+  );
+}
+      </script>
