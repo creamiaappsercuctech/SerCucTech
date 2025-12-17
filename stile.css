@@ -1,58 +1,7 @@
-```css
-body {
-    font-family: Arial;
-    background: #f4f4f4;
-    margin: 0;
-    padding: 20px;
-}
-
-.container {
-    text-align: center;
-    margin-top: 50px;
-}
-
-.btn {
-    display: block;
-    margin: 15px auto;
-    padding: 15px;
-    width: 200px;
-    background: #007bff;
-    color: white;
-    text-decoration: none;
-    border-radius: 8px;
-}
-
-form {
-    margin: 20px auto;
-    max-width: 400px;
-}
-
-input, textarea {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-}
-
-button {
-    margin-top: 10px;
-    width: 100%;
-    padding: 10px;
-    background: green;
-    color: white;
-    border: none;
-    border-radius: 6px;
-}
-
-.card {
-    background: white;
-    padding: 15px;
-    margin: 10px;
-    border-radius: 8px;
-}
-img{width:90px;margin:6px;cursor:pointer}
-img.big{width:90%;display:block}
-video{width:300px;display:block;margin:10px 0}
-section{border-bottom:1px solid #ccc;padding:10px}
-```
-
-  
+html,body{margin:0;padding:0;font-family:system-ui;background:#0b1020;color:white}
+.wrap{max-width:1000px;margin:auto;padding:16px}
+.card{background:#111827;padding:14px;border-radius:12px;margin-bottom:14px}
+input,textarea,button{width:100%;padding:8px;margin:6px 0}
+button{background:#2563eb;color:white;border:none;border-radius:8px}
+.hidden{display:none}
+.small{font-size:13px;opacity:.8}
