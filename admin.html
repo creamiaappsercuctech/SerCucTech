@@ -5,155 +5,150 @@
 <title>Admin SerCucTech</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{
-  font-family:system-ui;
-  background:#0f172a;
-  color:white;
-  padding:20px;
-}
-.card{
-  background:#020617;
-  padding:16px;
-  border-radius:12px;
-  margin-bottom:16px;
-}
-input, textarea, button{
-  width:100%;
-  padding:10px;
-  margin:6px 0;
-}
-button{
-  background:#2563eb;
-  border:none;
-  border-radius:8px;
-  color:white;
-}
-.hidden{
-  display:none;
-}
+body{font-family:system-ui;background:#0f172a;color:white;padding:20px}
+.card{background:#020617;padding:16px;border-radius:12px;margin-bottom:16px}
+input,textarea,button{width:100%;padding:10px;margin:6px 0}
+button{background:#2563eb;border:none;border-radius:8px;color:white}
+.hidden{display:none}
+.small{font-size:13px;opacity:.85}
+.file{display:flex;justify-content:space-between;align-items:center}
+.file button{width:auto;background:#dc2626}
+.link{font-size:13px;word-break:break-all}
 </style>
 </head>
-
 <body>
 
-<h2>Amministrazione SerCucTech</h2>
+<h2 id="t_admin">Amministrazione SerCucTech</h2>
 
-<!-- LOGIN PIN -->
 <div class="card" id="loginBox">
-  <h3>Inserisci PIN</h3>
-  <input id="pinInput" type="password" placeholder="PIN amministratore">
+  <input id="pinInput" type="password" placeholder="PIN">
   <button id="loginBtn">Entra</button>
 </div>
 
-<!-- PANNELLO ADMIN -->
-<div id="adminPanel" class="hidden">
+<div id="panel" class="hidden">
 
-  <div class="card">
-    <h3>Nuova Vetrina</h3>
-    <input id="vid" placeholder="ID vetrina (es: negozio1)">
-    <input id="title" placeholder="Titolo vetrina">
-    <textarea id="desc" placeholder="Descrizione"></textarea>
+<div class="card">
+<h3 id="t_new">Nuova Vetrina</h3>
+<input id="vid" placeholder="ID vetrina (es: negozio1)">
+<input id="title" placeholder="Titolo">
+<textarea id="desc" placeholder="Descrizione"></textarea>
+<input type="number" id="titleSize" value="32">
+<input type="color" id="titleColor">
+<input type="color" id="bgColor">
+<input type="file" id="bgImage" accept="image/*">
+</div>
 
-    <input type="number" id="titleSize" value="32" placeholder="Dimensione titolo">
-    <label>Colore titolo</label>
-    <input type="color" id="titleColor" value="#000000">
-    <label>Colore sfondo</label>
-    <input type="color" id="bgColor" value="#ffffff">
-    <label>Immagine sfondo</label>
-    <input type="file" id="bgImage" accept="image/*">
-  </div>
+<div class="card">
+<h3 id="t_files">File</h3>
+<input type="file" id="files" multiple accept="image/*,video/*">
+<button id="uploadBtn">Carica file</button>
+<div id="fileList"></div>
+</div>
 
-  <div class="card">
-    <h3>Carica file (immagini / video)</h3>
-    <input type="file" id="files" multiple accept="image/*,video/*">
-    <button id="uploadBtn">Carica file</button>
-    <p id="status"></p>
-  </div>
+<button id="saveBtn">Salva Vetrina</button>
 
-  <button id="saveBtn">Salva Vetrina</button>
+<div class="card">
+<h3>Vetrine create</h3>
+<div id="vetrineList"></div>
+</div>
+
+<div class="card">
+<h3>Cambio PIN</h3>
+<input id="newPin" placeholder="Nuovo PIN">
+<button onclick="changePin()">Cambia PIN</button>
+</div>
 
 </div>
 
 <script>
-/* ===== INIZIALIZZAZIONE SICURA ===== */
+/* ===== MULTILINGUA ===== */
+const lang = (navigator.language || 'en').slice(0,2);
+const T = {
+ it:{admin:"Amministrazione",new:"Nuova Vetrina",files:"File"},
+ uk:{admin:"Адміністрування",new:"Нова вітрина",files:"Файли"},
+ en:{admin:"Administration",new:"New Vetrina",files:"Files"},
+ ja:{admin:"管理",new:"新しいショーケース",files:"ファイル"}
+};
+const L=T[lang]||T.en;
+t_admin.textContent=L.admin;
+t_new.textContent=L.new;
+t_files.textContent=L.files;
 
-// PIN di default
+/* ===== PIN ===== */
 if(!localStorage.getItem("admin_pin")){
-  localStorage.setItem("admin_pin", "1234");
+  localStorage.setItem("admin_pin","1234");
+}
+loginBtn.onclick=()=>{
+  if(pinInput.value===localStorage.getItem("admin_pin")){
+    loginBox.classList.add("hidden");
+    panel.classList.remove("hidden");
+    loadVetrine();
+  } else alert("PIN errato");
+};
+
+function changePin(){
+  if(newPin.value){
+    localStorage.setItem("admin_pin",newPin.value);
+    alert("PIN aggiornato");
+  }
 }
 
-const loginBox = document.getElementById("loginBox");
-const adminPanel = document.getElementById("adminPanel");
-const pinInput = document.getElementById("pinInput");
-const loginBtn = document.getElementById("loginBtn");
-const uploadBtn = document.getElementById("uploadBtn");
-const saveBtn = document.getElementById("saveBtn");
-const status = document.getElementById("status");
-
-let uploadedFiles = [];
-
-/* ===== LOGIN ===== */
-loginBtn.onclick = () => {
-  const savedPin = localStorage.getItem("admin_pin");
-  if(pinInput.value === savedPin){
-    loginBox.classList.add("hidden");
-    adminPanel.classList.remove("hidden");
-  } else {
-    alert("❌ PIN errato");
-  }
-};
-
-/* ===== UPLOAD FILE ===== */
-uploadBtn.onclick = () => {
-  const filesInput = document.getElementById("files");
-  if(!filesInput.files.length){
-    alert("Seleziona almeno un file");
-    return;
-  }
-
-  [...filesInput.files].forEach(file=>{
-    const reader = new FileReader();
-    reader.onload = () => {
-      uploadedFiles.push({
-        name:file.name,
-        type:file.type,
-        data:reader.result
-      });
-      status.textContent = "File caricati: " + uploadedFiles.length;
+/* ===== FILE ===== */
+let uploaded=[];
+uploadBtn.onclick=()=>{
+  [...files.files].forEach(f=>{
+    const r=new FileReader();
+    r.onload=()=>{
+      uploaded.push({name:f.name,type:f.type,data:r.result});
+      renderFiles();
     };
-    reader.readAsDataURL(file);
+    r.readAsDataURL(f);
   });
 };
+function renderFiles(){
+  fileList.innerHTML="";
+  uploaded.forEach((f,i)=>{
+    fileList.innerHTML+=`
+    <div class="file">
+      <span>${f.name}</span>
+      <button onclick="delFile(${i})">X</button>
+    </div>`;
+  });
+}
+function delFile(i){uploaded.splice(i,1);renderFiles();}
 
-/* ===== SALVATAGGIO VETRINA ===== */
-saveBtn.onclick = () => {
-  const vid = document.getElementById("vid").value;
-  if(!vid){
-    alert("ID vetrina obbligatorio");
-    return;
-  }
-
-  const all = JSON.parse(localStorage.getItem("vetrine") || "{}");
-
-  all[vid] = {
-    title: document.getElementById("title").value,
-    desc: document.getElementById("desc").value,
-    titleSize: document.getElementById("titleSize").value,
-    titleColor: document.getElementById("titleColor").value,
-    bgColor: document.getElementById("bgColor").value,
-    bgImage: document.getElementById("bgImage").files[0]
-      ? URL.createObjectURL(document.getElementById("bgImage").files[0])
-      : null,
-    files: uploadedFiles
+/* ===== SALVA VETRINA ===== */
+function save(){
+  if(!vid.value){alert("ID obbligatorio");return;}
+  const all=JSON.parse(localStorage.getItem("vetrine")||"{}");
+  all[vid.value]={
+    title:title.value,desc:desc.value,
+    titleSize:titleSize.value,
+    titleColor:titleColor.value,
+    bgColor:bgColor.value,
+    bgImage:bgImage.files[0]?URL.createObjectURL(bgImage.files[0]):null,
+    files:uploaded
   };
+  localStorage.setItem("vetrine",JSON.stringify(all));
+  alert("Vetrina salvata");
+  loadVetrine();
+}
+saveBtn.onclick=save;
 
-  localStorage.setItem("vetrine", JSON.stringify(all));
-
-  alert(
-    "✅ Vetrina salvata!\n\nLink pubblico:\n" +
-    "index.html?vetrina=" + vid
-  );
-};
+/* ===== LISTA VETRINE + LINK ===== */
+function loadVetrine(){
+  const all=JSON.parse(localStorage.getItem("vetrine")||"{}");
+  vetrineList.innerHTML="";
+  Object.keys(all).forEach(id=>{
+    const link=`index.html?vetrina=${id}`;
+    vetrineList.innerHTML+=`
+      <div class="card small">
+        <b>${id}</b><br>
+        <a class="link" href="${link}" target="_blank">${link}</a>
+        <button onclick="navigator.clipboard.writeText('${location.origin+location.pathname.replace('admin.html','')+link}')">Copia link</button>
+      </div>`;
+  });
+}
 </script>
 
 </body>
