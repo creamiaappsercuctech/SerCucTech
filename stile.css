@@ -49,6 +49,10 @@ button {
     margin: 10px;
     border-radius: 8px;
 }
+img{width:90px;margin:6px;cursor:pointer}
+img.big{width:90%;display:block}
+video{width:300px;display:block;margin:10px 0}
+section{border-bottom:1px solid #ccc;padding:10px}
 ```
 
   
