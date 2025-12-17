@@ -1,57 +1,44 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<title>SerCucTech</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-body{font-family:system-ui;margin:0}
-.v{min-height:100vh;padding:20px;background-size:cover}
-.media{display:grid;grid-template-columns:repeat(auto-fill,100px);gap:10px}
-.media img,.media video{width:100px;height:100px;object-fit:cover;cursor:pointer}
-.full{position:fixed;inset:0;background:black;display:flex;align-items:center;justify-content:center}
-.full img,.full video{max-width:90%;max-height:90%}
-</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SerCucTech – Vetrine</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div id="app"></div>
+<div class="wrap">
+  <div class="card">
+    <h2>SerCucTech – Vetrine</h2>
+    <p class="small">
+      <a href="admin.html">🔐 Amministrazione</a>
+    </p>
+  </div>
 
+  <div class="card">
+    <h3>Vetrine disponibili</h3>
+    <div id="list"></div>
+    <p class="small">
+      Le vetrine pubbliche funzionano se esiste il file <b>/data/ID.json</b>
+    </p>
+  </div>
+</div>
+
+<script src="app.js"></script>
 <script>
-const params=new URLSearchParams(location.search);
-const id=params.get("vetrina");
-const data=JSON.parse(localStorage.getItem("vetrine")||"{}");
-const app=document.getElementById("app");
+const list = document.getElementById("list");
+const all = JSON.parse(localStorage.getItem("sercuctech_vetrine") || "{}");
 
-if(!id || !data[id]){
-  app.innerHTML="<h2>Vetrina non trovata</h2>";
-}else{
-  const v=data[id];
-  const d=document.createElement("div");
-  d.className="v";
-  d.style.backgroundColor=v.bgColor;
-  d.style.backgroundImage=v.bgImage?`url(${v.bgImage})`:"none";
-
-  d.innerHTML=`
-    <h1 style="font-size:${v.titleSize}px;color:${v.titleColor}">${v.title}</h1>
-    <p>${v.desc||""}</p>
-    <div class="media">
-      ${v.files.map(f=>f.type.startsWith("video")
-        ? `<video src="${f.data}" muted></video>`
-        : `<img src="${f.data}">`).join("")}
+if (!Object.keys(all).length) {
+  list.innerHTML = "<p class='small'>Nessuna vetrina locale.</p>";
+} else {
+  list.innerHTML = Object.keys(all).map(id => `
+    <div class="card">
+      <b>${id}</b><br>
+      <a href="vetrina.html?id=${id}">Apri vetrina</a>
     </div>
-  `;
-  app.appendChild(d);
-
-  document.querySelectorAll(".media img,.media video").forEach(el=>{
-    el.onclick=()=>{
-      const f=document.createElement("div");
-      f.className="full";
-      f.innerHTML=el.outerHTML;
-      f.onclick=()=>f.remove();
-      document.body.appendChild(f);
-    };
-  });
+  `).join("");
 }
 </script>
 
