@@ -2,154 +2,115 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Admin SerCucTech</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin – Vetrine</title>
+
 <style>
-body{font-family:system-ui;background:#0f172a;color:white;padding:20px}
-.card{background:#020617;padding:16px;border-radius:12px;margin-bottom:16px}
-input,textarea,button{width:100%;padding:10px;margin:6px 0}
-button{background:#2563eb;border:none;border-radius:8px;color:white}
-.hidden{display:none}
-.small{font-size:13px;opacity:.85}
-.file{display:flex;justify-content:space-between;align-items:center}
-.file button{width:auto;background:#dc2626}
-.link{font-size:13px;word-break:break-all}
+body {
+  margin: 0;
+  background: #0b1020;
+  color: white;
+  font-family: system-ui, sans-serif;
+}
+
+.container {
+  padding: 16px;
+}
+
+input, textarea, button {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
+}
+
+.card {
+  background: #111827;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+}
+.small {
+  font-size: 13px;
+  color: #9ca3af;
+}
 </style>
 </head>
+
 <body>
+<div class="container">
+  <h2>Gestione Vetrine</h2>
 
-<h2 id="t_admin">Amministrazione SerCucTech</h2>
+  <div class="card">
+    <input id="vid" placeholder="ID vetrina (es: negozio1)">
+    <input id="title" placeholder="Titolo">
+    <textarea id="desc" placeholder="Descrizione"></textarea>
+    <input type="file" id="files" multiple>
+    <button onclick="save()">Salva / Aggiorna vetrina</button>
+  </div>
 
-<div class="card" id="loginBox">
-  <input id="pinInput" type="password" placeholder="PIN">
-  <button id="loginBtn">Entra</button>
-</div>
-
-<div id="panel" class="hidden">
-
-<div class="card">
-<h3 id="t_new">Nuova Vetrina</h3>
-<input id="vid" placeholder="ID vetrina (es: negozio1)">
-<input id="title" placeholder="Titolo">
-<textarea id="desc" placeholder="Descrizione"></textarea>
-<input type="number" id="titleSize" value="32">
-<input type="color" id="titleColor">
-<input type="color" id="bgColor">
-<input type="file" id="bgImage" accept="image/*">
-</div>
-
-<div class="card">
-<h3 id="t_files">File</h3>
-<input type="file" id="files" multiple accept="image/*,video/*">
-<button id="uploadBtn">Carica file</button>
-<div id="fileList"></div>
-</div>
-
-<button id="saveBtn">Salva Vetrina</button>
-
-<div class="card">
-<h3>Vetrine create</h3>
-<div id="vetrineList"></div>
-</div>
-
-<div class="card">
-<h3>Cambio PIN</h3>
-<input id="newPin" placeholder="Nuovo PIN">
-<button onclick="changePin()">Cambia PIN</button>
-</div>
-
+  <h3>Vetrine esistenti</h3>
+  <div id="list"></div>
 </div>
 
 <script>
-/* ===== MULTILINGUA ===== */
-const lang = (navigator.language || 'en').slice(0,2);
-const T = {
- it:{admin:"Amministrazione",new:"Nuova Vetrina",files:"File"},
- uk:{admin:"Адміністрування",new:"Нова вітрина",files:"Файли"},
- en:{admin:"Administration",new:"New Vetrina",files:"Files"},
- ja:{admin:"管理",new:"新しいショーケース",files:"ファイル"}
-};
-const L=T[lang]||T.en;
-t_admin.textContent=L.admin;
-t_new.textContent=L.new;
-t_files.textContent=L.files;
+const KEY = 'vetrine-sercuctech';
+let vetrine = JSON.parse(localStorage.getItem(KEY) || '{}');
 
-/* ===== PIN ===== */
-if(!localStorage.getItem("admin_pin")){
-  localStorage.setItem("admin_pin","1234");
-}
-loginBtn.onclick=()=>{
-  if(pinInput.value===localStorage.getItem("admin_pin")){
-    loginBox.classList.add("hidden");
-    panel.classList.remove("hidden");
-    loadVetrine();
-  } else alert("PIN errato");
-};
+function save() {
+  const id = vid.value.trim();
+  if (!id) return alert("ID obbligatorio");
 
-function changePin(){
-  if(newPin.value){
-    localStorage.setItem("admin_pin",newPin.value);
-    alert("PIN aggiornato");
-  }
-}
+  const files = [...filesInput.files].map(f => ({
+    name: f.name,
+    url: URL.createObjectURL(f),
+    type: f.type
+  }));
 
-/* ===== FILE ===== */
-let uploaded=[];
-uploadBtn.onclick=()=>{
-  [...files.files].forEach(f=>{
-    const r=new FileReader();
-    r.onload=()=>{
-      uploaded.push({name:f.name,type:f.type,data:r.result});
-      renderFiles();
-    };
-    r.readAsDataURL(f);
-  });
-};
-function renderFiles(){
-  fileList.innerHTML="";
-  uploaded.forEach((f,i)=>{
-    fileList.innerHTML+=`
-    <div class="file">
-      <span>${f.name}</span>
-      <button onclick="delFile(${i})">X</button>
-    </div>`;
-  });
-}
-function delFile(i){uploaded.splice(i,1);renderFiles();}
-
-/* ===== SALVA VETRINA ===== */
-function save(){
-  if(!vid.value){alert("ID obbligatorio");return;}
-  const all=JSON.parse(localStorage.getItem("vetrine")||"{}");
-  all[vid.value]={
-    title:title.value,desc:desc.value,
-    titleSize:titleSize.value,
-    titleColor:titleColor.value,
-    bgColor:bgColor.value,
-    bgImage:bgImage.files[0]?URL.createObjectURL(bgImage.files[0]):null,
-    files:uploaded
+  vetrine[id] = {
+    title: title.value,
+    desc: desc.value,
+    files: (vetrine[id]?.files || []).concat(files)
   };
-  localStorage.setItem("vetrine",JSON.stringify(all));
-  alert("Vetrina salvata");
-  loadVetrine();
-}
-saveBtn.onclick=save;
 
-/* ===== LISTA VETRINE + LINK ===== */
-function loadVetrine(){
-  const all=JSON.parse(localStorage.getItem("vetrine")||"{}");
-  vetrineList.innerHTML="";
-  Object.keys(all).forEach(id=>{
-    const link=`index.html?vetrina=${id}`;
-    vetrineList.innerHTML+=`
-      <div class="card small">
-        <b>${id}</b><br>
-        <a class="link" href="${link}" target="_blank">${link}</a>
-        <button onclick="navigator.clipboard.writeText('${location.origin+location.pathname.replace('admin.html','')+link}')">Copia link</button>
-      </div>`;
+  localStorage.setItem(KEY, JSON.stringify(vetrine));
+  render();
+}
+
+function render() {
+  list.innerHTML = '';
+  Object.keys(vetrine).forEach(id => {
+    const v = vetrine[id];
+    const link = `${location.origin}${location.pathname.replace('admin.html','vetrine.html')}?id=${id}`;
+
+    const d = document.createElement('div');
+    d.className = 'card';
+    d.innerHTML = `
+      <b>${v.title || id}</b>
+      <div class="small">${v.desc || ''}</div>
+      <div class="small">Link pubblico:</div>
+      <a href="${link}" target="_blank">${link}</a>
+      <button onclick="del('${id}')">Elimina</button>
+    `;
+    list.appendChild(d);
   });
 }
-</script>
 
+function del(id) {
+  if (!confirm("Eliminare vetrina?")) return;
+  delete vetrine[id];
+  localStorage.setItem(KEY, JSON.stringify(vetrine));
+  render();
+}
+
+render();
+</script>
 </body>
 </html>
