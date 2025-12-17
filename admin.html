@@ -63,7 +63,11 @@
     <button onclick="save()">Salva / Aggiorna vetrina</button>
     <button class="danger" onclick="deleteVetrina()">🗑 Cancella vetrina</button>
   </div>
-  <div class="small">⚠ Cancella elimina solo dal tuo dispositivo. Per togliere anche online devi rimuovere <b>/data/ID.json</b> dalla repo.</div>
+
+  <div class="card" style="background:#0b1224">
+    <button onclick="exportVetrinaJson()">⬇ Esporta JSON vetrina (pubblica)</button>
+    <div class="small">Carica su GitHub in: <b>data/ID.json</b></div>
+  </div>
 </div>
 
 <div class="card">
@@ -77,20 +81,17 @@
   <input id="groupTitle" placeholder="Titolo gruppo (es: Promo Natale)">
   <div class="small">Seleziona le vetrine da includere:</div>
   <div id="groupPick"></div>
-  <button onclick="saveGroup()">Salva gruppo</button>
-  <div class="small" style="margin-top:8px">Link gruppo: <b>bundle.html?g=IDGRUPPO</b></div>
+
+  <button onclick="saveGroup()">Salva gruppo (locale)</button>
+
+  <div class="card" style="background:#0b1224">
+    <button onclick="exportGroupJson()">⬇ Esporta JSON gruppo (pubblico)</button>
+    <div class="small">Carica su GitHub in: <b>data/groups/GID.json</b></div>
+  </div>
+
   <hr>
   <h4 class="small">Gruppi salvati</h4>
   <div id="groupList"></div>
-</div>
-
-<div class="card">
-  <h3>Pubblicazione (per WhatsApp + link pubblico)</h3>
-  <button onclick="exportJson()">⬇ Esporta JSON vetrina (ID sopra)</button>
-  <div class="small">
-    Per renderla visibile a TUTTI: carica <b>ID.json</b> in repo dentro <b>/data/ID.json</b>.<br>
-    (Per anteprima WhatsApp: carica anche <b>/data/ID-cover.jpg</b>)
-  </div>
 </div>
 
 </div>
@@ -100,7 +101,6 @@
 <script>
 initPin();
 
-const STORE_KEY = "sercuctech_vetrine";
 const GROUP_KEY = "sercuctech_groups";
 let uploaded = [];
 
@@ -109,7 +109,7 @@ function doLogin(){
     login.style.display="none";
     panel.classList.remove("hidden");
     renderAll();
-  }else alert("PIN errato");
+  } else alert("PIN errato");
 }
 
 async function upload(){
@@ -119,7 +119,6 @@ async function upload(){
   }
   renderFiles();
 }
-
 function renderFiles(){
   fileList.innerHTML = uploaded.map((f,i)=>`
     <div class="card" style="background:#0b1224">
@@ -141,12 +140,7 @@ function buildVetrinaObject(){
     titleColor: titleColor.value || "#ffffff",
     bgColor: bgColor.value || "#0b1020",
     presentationText: presentationText.value || "",
-    voice: {
-      lang: voiceLang.value || "it-IT",
-      rate: Number(voiceRate.value || 1),
-      pitch: 1,
-      volume: 1
-    },
+    voice: { lang: voiceLang.value || "it-IT", rate: Number(voiceRate.value || 1), pitch: 1, volume: 1 },
     files: uploaded
   };
 }
@@ -163,57 +157,68 @@ function save(){
 
 function deleteVetrina(){
   const id=(vid.value||"").trim();
-  if(!id) return alert("Scrivi l’ID della vetrina da cancellare");
-  const all = loadAll();
-  if(!all[id]) return alert("Vetrina non trovata in locale");
-  if(!confirm(`Confermi cancellazione vetrina "${id}"?`)) return;
+  if(!id) return alert("Scrivi l’ID della vetrina");
+  const all=loadAll();
+  if(!all[id]) return alert("Non trovata in locale");
+  if(!confirm(`Cancellare vetrina "${id}"?`)) return;
   delete all[id];
   saveAll(all);
-  // pulizia form
-  uploaded = [];
+  uploaded=[];
   renderFiles();
   alert("Cancellata ✅");
   renderAll();
+}
+
+function exportVetrinaJson(){
+  const id=(vid.value||"").trim();
+  if(!id) return alert("Scrivi l’ID della vetrina");
+  const all=loadAll();
+  const v=all[id];
+  if(!v) return alert("Vetrina non trovata in locale");
+  const blob=new Blob([JSON.stringify(v,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`${id}.json`;
+  a.click();
+  alert(`Carica su GitHub in: data/${id}.json`);
+}
+
+function testVoice(){
+  const ok = speakText(presentationText.value, {lang: voiceLang.value, rate: voiceRate.value});
+  if(!ok) alert("Sintesi vocale non disponibile su questo browser.");
+}
+
+function copyText(text){
+  navigator.clipboard?.writeText(text).then(
+    ()=>alert("Copiato ✅"),
+    ()=>prompt("Copia manualmente:", text)
+  );
 }
 
 function renderList(){
   const all=loadAll();
   const base = location.origin + location.pathname.replace("admin.html","");
   const ids=Object.keys(all);
-
   list.innerHTML = ids.length ? ids.map(id=>{
     const link = `${base}vetrina.html?id=${encodeURIComponent(id)}`;
     return `
       <div class="card">
         <b>${id}</b>
         <div class="small">${all[id].desc||""}</div>
-        <a href="vetrina.html?id=${encodeURIComponent(id)}" target="_blank">Apri</a><br>
-        <span class="small">Link:</span><br>
         <a href="${link}" target="_blank">${link}</a>
         <button onclick="copyText('${link.replaceAll("'","%27")}')">Copia link</button>
       </div>
     `;
-  }).join("") : `<div class="small">Nessuna vetrina creata.</div>`;
+  }).join("") : `<div class="small">Nessuna vetrina.</div>`;
 }
 
-function copyText(u){
-  const link = decodeURIComponent(u);
-  navigator.clipboard?.writeText(link).then(
-    ()=>alert("Copiato ✅"),
-    ()=>prompt("Copia manualmente:", link)
-  );
-}
+// Gruppi
+function loadGroups(){ return JSON.parse(localStorage.getItem(GROUP_KEY)||"{}"); }
+function saveGroups(g){ localStorage.setItem(GROUP_KEY, JSON.stringify(g)); }
 
-// --- Gruppi (aggancia più vetrine) ---
-function loadGroups(){
-  return JSON.parse(localStorage.getItem(GROUP_KEY) || "{}");
-}
-function saveGroups(g){
-  localStorage.setItem(GROUP_KEY, JSON.stringify(g));
-}
 function renderGroupPicker(){
-  const all = loadAll();
-  const ids = Object.keys(all);
+  const all=loadAll();
+  const ids=Object.keys(all);
   groupPick.innerHTML = ids.length ? ids.map(id=>`
     <label class="card" style="background:#0b1224;display:flex;gap:10px;align-items:center">
       <input type="checkbox" data-id="${id}" style="width:auto">
@@ -224,23 +229,40 @@ function renderGroupPicker(){
     </label>
   `).join("") : `<div class="small">Crea prima almeno una vetrina.</div>`;
 }
+
 function saveGroup(){
   const gid=(groupId.value||"").trim();
   if(!gid) return alert("ID gruppo obbligatorio");
   const title=(groupTitle.value||gid).trim();
-
   const selected=[...groupPick.querySelectorAll('input[type="checkbox"]:checked')]
     .map(x=>x.getAttribute("data-id"));
-
   if(!selected.length) return alert("Seleziona almeno 1 vetrina");
 
   const groups=loadGroups();
-  groups[gid] = { title, ids:selected, updatedAt: Date.now() };
+  groups[gid]={ title, ids:selected, updatedAt: Date.now() };
   saveGroups(groups);
 
   alert(`Gruppo salvato ✅\nLink: bundle.html?g=${gid}`);
   renderGroups();
 }
+
+function exportGroupJson(){
+  const gid=(groupId.value||"").trim();
+  if(!gid) return alert("Scrivi l’ID gruppo (GID)");
+  const groups=loadGroups();
+  const g=groups[gid];
+  if(!g) return alert("Gruppo non trovato in locale. Prima salva il gruppo.");
+
+  // JSON pubblico: titolo + ids
+  const publicGroup = { title: g.title || gid, ids: g.ids || [] };
+  const blob=new Blob([JSON.stringify(publicGroup,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`${gid}.json`;
+  a.click();
+  alert(`Carica su GitHub in: data/groups/${gid}.json`);
+}
+
 function renderGroups(){
   const groups=loadGroups();
   const base = location.origin + location.pathname.replace("admin.html","");
@@ -251,12 +273,10 @@ function renderGroups(){
       <div class="card">
         <b>${gid}</b> <span class="pill">${groups[gid].ids.length} vetrine</span>
         <div class="small">${groups[gid].title||""}</div>
-        <a href="bundle.html?g=${encodeURIComponent(gid)}" target="_blank">Apri gruppo</a><br>
-        <span class="small">Link:</span><br>
         <a href="${link}" target="_blank">${link}</a>
         <div class="row">
           <button onclick="copyText('${link.replaceAll("'","%27")}')">Copia link</button>
-          <button class="danger" onclick="deleteGroup('${gid.replaceAll("'","\\'")}')">🗑 Elimina gruppo</button>
+          <button class="danger" onclick="deleteGroup('${gid.replaceAll("'","\\'")}')">🗑 Elimina</button>
         </div>
       </div>
     `;
@@ -268,26 +288,6 @@ function deleteGroup(gid){
   delete groups[gid];
   saveGroups(groups);
   renderGroups();
-}
-
-// --- Export JSON vetrina ---
-function exportJson(){
-  const id=(vid.value||"").trim();
-  if(!id) return alert("Scrivi l’ID della vetrina");
-  const all=loadAll();
-  const v=all[id];
-  if(!v) return alert("Vetrina non trovata in locale");
-  const blob = new Blob([JSON.stringify(v,null,2)], {type:"application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `${id}.json`;
-  a.click();
-  alert(`Carica su GitHub in: data/${id}.json`);
-}
-
-function testVoice(){
-  const ok = speakText(presentationText.value, {lang: voiceLang.value, rate: voiceRate.value});
-  if(!ok) alert("Sintesi vocale non disponibile su questo browser.");
 }
 
 function renderAll(){
