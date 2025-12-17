@@ -1,34 +1,50 @@
-```html
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Gestione Vetrine</title>
-    <link rel="stylesheet" href="stile.css">
+<meta charset="UTF-8">
+<link rel="stylesheet" href="style.css">
 </head>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="script.js"></script>
 <body>
 
-    <h1>Gestione Vetrine</h1>
+<select onchange="localStorage.lang=this.value;location.reload()">
+<option value="it">Italiano</option>
+<option value="uk">Українська</option>
+<option value="en">English</option>
+<option value="ja">日本語</option>
+</select>
 
-    <form id="formVetrina">
-        <input type="hidden" id="id" value="">
-        <input type="text" id="nome" placeholder="Nome vetrina" required>
-        <textarea id="descrizione" placeholder="Descrizione"></textarea>
-        <input type="text" id="immagine" placeholder="URL immagine">
-        <button type="submit">Salva</button>
-    </form>
+<h2 id="title"></h2>
 
-    <h2>Vetrine Salvate</h2>
-    <div id="lista"></div>
+<input id="nome" placeholder="Nome vetrina">
+<textarea id="desc" placeholder="Descrizione"></textarea>
+<input type="file" id="files" multiple>
+<button onclick="addVetrina()" id="save"></button>
 
-    <script src="db.js"></script>
-    <script src="script.js"></script>
-<h3>Upload file (immagini, video, pdf, zip, audio)</h3>
-<input type="file" id="files" multiple accept="*/*">
-<button onclick="addVetrina()">Salva nella vetrina</button>
+<hr>
+
+<div id="list"></div>
+
+<script src="lang.js"></script>
+<script src="script.js"></script>
+<script>
+title.textContent=t("admin");
+save.textContent=t("save");
+
+vetrine.forEach((v,i)=>{
+ const d=document.createElement("div");
+ d.innerHTML=`
+ <b>${v.nome}</b>
+ <button onclick="deleteVetrina(${i})">${t("delete")}</button>
+ <a href="vetrina.html?id=${i}" target="_blank">${t("open")}</a>
+ `;
+ v.files.forEach((f,fi)=>{
+  d.innerHTML+=`
+  <div>${f.name}
+   <button onclick="deleteFile(${i},${fi})">❌</button>
+  </div>`;
+ });
+ list.appendChild(d);
+});
+</script>
 </body>
 </html>
-```
-
