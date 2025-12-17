@@ -1,52 +1,7 @@
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>SER TECH CUC</title>
-    <link rel="stylesheet" href="stile.css">
-</head>
-<body>
-
-    <div class="container">
-        <h1>SER TECH CUC</h1>
-
-        <a class="btn" href="admin.html">Gestione Vetrine</a>
-        <a class="btn" href="vetrine.html">Lista Vetrine</a>
-    </div>
-    <div id="vetrina"></div>
-<script src="script.js"></script>
+<div id="home"></div>
 <script>
-const box=document.getElementById("vetrina");
-const vetrine=JSON.parse(localStorage.getItem("vetrine"))||[];
-
-vetrine.forEach(v=>{
- const sec=document.createElement("section");
- sec.innerHTML=`<h2>${v.nome}</h2><p>${v.desc}</p>`;
- v.files.forEach(f=>{
-  let el;
-  if(f.type.startsWith("image")){
-   el=document.createElement("img");
-   el.src=f.data;
-   el.onclick=()=>el.classList.toggle("big");
-  }
-  else if(f.type.startsWith("video")){
-   el=document.createElement("video");
-   el.src=f.data;
-   el.controls=true;
-  }
-  else{
-   el=document.createElement("a");
-   el.href=f.data;
-   el.download=f.name;
-   el.textContent="📎 "+f.name;
-  }
-  sec.appendChild(el);
- });
- box.appendChild(sec);
+const v=JSON.parse(localStorage.vetrine||"[]");
+v.forEach((x,i)=>{
+ home.innerHTML+=`<a href="vetrina.html?id=${i}">${x.nome}</a><br>`;
 });
 </script>
-
-</body>
-</html>
-```
