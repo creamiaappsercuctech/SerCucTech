@@ -1,73 +1,39 @@
-```javascript
-document.addEventListener("DOMContentLoaded", () => {
-    const formVetrina = document.getElementById("formVetrina");
-    const listaVetrineDiv = document.getElementById("listaVetrine");
+let vetrine = JSON.parse(localStorage.getItem("vetrine")) || [];
 
-    // Carica le vetrine all'avvio
-    caricaVetrine();
+function addVetrina(){
+ const nome = document.getElementById("nome").value;
+ const desc = document.getElementById("desc").value;
+ const files = document.getElementById("files").files;
 
-    formVetrina.addEventListener("submit", (event) => {
-        event.preventDefault();
-        const id = document.getElementById("id").value;
-        const nome = document.getElementById("nome").value;
-        const descrizione = document.getElementById("descrizione").value;
-        const immagine = document.getElementById("immagine").value;
+ if(!nome){ alert("Nome vetrina obbligatorio"); return; }
 
-        const vetrina = { nome, descrizione, immagine };
+ const arr=[];
+ let pending = files.length;
 
-        if (id) {
-            aggiornaVetrina(id, vetrina).then(() => {
-                resettaForm();
-                caricaVetrine();
-            });
-        } else {
-            salvaVetrina(vetrina).then(() => {
-                resettaForm();
-                caricaVetrine();
-            });
-        }
-    });
+ if(pending===0){
+  save(nome,desc,arr);
+  return;
+ }
 
-    function caricaVetrine() {
-        listaVetrine().then(vetrine => {
-            listaVetrineDiv.innerHTML = "";
-            vetrine.forEach(vetrina => {
-                const div = document.createElement("div");
-                div.classList.add("card");
-                div.innerHTML = `
-                    <h3>${vetrina.nome}</h3>
-                    <p>${vetrina.descrizione}</p>
-                    <img src="${vetrina.immagine}" alt="${vetrina.nome}" style="width: 100%;">
-                    <button onclick="modificaVetrina(${vetrina.id})">Modifica</button>
-                    <button onclick="rimuoviVetrina(${vetrina.id})">Rimuovi</button>
-                `;
-                listaVetrineDiv.appendChild(div);
-            });
-        });
-    }
+ [...files].forEach(f=>{
+  const fr=new FileReader();
+  fr.onload=e=>{
+   arr.push({
+    name:f.name,
+    type:f.type,
+    data:e.target.result,
+    date:Date.now()
+   });
+   pending--;
+   if(pending===0) save(nome,desc,arr);
+  };
+  fr.readAsDataURL(f);
+ });
+}
 
-    window.modificaVetrina = function(id) {
-        const vetrina = listaVetrine().then(vetrine => {
-            return vetrine.find(v => v.id === id);
-        });
-
-        vetrina.then(v => {
-            document.getElementById("id").value = v.id;
-            document.getElementById("nome").value = v.nome;
-            document.getElementById("descrizione").value = v.descrizione;
-            document.getElementById("immagine").value = v.immagine;
-        });
-    }
-
-    window.rimuoviVetrina = function(id) {
-        rimuoviVetrina(id).then(() => {
-            caricaVetrine();
-        });
-    }
-
-    function resettaForm() {
-        formVetrina.reset();
-        document.getElementById("id").value = "";
-    }
-});
-```
+function save(nome,desc,files){
+ vetrine.push({nome,desc,files});
+ localStorage.setItem("vetrine",JSON.stringify(vetrine));
+ alert("Vetrina salvata");
+ location.reload();
+}
