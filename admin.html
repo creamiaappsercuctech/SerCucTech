@@ -13,7 +13,7 @@
 <div class="card" id="login">
   <h3>Accesso Admin</h3>
   <input id="pin" type="password" placeholder="PIN">
-  <button onclick="login()">Entra</button>
+  <button onclick="doLogin()">Entra</button>
   <div class="small">PIN default: <b>1234</b></div>
 </div>
 
@@ -54,7 +54,7 @@
   <input type="number" id="voiceRate" value="1" step="0.1" placeholder="Velocità voce (1 = normale)">
   <button onclick="testVoice()">▶ Test voce</button>
 
-  <div class="small">File (immagini / video) – puoi selezionarne più di uno</div>
+  <div class="small">File (immagini / video) – seleziona più file</div>
   <input type="file" id="files" multiple accept="image/*,video/*">
   <button onclick="upload()">Carica file</button>
   <div id="fileList"></div>
@@ -65,14 +65,14 @@
 <div class="card">
   <h3>Vetrine create</h3>
   <div id="list"></div>
-  <div class="small">
-    Per renderla pubblica per TUTTI: esporta JSON e caricalo nella repo in <b>/data/ID.json</b>.
-  </div>
 </div>
 
 <div class="card">
-  <h3>Esporta vetrina in JSON</h3>
-  <button onclick="exportJson()">⬇ Esporta JSON della vetrina (ID scritto sopra)</button>
+  <h3>Pubblicazione (per WhatsApp + link pubblico)</h3>
+  <button onclick="exportJson()">⬇ Esporta JSON</button>
+  <button onclick="openGitHubData()">📂 Apri cartella /data su GitHub</button>
+  <button onclick="openGitHubNewFile()">➕ Crea cartella /data (se manca)</button>
+  <div class="small" id="publishHelp"></div>
 </div>
 
 </div>
@@ -82,9 +82,12 @@
 <script>
 initPin();
 
-let uploaded = [];
+const publishHelp = document.getElementById("publishHelp");
 
-function login() {
+let uploaded = [];
+let repoBase = location.origin + location.pathname.replace("admin.html",""); // base Pages
+
+function doLogin() {
   if (pin.value === getPin()) {
     login.style.display = "none";
     panel.classList.remove("hidden");
@@ -142,20 +145,61 @@ function save() {
   renderList();
 }
 
-function renderList(){
+async function checkPublished(id){
+  // Controllo automatico: esiste /data/ID.json?
+  try{
+    const r = await fetch(`data/${encodeURIComponent(id)}.json`, {cache:"no-store"});
+    return r.ok;
+  }catch(e){
+    return false;
+  }
+}
+
+function shareLink(id){
+  return `${repoBase}vetrina.html?id=${encodeURIComponent(id)}`;
+}
+
+async function renderList(){
   const all = loadAll();
   const ids = Object.keys(all);
-  list.innerHTML = ids.length ? ids.map(id=>{
-    const publicLink = `${location.origin}${location.pathname.replace('admin.html','')}vetrina.html?id=${encodeURIComponent(id)}`;
-    return `
-      <div class="card">
-        <b>${id}</b><br>
-        <a href="vetrina.html?id=${encodeURIComponent(id)}" target="_blank">Apri (locale)</a><br>
-        <span class="small">Link da condividere:</span><br>
-        <a href="${publicLink}" target="_blank">${publicLink}</a>
-      </div>
+
+  list.innerHTML = ids.length ? "" : `<div class="small">Nessuna vetrina creata.</div>`;
+
+  for(const id of ids){
+    const publicLink = shareLink(id);
+    const published = await checkPublished(id);
+
+    const badge = published
+      ? `<span class="pill">PUBBLICATA ✅</span>`
+      : `<span class="pill" style="background:#3b1d1d">NON PUBBLICATA ❌</span>`;
+
+    const div = document.createElement("div");
+    div.className="card";
+    div.innerHTML = `
+      <b>${id}</b> ${badge}<br>
+      <div class="small">${all[id].desc||""}</div>
+      <div class="small">Link da condividere:</div>
+      <a href="${publicLink}" target="_blank">${publicLink}</a>
+      <button onclick="copyLink('${publicLink.replaceAll("'","%27")}')">Copia link</button>
+      ${published ? "" : `<div class="small" style="margin-top:8px">⚠ Per WhatsApp: esporta JSON e carica in <b>/data/${id}.json</b></div>`}
     `;
-  }).join("") : `<div class="small">Nessuna vetrina creata.</div>`;
+    list.appendChild(div);
+  }
+
+  publishHelp.innerHTML = `
+    <div>✅ Per renderla visibile a TUTTI:</div>
+    <div class="small">1) Esporta JSON → ottieni <b>ID.json</b></div>
+    <div class="small">2) Caricalo su GitHub in <b>/data/ID.json</b></div>
+    <div class="small">3) (Per anteprima WhatsApp) carica anche una cover: <b>/data/ID-cover.jpg</b></div>
+  `;
+}
+
+function copyLink(u){
+  const link = decodeURIComponent(u);
+  navigator.clipboard?.writeText(link).then(
+    ()=>alert("Link copiato ✅"),
+    ()=>prompt("Copia manualmente:", link)
+  );
 }
 
 function exportJson(){
@@ -164,12 +208,23 @@ function exportJson(){
   const all = loadAll();
   const v = all[id];
   if(!v) return alert("Vetrina non trovata in locale");
+
   const blob = new Blob([JSON.stringify(v,null,2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = `${id}.json`;
   a.click();
-  alert(`Ora carica ${id}.json nella cartella /data/ della repo e rinominalo in data/${id}.json`);
+
+  alert(`Ora carica il file in GitHub in: data/${id}.json`);
+}
+
+function openGitHubData(){
+  alert("Apri la repo su GitHub → entra nella cartella 'data' e carica lì il file JSON.");
+  // Non possiamo sapere l’URL esatto GitHub repo dal pages, quindi ti guido con istruzione.
+}
+
+function openGitHubNewFile(){
+  alert("Se non esiste la cartella 'data': su GitHub crea una cartella chiamata esattamente 'data' (minuscolo).");
 }
 
 function testVoice(){
