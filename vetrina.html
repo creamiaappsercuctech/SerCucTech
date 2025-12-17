@@ -12,30 +12,97 @@
 
 <script src="app.js"></script>
 <script>
-const id = new URLSearchParams(location.search).get("id");
-const all = loadAll();
-const v = all[id];
-
-if(!v){
-  app.innerHTML = "<p>Vetrina non trovata</p>";
-}else{
-  app.innerHTML = `
-  <div style="
-    width:100vw;height:100vh;
-    background:${v.bgColor};
-    padding:20px;
-    overflow:auto">
-    <h1 style="color:${v.titleColor};font-size:${v.titleSize}px">
-      ${v.title}
-    </h1>
-    <p>${v.desc}</p>
-    ${v.files.map(f =>
-      f.type.startsWith("video")
-      ? `<video src="${f.data}" controls></video>`
-      : `<img src="${f.data}" style="width:100px">`
-    ).join("")}
-  </div>`;
+function showFull(html){
+  const w=document.createElement("div");
+  w.className="full";
+  w.innerHTML = html + `<div class="hint">Tocca per chiudere</div>`;
+  w.onclick=()=>w.remove();
+  document.body.appendChild(w);
 }
+
+(async function(){
+  const id = new URLSearchParams(location.search).get("id");
+  if(!id){ app.innerHTML = "<div class='wrap card'>ID mancante</div>"; return; }
+
+  // 1) prova JSON pubblico
+  let v = null;
+  try{
+    const r = await fetch(`data/${encodeURIComponent(id)}.json`, {cache:"no-store"});
+    if(r.ok) v = await r.json();
+  }catch(e){}
+
+  // 2) fallback localStorage
+  if(!v){
+    const all = loadAll();
+    v = all[id] || null;
+  }
+
+  if(!v){
+    app.innerHTML = `<div class='wrap card'>Vetrina <b>${id}</b> non trovata.</div>`;
+    return;
+  }
+
+  // Layout fullscreen
+  document.body.style.overflow="hidden";
+  app.innerHTML = `
+    <div style="
+      width:100vw;height:100vh;overflow:auto;
+      background:${v.bgColor||"#0b1020"};
+      font-family:${v.fontFamily||"system-ui"};
+      font-size:${v.baseFontSize||16}px;
+      padding:16px;
+    ">
+      <div style="text-align:center;">
+        <div style="font-weight:900;font-size:${v.titleSize||32}px;color:${v.titleColor||"#fff"}">
+          ${v.title||id}
+        </div>
+        <div class="small">${v.desc||""}</div>
+      </div>
+
+      <div class="card" style="background:#0b1224">
+        <button id="btnSpeak">▶ Ascolta presentazione</button>
+        <div class="small">La riproduzione automatica può dipendere dalle regole del browser.</div>
+      </div>
+
+      <div class="grid" id="grid"></div>
+    </div>
+  `;
+
+  // Media grid
+  const grid = document.getElementById("grid");
+  (v.files||[]).forEach(f=>{
+    if((f.type||"").startsWith("video")){
+      const el=document.createElement("video");
+      el.className="thumb";
+      el.src=f.data;
+      el.muted=true;
+      el.controls=true;
+      el.onclick=()=>showFull(`<video src="${el.src}" controls autoplay></video>`);
+      grid.appendChild(el);
+    }else if((f.type||"").startsWith("image")){
+      const img=document.createElement("img");
+      img.className="thumb";
+      img.src=f.data;
+      img.onclick=()=>showFull(`<img src="${img.src}">`);
+      grid.appendChild(img);
+    }
+  });
+
+  // Voce (auto + fallback)
+  function playVoice(){
+    const txt = v.presentationText || "";
+    const voice = v.voice || {};
+    return speakText(txt, voice);
+  }
+
+  document.getElementById("btnSpeak").onclick = () => {
+    const ok = playVoice();
+    if(!ok) alert("Sintesi vocale non disponibile su questo browser.");
+  };
+
+  // Tentativo autoplay (può essere bloccato dal browser finché non tocchi)
+  playVoice();
+})();
 </script>
 
 </body>
