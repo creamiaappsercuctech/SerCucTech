@@ -5,47 +5,12 @@
 <title>SerCucTech – Vetrina</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body {
-  margin:0;
-  font-family: system-ui;
-  background:#f1f5f9;
-}
-.vetrina {
-  min-height:100vh;
-  padding:20px;
-  background-size:cover;
-  background-position:center;
-}
-.title {
-  font-weight:bold;
-}
-.media-grid {
-  display:grid;
-  grid-template-columns:repeat(auto-fill,100px);
-  gap:10px;
-}
-.media-grid img,
-.media-grid video {
-  width:100px;
-  height:100px;
-  object-fit:cover;
-  cursor:pointer;
-  border-radius:8px;
-}
-.fullscreen {
-  position:fixed;
-  inset:0;
-  background:black;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:999;
-}
-.fullscreen img,
-.fullscreen video {
-  max-width:90%;
-  max-height:90%;
-}
+body{margin:0;font-family:system-ui}
+.vetrina{min-height:100vh;padding:20px;background-size:cover}
+.media{display:grid;grid-template-columns:repeat(auto-fill,100px);gap:10px}
+.media img,.media video{width:100px;height:100px;object-fit:cover;cursor:pointer;border-radius:8px}
+.full{position:fixed;inset:0;background:black;display:flex;align-items:center;justify-content:center}
+.full img,.full video{max-width:90%;max-height:90%}
 </style>
 </head>
 <body>
@@ -53,46 +18,41 @@ body {
 <div id="app"></div>
 
 <script>
-const v = JSON.parse(localStorage.getItem('sercuctech_vetrina') || '{}');
-const app = document.getElementById('app');
+const app = document.getElementById("app");
+const v = JSON.parse(localStorage.getItem("sercuctech_vetrina"));
 
-if(!v.title){
-  app.innerHTML = "<h2>Vetrina non disponibile</h2>";
+if(!v){
+  app.innerHTML="<h2>Vetrina non disponibile</h2>";
 }else{
-  const div = document.createElement('div');
-  div.className = 'vetrina';
-  div.style.backgroundColor = v.bgColor;
-  div.style.backgroundImage = v.bgImage ? `url(${v.bgImage})` : 'none';
+  const d=document.createElement("div");
+  d.className="vetrina";
+  d.style.backgroundColor=v.bgColor;
+  d.style.backgroundImage=v.bgImage?`url(${v.bgImage})`:"none";
 
-  div.innerHTML = `
-    <h1 class="title" style="
-      font-size:${v.titleSize}px;
-      color:${v.titleColor};
-    ">${v.title}</h1>
-
-    <p>${v.description || ''}</p>
-
-    <div class="media-grid">
-      ${v.files.map(f => `
-        ${f.type.startsWith('video')
+  d.innerHTML=`
+    <h1 style="font-size:${v.titleSize}px;color:${v.titleColor}">${v.title}</h1>
+    <p>${v.description||""}</p>
+    <div class="media">
+      ${v.files.map(f=>`
+        ${f.type.startsWith("video")
           ? `<video src="${f.data}" muted></video>`
-          : `<img src="${f.data}">`
-        }
-      `).join('')}
+          : `<img src="${f.data}">`}
+      `).join("")}
     </div>
   `;
-  app.appendChild(div);
+  app.appendChild(d);
 
-  document.querySelectorAll('.media-grid img, video').forEach(el=>{
+  document.querySelectorAll(".media img,.media video").forEach(el=>{
     el.onclick=()=>{
-      const fs=document.createElement('div');
-      fs.className='fullscreen';
-      fs.innerHTML=el.outerHTML;
-      fs.onclick=()=>fs.remove();
-      document.body.appendChild(fs);
-    }
+      const f=document.createElement("div");
+      f.className="full";
+      f.innerHTML=el.outerHTML;
+      f.onclick=()=>f.remove();
+      document.body.appendChild(f);
+    };
   });
 }
 </script>
+
 </body>
 </html>
