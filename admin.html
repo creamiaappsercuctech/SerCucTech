@@ -6,6 +6,8 @@
     <title>Gestione Vetrine</title>
     <link rel="stylesheet" href="stile.css">
 </head>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="script.js"></script>
 <body>
 
     <h1>Gestione Vetrine</h1>
@@ -23,7 +25,9 @@
 
     <script src="db.js"></script>
     <script src="script.js"></script>
-
+<h3>Upload file (immagini, video, pdf, zip, audio)</h3>
+<input type="file" id="files" multiple accept="*/*">
+<button onclick="addVetrina()">Salva nella vetrina</button>
 </body>
 </html>
 ```
