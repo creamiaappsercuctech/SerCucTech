@@ -1,37 +1,48 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div id="out"></div>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0b1020;
+  font-family: system-ui, sans-serif;
+}
 
-<script>
-const id=new URLSearchParams(location.search).get("id");
-const v=JSON.parse(localStorage.vetrine||"[]")[id];
-if(!v){out.textContent="404";throw 0;}
+#app {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
-out.innerHTML=`<h1>${v.nome}</h1><p>${v.desc}</p>`;
-v.files.forEach(f=>{
- let e;
- if(f.type.startsWith("image")){
-  e=document.createElement("img");
-  e.src=f.data;
- }
- else if(f.type.startsWith("video")){
-  e=document.createElement("video");
-  e.src=f.data;
-  e.controls=true;
- }
- else{
-  e=document.createElement("a");
-  e.href=f.data;
-  e.download=f.name;
-  e.textContent=f.name;
- }
- out.appendChild(e);
-});
-</script>
-</body>
-</html>
+header {
+  padding: 12px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.vetrina {
+  margin-bottom: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 8px;
+}
+
+.grid img, .grid video {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+</style>
