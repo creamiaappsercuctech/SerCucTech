@@ -20,7 +20,13 @@
 <div id="panel" class="hidden">
 
 <div class="card">
-  <h3>Nuova / Modifica Vetrina</h3>
+  <h3>Modifica completa vetrina</h3>
+
+  <div class="small">Seleziona una vetrina esistente per modificarla:</div>
+  <select id="pickVetrina"></select>
+  <button onclick="loadSelected()">Carica in modifica</button>
+
+  <hr>
 
   <input id="vid" placeholder="ID vetrina (es: negozio1)">
   <input id="title" placeholder="Titolo">
@@ -34,17 +40,22 @@
     <option value="Georgia, serif">Georgia</option>
     <option value="'Courier New', monospace">Courier</option>
   </select>
-
   <input type="number" id="baseFontSize" value="16" placeholder="Dimensione testo base (px)">
   <input type="number" id="titleSize" value="32" placeholder="Dimensione titolo (px)">
-
   <label>Colore titolo</label>
   <input type="color" id="titleColor" value="#ffffff">
   <label>Colore sfondo</label>
   <input type="color" id="bgColor" value="#0b1020">
 
-  <div class="small">Presentazione (testo e voce)</div>
-  <textarea id="presentationText" placeholder="Scrivi qui la presentazione da leggere a voce..."></textarea>
+  <div class="small">Sfondo immagine (opzionale)</div>
+  <input type="file" id="bgImage" accept="image/*">
+  <div class="small" id="bgInfo"></div>
+  <button class="danger" onclick="removeBg()">Rimuovi sfondo immagine</button>
+
+  <hr>
+
+  <div class="small">Presentazione (testo + voce)</div>
+  <textarea id="presentationText" placeholder="Testo che verrà letto quando l’utente apre la vetrina..."></textarea>
   <select id="voiceLang">
     <option value="it-IT">Italiano (it-IT)</option>
     <option value="uk-UA">Українська (uk-UA)</option>
@@ -54,19 +65,28 @@
   <input type="number" id="voiceRate" value="1" step="0.1" placeholder="Velocità voce (1 = normale)">
   <button onclick="testVoice()">▶ Test voce</button>
 
-  <div class="small">File (immagini / video) – seleziona più file</div>
-  <input type="file" id="files" multiple accept="image/*,video/*">
+  <hr>
+
+  <h4>File (upload multiplo)</h4>
+  <input type="file" id="files" multiple accept="image/*,video/*,application/pdf">
+  <label style="display:flex;gap:10px;align-items:center">
+    <input type="checkbox" id="doOcr" style="width:auto">
+    <span class="small">OCR (solo immagini: JPG/PNG/WebP). PDF non supportato in OCR in questa versione.</span>
+  </label>
   <button onclick="upload()">Carica file</button>
+  <div class="small" id="ocrStatus"></div>
+
+  <h4>File già presenti</h4>
   <div id="fileList"></div>
 
   <div class="row">
-    <button onclick="save()">Salva / Aggiorna vetrina</button>
+    <button onclick="save()">Salva / Aggiorna</button>
     <button class="danger" onclick="deleteVetrina()">🗑 Cancella vetrina</button>
   </div>
 
-  <div class="card" style="background:#0b1224">
-    <button onclick="exportVetrinaJson()">⬇ Esporta JSON vetrina (pubblica)</button>
-    <div class="small">Carica su GitHub in: <b>data/ID.json</b></div>
+  <div class="card" style="background:#0b1224;margin-top:10px">
+    <button onclick="exportVetrinaJson()">⬇ Esporta JSON (pubblico)</button>
+    <div class="small">Carica su GitHub in: <b>data/ID.json</b> (e se vuoi anteprima WhatsApp: <b>data/ID-cover.jpg</b>)</div>
   </div>
 </div>
 
@@ -75,72 +95,161 @@
   <div id="list"></div>
 </div>
 
-<div class="card">
-  <h3>Gruppi (aggancia più vetrine)</h3>
-  <input id="groupId" placeholder="ID gruppo (es: natale2025)">
-  <input id="groupTitle" placeholder="Titolo gruppo (es: Promo Natale)">
-  <div class="small">Seleziona le vetrine da includere:</div>
-  <div id="groupPick"></div>
-
-  <button onclick="saveGroup()">Salva gruppo (locale)</button>
-
-  <div class="card" style="background:#0b1224">
-    <button onclick="exportGroupJson()">⬇ Esporta JSON gruppo (pubblico)</button>
-    <div class="small">Carica su GitHub in: <b>data/groups/GID.json</b></div>
-  </div>
-
-  <hr>
-  <h4 class="small">Gruppi salvati</h4>
-  <div id="groupList"></div>
-</div>
-
 </div>
 </div>
 
+<!-- OCR: Tesseract.js (client-side) -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="app.js"></script>
 <script>
 initPin();
 
-const GROUP_KEY = "sercuctech_groups";
-let uploaded = [];
+let uploaded = [];          // files della vetrina in modifica (array)
+let currentBgData = null;   // base64 dello sfondo immagine
 
 function doLogin(){
   if(pin.value === getPin()){
     login.style.display="none";
     panel.classList.remove("hidden");
-    renderAll();
+    refreshAll();
   } else alert("PIN errato");
 }
 
+function refreshAll(){
+  renderPicker();
+  renderList();
+  renderFiles();
+  updateBgInfo();
+}
+
+function renderPicker(){
+  const all = loadAll();
+  const ids = Object.keys(all);
+  pickVetrina.innerHTML = `<option value="">-- Seleziona --</option>` + ids.map(id=>`<option value="${id}">${id}</option>`).join("");
+}
+
+function loadSelected(){
+  const id = pickVetrina.value;
+  if(!id) return alert("Seleziona una vetrina");
+  const all = loadAll();
+  const v = all[id];
+  if(!v) return alert("Non trovata");
+
+  vid.value = id;
+  title.value = v.title || "";
+  desc.value = v.desc || "";
+  fontFamily.value = v.fontFamily || "system-ui";
+  baseFontSize.value = v.baseFontSize ?? 16;
+  titleSize.value = v.titleSize ?? 32;
+  titleColor.value = v.titleColor || "#ffffff";
+  bgColor.value = v.bgColor || "#0b1020";
+
+  presentationText.value = v.presentationText || "";
+  voiceLang.value = (v.voice && v.voice.lang) ? v.voice.lang : "it-IT";
+  voiceRate.value = (v.voice && v.voice.rate) ? v.voice.rate : 1;
+
+  uploaded = Array.isArray(v.files) ? v.files.slice() : [];
+  currentBgData = v.bgImage || null; // base64
+  bgImage.value = ""; // reset input (browser non permette prefill)
+  refreshAll();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
 async function upload(){
-  for(const f of files.files){
+  const fl = [...files.files];
+  if(!fl.length) return alert("Seleziona almeno un file");
+
+  ocrStatus.textContent = "";
+
+  // OCR opzionale (solo immagini)
+  const wantOcr = doOcr.checked;
+
+  for(const f of fl){
     const data = await toBase64(f);
-    uploaded.push({name:f.name,type:f.type,data});
+    const item = { name:f.name, type:f.type, data };
+
+    if(wantOcr && (f.type.startsWith("image/"))){
+      // OCR su immagine
+      try{
+        ocrStatus.textContent = `OCR in corso: ${f.name} ...`;
+        const { data: out } = await Tesseract.recognize(data, "eng"); // OCR engine (base). Se vuoi italiano/ukr/ja, si può estendere.
+        item.ocrText = (out && out.text) ? out.text.trim() : "";
+      }catch(e){
+        item.ocrText = "";
+      }finally{
+        ocrStatus.textContent = "";
+      }
+    }
+    uploaded.push(item);
   }
   renderFiles();
 }
+
 function renderFiles(){
-  fileList.innerHTML = uploaded.map((f,i)=>`
+  fileList.innerHTML = uploaded.length ? uploaded.map((f,i)=>`
     <div class="card" style="background:#0b1224">
-      <b>${f.name}</b>
-      <div class="small">${f.type}</div>
-      <button class="danger" onclick="delFile(${i})">Elimina file</button>
+      <b>${escapeHtml(f.name)}</b>
+      <div class="small">${escapeHtml(f.type || "")}</div>
+
+      ${f.ocrText ? `<details><summary class="small">OCR testo (solo admin)</summary><pre class="small" style="white-space:pre-wrap">${escapeHtml(f.ocrText)}</pre></details>` : ""}
+
+      <div class="row">
+        <button onclick="renameFile(${i})">Rinomina</button>
+        <button class="danger" onclick="delFile(${i})">Elimina</button>
+      </div>
     </div>
-  `).join("");
+  `).join("") : `<div class="small">Nessun file caricato.</div>`;
 }
-function delFile(i){ uploaded.splice(i,1); renderFiles(); }
+
+function renameFile(i){
+  const n = prompt("Nuovo nome file:", uploaded[i].name);
+  if(n && n.trim()){
+    uploaded[i].name = n.trim();
+    renderFiles();
+  }
+}
+
+function delFile(i){
+  if(!confirm("Eliminare questo file?")) return;
+  uploaded.splice(i,1);
+  renderFiles();
+}
+
+bgImage.addEventListener("change", async ()=>{
+  if(bgImage.files[0]){
+    currentBgData = await toBase64(bgImage.files[0]); // base64 persistente
+    updateBgInfo();
+  }
+});
+
+function removeBg(){
+  currentBgData = null;
+  bgImage.value = "";
+  updateBgInfo();
+}
+
+function updateBgInfo(){
+  bgInfo.textContent = currentBgData ? "✅ Sfondo immagine impostato" : "Nessuna immagine di sfondo";
+}
 
 function buildVetrinaObject(){
+  const id=(vid.value||"").trim();
   return {
-    title: title.value || vid.value,
+    title: title.value || id,
     desc: desc.value || "",
     fontFamily: fontFamily.value || "system-ui",
     baseFontSize: Number(baseFontSize.value || 16),
     titleSize: Number(titleSize.value || 32),
     titleColor: titleColor.value || "#ffffff",
     bgColor: bgColor.value || "#0b1020",
+    bgImage: currentBgData || null, // ✅ immagine sfondo persistente
     presentationText: presentationText.value || "",
-    voice: { lang: voiceLang.value || "it-IT", rate: Number(voiceRate.value || 1), pitch: 1, volume: 1 },
+    voice: {
+      lang: voiceLang.value || "it-IT",
+      rate: Number(voiceRate.value || 1),
+      pitch: 1,
+      volume: 1
+    },
     files: uploaded
   };
 }
@@ -152,7 +261,7 @@ function save(){
   all[id] = buildVetrinaObject();
   saveAll(all);
   alert("Salvato ✅");
-  renderAll();
+  refreshAll();
 }
 
 function deleteVetrina(){
@@ -163,18 +272,23 @@ function deleteVetrina(){
   if(!confirm(`Cancellare vetrina "${id}"?`)) return;
   delete all[id];
   saveAll(all);
-  uploaded=[];
-  renderFiles();
+
+  // reset form
+  pickVetrina.value="";
+  vid.value=""; title.value=""; desc.value="";
+  uploaded=[]; currentBgData=null; bgImage.value="";
+  refreshAll();
+
   alert("Cancellata ✅");
-  renderAll();
 }
 
 function exportVetrinaJson(){
   const id=(vid.value||"").trim();
-  if(!id) return alert("Scrivi l’ID della vetrina");
+  if(!id) return alert("Scrivi l’ID");
   const all=loadAll();
   const v=all[id];
-  if(!v) return alert("Vetrina non trovata in locale");
+  if(!v) return alert("Non trovata in locale");
+
   const blob=new Blob([JSON.stringify(v,null,2)],{type:"application/json"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
@@ -188,13 +302,6 @@ function testVoice(){
   if(!ok) alert("Sintesi vocale non disponibile su questo browser.");
 }
 
-function copyText(text){
-  navigator.clipboard?.writeText(text).then(
-    ()=>alert("Copiato ✅"),
-    ()=>prompt("Copia manualmente:", text)
-  );
-}
-
 function renderList(){
   const all=loadAll();
   const base = location.origin + location.pathname.replace("admin.html","");
@@ -204,96 +311,17 @@ function renderList(){
     return `
       <div class="card">
         <b>${id}</b>
-        <div class="small">${all[id].desc||""}</div>
+        <div class="small">${escapeHtml(all[id].desc||"")}</div>
         <a href="${link}" target="_blank">${link}</a>
-        <button onclick="copyText('${link.replaceAll("'","%27")}')">Copia link</button>
       </div>
     `;
   }).join("") : `<div class="small">Nessuna vetrina.</div>`;
 }
 
-// Gruppi
-function loadGroups(){ return JSON.parse(localStorage.getItem(GROUP_KEY)||"{}"); }
-function saveGroups(g){ localStorage.setItem(GROUP_KEY, JSON.stringify(g)); }
-
-function renderGroupPicker(){
-  const all=loadAll();
-  const ids=Object.keys(all);
-  groupPick.innerHTML = ids.length ? ids.map(id=>`
-    <label class="card" style="background:#0b1224;display:flex;gap:10px;align-items:center">
-      <input type="checkbox" data-id="${id}" style="width:auto">
-      <div>
-        <b>${id}</b>
-        <div class="small">${all[id].title||""}</div>
-      </div>
-    </label>
-  `).join("") : `<div class="small">Crea prima almeno una vetrina.</div>`;
-}
-
-function saveGroup(){
-  const gid=(groupId.value||"").trim();
-  if(!gid) return alert("ID gruppo obbligatorio");
-  const title=(groupTitle.value||gid).trim();
-  const selected=[...groupPick.querySelectorAll('input[type="checkbox"]:checked')]
-    .map(x=>x.getAttribute("data-id"));
-  if(!selected.length) return alert("Seleziona almeno 1 vetrina");
-
-  const groups=loadGroups();
-  groups[gid]={ title, ids:selected, updatedAt: Date.now() };
-  saveGroups(groups);
-
-  alert(`Gruppo salvato ✅\nLink: bundle.html?g=${gid}`);
-  renderGroups();
-}
-
-function exportGroupJson(){
-  const gid=(groupId.value||"").trim();
-  if(!gid) return alert("Scrivi l’ID gruppo (GID)");
-  const groups=loadGroups();
-  const g=groups[gid];
-  if(!g) return alert("Gruppo non trovato in locale. Prima salva il gruppo.");
-
-  // JSON pubblico: titolo + ids
-  const publicGroup = { title: g.title || gid, ids: g.ids || [] };
-  const blob=new Blob([JSON.stringify(publicGroup,null,2)],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=`${gid}.json`;
-  a.click();
-  alert(`Carica su GitHub in: data/groups/${gid}.json`);
-}
-
-function renderGroups(){
-  const groups=loadGroups();
-  const base = location.origin + location.pathname.replace("admin.html","");
-  const keys=Object.keys(groups);
-  groupList.innerHTML = keys.length ? keys.map(gid=>{
-    const link = `${base}bundle.html?g=${encodeURIComponent(gid)}`;
-    return `
-      <div class="card">
-        <b>${gid}</b> <span class="pill">${groups[gid].ids.length} vetrine</span>
-        <div class="small">${groups[gid].title||""}</div>
-        <a href="${link}" target="_blank">${link}</a>
-        <div class="row">
-          <button onclick="copyText('${link.replaceAll("'","%27")}')">Copia link</button>
-          <button class="danger" onclick="deleteGroup('${gid.replaceAll("'","\\'")}')">🗑 Elimina</button>
-        </div>
-      </div>
-    `;
-  }).join("") : `<div class="small">Nessun gruppo creato.</div>`;
-}
-function deleteGroup(gid){
-  if(!confirm(`Eliminare gruppo "${gid}"?`)) return;
-  const groups=loadGroups();
-  delete groups[gid];
-  saveGroups(groups);
-  renderGroups();
-}
-
-function renderAll(){
-  renderList();
-  renderGroupPicker();
-  renderGroups();
+function escapeHtml(s){
+  return String(s||"")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;")
+    .replaceAll(">","&gt;").replaceAll('"',"&quot;");
 }
 </script>
 
