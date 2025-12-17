@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SerCucTech – Guida Pubblicazione Vetrine</title>
+<meta property="og:title" content="SerCucTech – Pubblicare una vetrina">
+<meta property="og:description" content="Guida rapida per rendere una vetrina visibile a tutti e con anteprima WhatsApp">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <div class="card">
+    <h2>Guida Pubblicazione Vetrine (SerCucTech)</h2>
+    <div class="small">
+      Questa guida serve per far funzionare i link condivisi (WhatsApp, Telegram, ecc.).
+      <br>Perché? Perché i dati salvati nell’admin sono locali finché non li pubblichi in <b>/data/</b>.
+    </div>
+    <div class="small" style="margin-top:10px">
+      <a href="index.html">⬅ Torna alle vetrine</a> • <a href="admin.html">🔐 Vai all’admin</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>✅ Obiettivo</h3>
+    <div class="small">
+      Una vetrina è visibile a TUTTI solo se esiste il file:
+      <br><b>/data/ID.json</b>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>1️⃣ Crea la vetrina in Admin</h3>
+    <ol class="small">
+      <li>Apri <b>admin.html</b></li>
+      <li>Inserisci il PIN</li>
+      <li>Scrivi <b>ID vetrina</b> (es: <b>negozio1</b>)</li>
+      <li>Inserisci titolo/descrizione, carica file, salva</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>2️⃣ Esporta il file JSON</h3>
+    <ol class="small">
+      <li>In Admin, scrivi l’ID della vetrina</li>
+      <li>Premi <b>⬇ Esporta JSON</b></li>
+      <li>Otterrai un file sul telefono: <b>ID.json</b> (es: <b>negozio1.json</b>)</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>3️⃣ Carica su GitHub in /data/</h3>
+    <ol class="small">
+      <li>Apri la repo su GitHub</li>
+      <li>Se non esiste, crea la cartella <b>data</b> (minuscolo)</li>
+      <li>Carica il file dentro: <b>data/ID.json</b></li>
+    </ol>
+
+    <div class="card" style="background:#0b1224">
+      <div class="small">
+        ✅ Controllo: apri questo link (sostituisci ID):
+        <br><code>https://creamiaappsercuctech.github.io/SerCucTech/data/ID.json</code>
+        <br>Se vedi testo JSON → è pubblicato.
+        <br>Se vedi 404 → non è pubblicato (quindi WhatsApp non lo vede).
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>4️⃣ Condividi il link della vetrina</h3>
+    <div class="small">
+      Il link pubblico è:
+      <br><code>https://creamiaappsercuctech.github.io/SerCucTech/vetrina.html?id=ID</code>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📸 Anteprima WhatsApp (consigliata)</h3>
+    <div class="small">
+      Per far apparire un’anteprima bella su WhatsApp, carica anche una cover immagine:
+      <br><b>/data/ID-cover.jpg</b>
+      <br>(es: <b>data/negozio1-cover.jpg</b>)
+      <br><br>Consiglio: usa una foto rettangolare (es. 1200×630).
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🧠 Nota importante</h3>
+    <div class="small">
+      Se la vetrina esiste solo nel tuo admin (localStorage), la vedi solo TU.
+      Gli altri (WhatsApp) vedono solo quello che è pubblicato in <b>/data/</b>.
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
