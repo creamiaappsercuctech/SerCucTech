@@ -14,22 +14,47 @@
   <h3>Accesso Admin</h3>
   <input id="pin" type="password" placeholder="PIN">
   <button onclick="login()">Entra</button>
+  <div class="small">PIN default: <b>1234</b></div>
 </div>
 
 <div id="panel" class="hidden">
 
 <div class="card">
   <h3>Nuova / Modifica Vetrina</h3>
+
   <input id="vid" placeholder="ID vetrina (es: negozio1)">
   <input id="title" placeholder="Titolo">
   <textarea id="desc" placeholder="Descrizione"></textarea>
 
-  <input type="number" id="titleSize" value="32">
+  <div class="small">Font e dimensioni</div>
+  <select id="fontFamily">
+    <option value="system-ui">System</option>
+    <option value="Arial, sans-serif">Arial</option>
+    <option value="'Times New Roman', serif">Times</option>
+    <option value="Georgia, serif">Georgia</option>
+    <option value="'Courier New', monospace">Courier</option>
+  </select>
+
+  <input type="number" id="baseFontSize" value="16" placeholder="Dimensione testo base (px)">
+  <input type="number" id="titleSize" value="32" placeholder="Dimensione titolo (px)">
+
   <label>Colore titolo</label>
   <input type="color" id="titleColor" value="#ffffff">
   <label>Colore sfondo</label>
   <input type="color" id="bgColor" value="#0b1020">
 
+  <div class="small">Presentazione (testo e voce)</div>
+  <textarea id="presentationText" placeholder="Scrivi qui la presentazione da leggere a voce..."></textarea>
+  <select id="voiceLang">
+    <option value="it-IT">Italiano (it-IT)</option>
+    <option value="uk-UA">Українська (uk-UA)</option>
+    <option value="en-US">English (en-US)</option>
+    <option value="ja-JP">日本語 (ja-JP)</option>
+  </select>
+  <input type="number" id="voiceRate" value="1" step="0.1" placeholder="Velocità voce (1 = normale)">
+  <button onclick="testVoice()">▶ Test voce</button>
+
+  <div class="small">File (immagini / video) – puoi selezionarne più di uno</div>
   <input type="file" id="files" multiple accept="image/*,video/*">
   <button onclick="upload()">Carica file</button>
   <div id="fileList"></div>
@@ -40,6 +65,14 @@
 <div class="card">
   <h3>Vetrine create</h3>
   <div id="list"></div>
+  <div class="small">
+    Per renderla pubblica per TUTTI: esporta JSON e caricalo nella repo in <b>/data/ID.json</b>.
+  </div>
+</div>
+
+<div class="card">
+  <h3>Esporta vetrina in JSON</h3>
+  <button onclick="exportJson()">⬇ Esporta JSON della vetrina (ID scritto sopra)</button>
 </div>
 
 </div>
@@ -69,36 +102,79 @@ async function upload() {
 
 function renderFiles() {
   fileList.innerHTML = uploaded.map((f,i)=>`
-    <div>${f.name} <button onclick="delFile(${i})">X</button></div>
+    <div class="card" style="background:#0b1224">
+      <b>${f.name}</b>
+      <div class="small">${f.type}</div>
+      <button style="background:#dc2626" onclick="delFile(${i})">Elimina file</button>
+    </div>
   `).join("");
 }
 
 function delFile(i){ uploaded.splice(i,1); renderFiles(); }
 
-function save() {
-  if(!vid.value) return alert("ID obbligatorio");
-  const all = loadAll();
-  all[vid.value] = {
-    title:title.value,
-    desc:desc.value,
-    titleSize:titleSize.value,
-    titleColor:titleColor.value,
-    bgColor:bgColor.value,
-    files:uploaded
+function buildVetrinaObject(){
+  return {
+    title: title.value || vid.value,
+    desc: desc.value || "",
+    fontFamily: fontFamily.value || "system-ui",
+    baseFontSize: Number(baseFontSize.value || 16),
+    titleSize: Number(titleSize.value || 32),
+    titleColor: titleColor.value || "#ffffff",
+    bgColor: bgColor.value || "#0b1020",
+    presentationText: presentationText.value || "",
+    voice: {
+      lang: voiceLang.value || "it-IT",
+      rate: Number(voiceRate.value || 1),
+      pitch: 1,
+      volume: 1
+    },
+    files: uploaded
   };
+}
+
+function save() {
+  const id = (vid.value||"").trim();
+  if(!id) return alert("ID obbligatorio");
+  const all = loadAll();
+  all[id] = buildVetrinaObject();
   saveAll(all);
-  alert("Salvato");
+  alert("Salvato ✅");
   renderList();
 }
 
 function renderList(){
   const all = loadAll();
-  list.innerHTML = Object.keys(all).map(id=>`
-    <div>
-      <b>${id}</b> —
-      <a href="vetrina.html?id=${id}" target="_blank">link</a>
-    </div>
-  `).join("");
+  const ids = Object.keys(all);
+  list.innerHTML = ids.length ? ids.map(id=>{
+    const publicLink = `${location.origin}${location.pathname.replace('admin.html','')}vetrina.html?id=${encodeURIComponent(id)}`;
+    return `
+      <div class="card">
+        <b>${id}</b><br>
+        <a href="vetrina.html?id=${encodeURIComponent(id)}" target="_blank">Apri (locale)</a><br>
+        <span class="small">Link da condividere:</span><br>
+        <a href="${publicLink}" target="_blank">${publicLink}</a>
+      </div>
+    `;
+  }).join("") : `<div class="small">Nessuna vetrina creata.</div>`;
+}
+
+function exportJson(){
+  const id = (vid.value||"").trim();
+  if(!id) return alert("Scrivi prima l’ID della vetrina");
+  const all = loadAll();
+  const v = all[id];
+  if(!v) return alert("Vetrina non trovata in locale");
+  const blob = new Blob([JSON.stringify(v,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${id}.json`;
+  a.click();
+  alert(`Ora carica ${id}.json nella cartella /data/ della repo e rinominalo in data/${id}.json`);
+}
+
+function testVoice(){
+  const ok = speakText(presentationText.value, {lang: voiceLang.value, rate: voiceRate.value});
+  if(!ok) alert("Sintesi vocale non disponibile su questo browser.");
 }
 </script>
 
