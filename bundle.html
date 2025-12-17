@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Gruppo Vetrine</title>
 <link rel="stylesheet" href="style.css">
+<meta property="og:title" content="SerCucTech – Gruppo Vetrine">
+<meta property="og:description" content="Vetrine collegate in un unico link">
+<meta property="og:type" content="website">
 </head>
 <body>
 
@@ -20,6 +23,13 @@ function showFull(html){
   document.body.appendChild(w);
 }
 
+async function loadPublicGroup(gid){
+  try{
+    const r = await fetch(`data/groups/${encodeURIComponent(gid)}.json`, {cache:"no-store"});
+    if(r.ok) return await r.json();
+  }catch(e){}
+  return null;
+}
 async function loadPublicVetrina(id){
   try{
     const r = await fetch(`data/${encodeURIComponent(id)}.json`, {cache:"no-store"});
@@ -35,68 +45,83 @@ async function loadPublicVetrina(id){
     return;
   }
 
-  const groups = JSON.parse(localStorage.getItem("sercuctech_groups") || "{}");
-  const group = groups[gid];
+  // 1) gruppo pubblico
+  let group = await loadPublicGroup(gid);
+  let isPublicGroup = !!group;
+
+  // 2) fallback gruppo locale
+  if(!group){
+    const localGroups = JSON.parse(localStorage.getItem("sercuctech_groups") || "{}");
+    group = localGroups[gid] || null;
+  }
 
   if(!group){
     app.innerHTML = `
       <div class="wrap card">
-        Gruppo <b>${gid}</b> non trovato sul dispositivo.<br><br>
+        Gruppo <b>${gid}</b> non trovato.<br><br>
         <div class="small">
-          Nota: i gruppi sono locali (admin). Per condividerli a tutti, ti preparo dopo una modalità “gruppo pubblico” con JSON.
+          Per renderlo pubblico, carica su GitHub: <b>data/groups/${gid}.json</b>
         </div>
       </div>`;
     return;
   }
 
-  // Carichiamo le vetrine: prima prova pubblico, poi fallback locale
   const localAll = loadAll();
   const blocks = [];
 
-  for(const id of group.ids){
+  for(const id of (group.ids||[])){
     const pub = await loadPublicVetrina(id);
     const v = pub || localAll[id];
-    if(!v) continue;
+    if(!v){
+      blocks.push({id, v:null});
+      continue;
+    }
     blocks.push({id, v, pub: !!pub});
   }
 
-  if(!blocks.length){
-    app.innerHTML = `<div class="wrap card">Nessuna vetrina disponibile nel gruppo.</div>`;
-    return;
-  }
-
-  // Fullscreen layout
   document.body.style.overflow="hidden";
-
   app.innerHTML = `
     <div style="width:100vw;height:100vh;overflow:auto;padding:14px">
       <div class="card">
         <h2>${group.title || gid}</h2>
-        <div class="small">Contiene ${blocks.length} vetrine</div>
+        <div class="small">
+          ${isPublicGroup ? "Gruppo pubblico ✅" : "Gruppo locale ⚠️"} •
+          ${blocks.length} vetrine
+        </div>
+        <div class="small">Link: ${location.href}</div>
       </div>
 
-      ${blocks.map(({id,v,pub})=>`
-        <div class="card" style="background:${v.bgColor||"#111827"}">
-          <div style="font-family:${v.fontFamily||"system-ui"};font-size:${v.baseFontSize||16}px">
-            <div style="font-weight:900;font-size:${v.titleSize||32}px;color:${v.titleColor||"#fff"}">
-              ${v.title || id}
+      ${blocks.map(({id,v,pub})=>{
+        if(!v){
+          return `
+            <div class="card" style="background:#3b1d1d">
+              <b>${id}</b>
+              <div class="small">❌ Vetrina non trovata. Pubblica: <b>data/${id}.json</b></div>
+            </div>`;
+        }
+        return `
+          <div class="card" style="background:${v.bgColor||"#111827"}">
+            <div style="font-family:${v.fontFamily||"system-ui"};font-size:${v.baseFontSize||16}px">
+              <div style="font-weight:900;font-size:${v.titleSize||32}px;color:${v.titleColor||"#fff"}">
+                ${v.title || id}
+              </div>
+              <div class="small">${v.desc||""} ${pub ? "" : "(locale)"}</div>
             </div>
-            <div class="small">${v.desc||""} ${pub ? "" : " (locale)"}</div>
-          </div>
 
-          <div class="grid">
-            ${(v.files||[]).map(f=>{
-              if((f.type||"").startsWith("video")){
-                return `<video class="thumb" src="${f.data}" muted controls onclick="event.stopPropagation();showFull('<video src=&quot;${f.data}&quot; controls autoplay></video>')"></video>`;
-              }
-              if((f.type||"").startsWith("image")){
-                return `<img class="thumb" src="${f.data}" onclick="event.stopPropagation();showFull('<img src=&quot;${f.data}&quot;>')">`;
-              }
-              return "";
-            }).join("")}
+            <div class="grid">
+              ${(v.files||[]).map(f=>{
+                if((f.type||"").startsWith("video")){
+                  return `<video class="thumb" src="${f.data}" muted controls onclick="event.stopPropagation();showFull('<video src=&quot;${f.data}&quot; controls autoplay></video>')"></video>`;
+                }
+                if((f.type||"").startsWith("image")){
+                  return `<img class="thumb" src="${f.data}" onclick="event.stopPropagation();showFull('<img src=&quot;${f.data}&quot;>')">`;
+                }
+                return "";
+              }).join("")}
+            </div>
           </div>
-        </div>
-      `).join("")}
+        `;
+      }).join("")}
     </div>
   `;
 })();
