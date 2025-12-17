@@ -59,7 +59,11 @@
   <button onclick="upload()">Carica file</button>
   <div id="fileList"></div>
 
-  <button onclick="save()">Salva vetrina</button>
+  <div class="row">
+    <button onclick="save()">Salva / Aggiorna vetrina</button>
+    <button class="danger" onclick="deleteVetrina()">🗑 Cancella vetrina</button>
+  </div>
+  <div class="small">⚠ Cancella elimina solo dal tuo dispositivo. Per togliere anche online devi rimuovere <b>/data/ID.json</b> dalla repo.</div>
 </div>
 
 <div class="card">
@@ -68,11 +72,25 @@
 </div>
 
 <div class="card">
+  <h3>Gruppi (aggancia più vetrine)</h3>
+  <input id="groupId" placeholder="ID gruppo (es: natale2025)">
+  <input id="groupTitle" placeholder="Titolo gruppo (es: Promo Natale)">
+  <div class="small">Seleziona le vetrine da includere:</div>
+  <div id="groupPick"></div>
+  <button onclick="saveGroup()">Salva gruppo</button>
+  <div class="small" style="margin-top:8px">Link gruppo: <b>bundle.html?g=IDGRUPPO</b></div>
+  <hr>
+  <h4 class="small">Gruppi salvati</h4>
+  <div id="groupList"></div>
+</div>
+
+<div class="card">
   <h3>Pubblicazione (per WhatsApp + link pubblico)</h3>
-  <button onclick="exportJson()">⬇ Esporta JSON</button>
-  <button onclick="openGitHubData()">📂 Apri cartella /data su GitHub</button>
-  <button onclick="openGitHubNewFile()">➕ Crea cartella /data (se manca)</button>
-  <div class="small" id="publishHelp"></div>
+  <button onclick="exportJson()">⬇ Esporta JSON vetrina (ID sopra)</button>
+  <div class="small">
+    Per renderla visibile a TUTTI: carica <b>ID.json</b> in repo dentro <b>/data/ID.json</b>.<br>
+    (Per anteprima WhatsApp: carica anche <b>/data/ID-cover.jpg</b>)
+  </div>
 </div>
 
 </div>
@@ -82,37 +100,35 @@
 <script>
 initPin();
 
-const publishHelp = document.getElementById("publishHelp");
-
+const STORE_KEY = "sercuctech_vetrine";
+const GROUP_KEY = "sercuctech_groups";
 let uploaded = [];
-let repoBase = location.origin + location.pathname.replace("admin.html",""); // base Pages
 
-function doLogin() {
-  if (pin.value === getPin()) {
-    login.style.display = "none";
+function doLogin(){
+  if(pin.value === getPin()){
+    login.style.display="none";
     panel.classList.remove("hidden");
-    renderList();
-  } else alert("PIN errato");
+    renderAll();
+  }else alert("PIN errato");
 }
 
-async function upload() {
-  for (const f of files.files) {
+async function upload(){
+  for(const f of files.files){
     const data = await toBase64(f);
-    uploaded.push({ name:f.name, type:f.type, data });
+    uploaded.push({name:f.name,type:f.type,data});
   }
   renderFiles();
 }
 
-function renderFiles() {
+function renderFiles(){
   fileList.innerHTML = uploaded.map((f,i)=>`
     <div class="card" style="background:#0b1224">
       <b>${f.name}</b>
       <div class="small">${f.type}</div>
-      <button style="background:#dc2626" onclick="delFile(${i})">Elimina file</button>
+      <button class="danger" onclick="delFile(${i})">Elimina file</button>
     </div>
   `).join("");
 }
-
 function delFile(i){ uploaded.splice(i,1); renderFiles(); }
 
 function buildVetrinaObject(){
@@ -135,101 +151,149 @@ function buildVetrinaObject(){
   };
 }
 
-function save() {
-  const id = (vid.value||"").trim();
+function save(){
+  const id=(vid.value||"").trim();
   if(!id) return alert("ID obbligatorio");
   const all = loadAll();
   all[id] = buildVetrinaObject();
   saveAll(all);
   alert("Salvato ✅");
-  renderList();
+  renderAll();
 }
 
-async function checkPublished(id){
-  // Controllo automatico: esiste /data/ID.json?
-  try{
-    const r = await fetch(`data/${encodeURIComponent(id)}.json`, {cache:"no-store"});
-    return r.ok;
-  }catch(e){
-    return false;
-  }
-}
-
-function shareLink(id){
-  return `${repoBase}vetrina.html?id=${encodeURIComponent(id)}`;
-}
-
-async function renderList(){
+function deleteVetrina(){
+  const id=(vid.value||"").trim();
+  if(!id) return alert("Scrivi l’ID della vetrina da cancellare");
   const all = loadAll();
-  const ids = Object.keys(all);
-
-  list.innerHTML = ids.length ? "" : `<div class="small">Nessuna vetrina creata.</div>`;
-
-  for(const id of ids){
-    const publicLink = shareLink(id);
-    const published = await checkPublished(id);
-
-    const badge = published
-      ? `<span class="pill">PUBBLICATA ✅</span>`
-      : `<span class="pill" style="background:#3b1d1d">NON PUBBLICATA ❌</span>`;
-
-    const div = document.createElement("div");
-    div.className="card";
-    div.innerHTML = `
-      <b>${id}</b> ${badge}<br>
-      <div class="small">${all[id].desc||""}</div>
-      <div class="small">Link da condividere:</div>
-      <a href="${publicLink}" target="_blank">${publicLink}</a>
-      <button onclick="copyLink('${publicLink.replaceAll("'","%27")}')">Copia link</button>
-      ${published ? "" : `<div class="small" style="margin-top:8px">⚠ Per WhatsApp: esporta JSON e carica in <b>/data/${id}.json</b></div>`}
-    `;
-    list.appendChild(div);
-  }
-
-  publishHelp.innerHTML = `
-    <div>✅ Per renderla visibile a TUTTI:</div>
-    <div class="small">1) Esporta JSON → ottieni <b>ID.json</b></div>
-    <div class="small">2) Caricalo su GitHub in <b>/data/ID.json</b></div>
-    <div class="small">3) (Per anteprima WhatsApp) carica anche una cover: <b>/data/ID-cover.jpg</b></div>
-  `;
+  if(!all[id]) return alert("Vetrina non trovata in locale");
+  if(!confirm(`Confermi cancellazione vetrina "${id}"?`)) return;
+  delete all[id];
+  saveAll(all);
+  // pulizia form
+  uploaded = [];
+  renderFiles();
+  alert("Cancellata ✅");
+  renderAll();
 }
 
-function copyLink(u){
+function renderList(){
+  const all=loadAll();
+  const base = location.origin + location.pathname.replace("admin.html","");
+  const ids=Object.keys(all);
+
+  list.innerHTML = ids.length ? ids.map(id=>{
+    const link = `${base}vetrina.html?id=${encodeURIComponent(id)}`;
+    return `
+      <div class="card">
+        <b>${id}</b>
+        <div class="small">${all[id].desc||""}</div>
+        <a href="vetrina.html?id=${encodeURIComponent(id)}" target="_blank">Apri</a><br>
+        <span class="small">Link:</span><br>
+        <a href="${link}" target="_blank">${link}</a>
+        <button onclick="copyText('${link.replaceAll("'","%27")}')">Copia link</button>
+      </div>
+    `;
+  }).join("") : `<div class="small">Nessuna vetrina creata.</div>`;
+}
+
+function copyText(u){
   const link = decodeURIComponent(u);
   navigator.clipboard?.writeText(link).then(
-    ()=>alert("Link copiato ✅"),
+    ()=>alert("Copiato ✅"),
     ()=>prompt("Copia manualmente:", link)
   );
 }
 
-function exportJson(){
-  const id = (vid.value||"").trim();
-  if(!id) return alert("Scrivi prima l’ID della vetrina");
+// --- Gruppi (aggancia più vetrine) ---
+function loadGroups(){
+  return JSON.parse(localStorage.getItem(GROUP_KEY) || "{}");
+}
+function saveGroups(g){
+  localStorage.setItem(GROUP_KEY, JSON.stringify(g));
+}
+function renderGroupPicker(){
   const all = loadAll();
-  const v = all[id];
-  if(!v) return alert("Vetrina non trovata in locale");
+  const ids = Object.keys(all);
+  groupPick.innerHTML = ids.length ? ids.map(id=>`
+    <label class="card" style="background:#0b1224;display:flex;gap:10px;align-items:center">
+      <input type="checkbox" data-id="${id}" style="width:auto">
+      <div>
+        <b>${id}</b>
+        <div class="small">${all[id].title||""}</div>
+      </div>
+    </label>
+  `).join("") : `<div class="small">Crea prima almeno una vetrina.</div>`;
+}
+function saveGroup(){
+  const gid=(groupId.value||"").trim();
+  if(!gid) return alert("ID gruppo obbligatorio");
+  const title=(groupTitle.value||gid).trim();
 
+  const selected=[...groupPick.querySelectorAll('input[type="checkbox"]:checked')]
+    .map(x=>x.getAttribute("data-id"));
+
+  if(!selected.length) return alert("Seleziona almeno 1 vetrina");
+
+  const groups=loadGroups();
+  groups[gid] = { title, ids:selected, updatedAt: Date.now() };
+  saveGroups(groups);
+
+  alert(`Gruppo salvato ✅\nLink: bundle.html?g=${gid}`);
+  renderGroups();
+}
+function renderGroups(){
+  const groups=loadGroups();
+  const base = location.origin + location.pathname.replace("admin.html","");
+  const keys=Object.keys(groups);
+  groupList.innerHTML = keys.length ? keys.map(gid=>{
+    const link = `${base}bundle.html?g=${encodeURIComponent(gid)}`;
+    return `
+      <div class="card">
+        <b>${gid}</b> <span class="pill">${groups[gid].ids.length} vetrine</span>
+        <div class="small">${groups[gid].title||""}</div>
+        <a href="bundle.html?g=${encodeURIComponent(gid)}" target="_blank">Apri gruppo</a><br>
+        <span class="small">Link:</span><br>
+        <a href="${link}" target="_blank">${link}</a>
+        <div class="row">
+          <button onclick="copyText('${link.replaceAll("'","%27")}')">Copia link</button>
+          <button class="danger" onclick="deleteGroup('${gid.replaceAll("'","\\'")}')">🗑 Elimina gruppo</button>
+        </div>
+      </div>
+    `;
+  }).join("") : `<div class="small">Nessun gruppo creato.</div>`;
+}
+function deleteGroup(gid){
+  if(!confirm(`Eliminare gruppo "${gid}"?`)) return;
+  const groups=loadGroups();
+  delete groups[gid];
+  saveGroups(groups);
+  renderGroups();
+}
+
+// --- Export JSON vetrina ---
+function exportJson(){
+  const id=(vid.value||"").trim();
+  if(!id) return alert("Scrivi l’ID della vetrina");
+  const all=loadAll();
+  const v=all[id];
+  if(!v) return alert("Vetrina non trovata in locale");
   const blob = new Blob([JSON.stringify(v,null,2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = `${id}.json`;
   a.click();
-
-  alert(`Ora carica il file in GitHub in: data/${id}.json`);
-}
-
-function openGitHubData(){
-  alert("Apri la repo su GitHub → entra nella cartella 'data' e carica lì il file JSON.");
-  // Non possiamo sapere l’URL esatto GitHub repo dal pages, quindi ti guido con istruzione.
-}
-
-function openGitHubNewFile(){
-  alert("Se non esiste la cartella 'data': su GitHub crea una cartella chiamata esattamente 'data' (minuscolo).");
+  alert(`Carica su GitHub in: data/${id}.json`);
 }
 
 function testVoice(){
   const ok = speakText(presentationText.value, {lang: voiceLang.value, rate: voiceRate.value});
   if(!ok) alert("Sintesi vocale non disponibile su questo browser.");
+}
+
+function renderAll(){
+  renderList();
+  renderGroupPicker();
+  renderGroups();
 }
 </script>
 
