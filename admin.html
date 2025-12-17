@@ -2,85 +2,83 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Admin – SerCucTech</title>
+<title>Admin SerCucTech</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{font-family:system-ui;background:#0f172a;color:#fff;padding:20px}
-.card{background:#020617;padding:16px;border-radius:12px;margin-bottom:14px}
-input,textarea,button{width:100%;margin:6px 0;padding:10px}
-button{background:#2563eb;color:white;border:none;border-radius:8px}
+body{font-family:system-ui;background:#0f172a;color:white;padding:20px}
+.card{background:#020617;padding:16px;border-radius:12px;margin-bottom:16px}
+input,textarea,button{width:100%;padding:10px;margin:6px 0}
+button{background:#2563eb;border:none;border-radius:8px;color:white}
+.small{font-size:12px;opacity:.8}
 </style>
 </head>
 <body>
 
-<h2>Pannello Amministratore</h2>
+<h2>Admin SerCucTech</h2>
+
+<div class="card" id="login">
+<input id="pin" type="password" placeholder="PIN admin">
+<button onclick="login()">Entra</button>
+</div>
+
+<div id="panel" style="display:none">
 
 <div class="card">
-<h3>Impostazioni Vetrina</h3>
-<input id="title" placeholder="Titolo vetrina">
-<input type="number" id="titleSize" placeholder="Dimensione titolo (px)" value="32">
-<label>Colore titolo</label>
+<h3>Nuova vetrina</h3>
+<input id="vid" placeholder="ID vetrina (es: negozio1)">
+<input id="title" placeholder="Titolo">
+<textarea id="desc" placeholder="Descrizione"></textarea>
+<input type="number" id="titleSize" value="32">
 <input type="color" id="titleColor" value="#000000">
-<label>Colore sfondo</label>
 <input type="color" id="bgColor" value="#ffffff">
-<label>Immagine sfondo</label>
 <input type="file" id="bgImage" accept="image/*">
-<textarea id="description" placeholder="Descrizione vetrina"></textarea>
 </div>
 
 <div class="card">
-<h3>Caricamento file (immagini / video)</h3>
-<input type="file" id="mediaFiles" multiple accept="image/*,video/*">
-<button onclick="uploadFiles()">📤 Carica file</button>
-<p id="status"></p>
+<h3>File</h3>
+<input type="file" id="files" multiple accept="image/*,video/*">
+<button onclick="addFiles()">Carica file</button>
+<p class="small" id="status"></p>
 </div>
 
-<button onclick="saveVetrina()">💾 Salva Vetrina</button>
+<button onclick="save()">Salva vetrina</button>
+
+</div>
 
 <script>
-let uploadedFiles = [];
+const ADMIN_PIN = localStorage.getItem("admin_pin") || "1234";
+let uploaded=[];
 
-function uploadFiles(){
-  const files = mediaFiles.files;
-  if(!files.length){
-    alert("Seleziona almeno un file");
-    return;
-  }
-
-  [...files].forEach(file=>{
-    const reader = new FileReader();
-    reader.onload = () => {
-      uploadedFiles.push({
-        name: file.name,
-        type: file.type,
-        data: reader.result
-      });
-      status.textContent = uploadedFiles.length + " file caricati";
-    };
-    reader.readAsDataURL(file);
-  });
+function login(){
+  if(pin.value===ADMIN_PIN){
+    login.style.display="none";
+    panel.style.display="block";
+  } else alert("PIN errato");
 }
 
-function saveVetrina(){
-  if(!title.value){
-    alert("Inserisci un titolo");
-    return;
-  }
+function addFiles(){
+  [...files.files].forEach(f=>{
+    const r=new FileReader();
+    r.onload=()=>uploaded.push({name:f.name,type:f.type,data:r.result});
+    r.readAsDataURL(f);
+  });
+  status.textContent="File caricati: "+uploaded.length;
+}
 
-  const vetrina = {
-    title: title.value,
-    titleSize: titleSize.value,
-    titleColor: titleColor.value,
-    bgColor: bgColor.value,
-    description: description.value,
-    bgImage: bgImage.files[0]
-      ? URL.createObjectURL(bgImage.files[0])
-      : null,
-    files: uploadedFiles
+function save(){
+  if(!vid.value){alert("ID vetrina obbligatorio");return;}
+  const all=JSON.parse(localStorage.getItem("vetrine")||"{}");
+  all[vid.value]={
+    title:title.value,
+    desc:desc.value,
+    titleSize:titleSize.value,
+    titleColor:titleColor.value,
+    bgColor:bgColor.value,
+    bgImage:bgImage.files[0]?URL.createObjectURL(bgImage.files[0]):null,
+    files:uploaded
   };
-
-  localStorage.setItem("sercuctech_vetrina", JSON.stringify(vetrina));
-  alert("✅ Vetrina salvata correttamente");
+  localStorage.setItem("vetrine",JSON.stringify(all));
+  alert("Vetrina salvata\nLink:\nindex.html?vetrina="+vid.value);
 }
 </script>
 
