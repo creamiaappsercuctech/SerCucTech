@@ -5,11 +5,12 @@ function initPin(){
   if(!localStorage.getItem(PINKEY)) localStorage.setItem(PINKEY,"1234");
 }
 function getPin(){ return localStorage.getItem(PINKEY); }
+function setPin(newPin){ localStorage.setItem(PINKEY, String(newPin||"")); }
 
 // ===== Speech =====
 function speakText(text, opts={}){
   if(!text) return false;
-  if(!("speechSynthesis" in window)) return false;
+  if(!("speechSynthesis" in windowFS)) return false;
   try{
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
@@ -75,14 +76,13 @@ async function idbListIds(){
   const db = await idbOpen();
   return new Promise((resolve, reject)=>{
     const tx = db.transaction(STORE_V, "readonly");
-    const store = tx.objectStore(STORE_V);
-    const req = store.getAllKeys();
+    const req = tx.objectStore(STORE_V).getAllKeys();
     req.onsuccess = ()=>resolve(req.result || []);
     req.onerror = ()=>reject(req.error);
   });
 }
 
-// ===== Export helpers (Blob -> base64 DataURL) =====
+// ===== Export helpers =====
 function blobToDataURL(blob){
   return new Promise((res, rej)=>{
     const r = new FileReader();
@@ -98,5 +98,10 @@ async function downloadJson(filename, obj){
   a.href = URL.createObjectURL(blob);
   a.download = filename;
   a.click();
-    }
-    
+}
+
+function escapeHtml(s){
+  return String(s||"")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;")
+    .replaceAll(">","&gt;").replaceAll('"',"&quot;");
+  }
