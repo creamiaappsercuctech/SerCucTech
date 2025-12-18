@@ -86,7 +86,14 @@ if(!id){
   throw new Error("ID mancante");
 }
 
-const url = "data/" + id + ".json";
+// === BASE PATH GITHUB PAGES ===
+const REPO = "SerCucTech"; // <-- NOME ESATTO REPO
+const BASE = location.hostname.includes("github.io")
+  ? "/" + REPO + "/"
+  : "/";
+
+// === URL JSON ===
+const url = BASE + "data/" + id + ".json";
 
 /* ================================
    CARICAMENTO DATI
