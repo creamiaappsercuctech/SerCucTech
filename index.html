@@ -4,51 +4,82 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SerCucTech – Vetrine</title>
-<meta property="og:title" content="SerCucTech – Vetrine">
-<meta property="og:description" content="Vetrine condivisibili online con presentazione vocale">
-<meta property="og:type" content="website">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <div class="wrap">
+
   <div class="card">
     <h2>SerCucTech – Vetrine</h2>
-    <div class="small"><a href="admin.html">🔐 Amministrazione</a></div>
+    <div class="small">
+      ✅ Locali = salvate nel tuo telefono (admin)<br>
+      🌍 Pubbliche = file in GitHub <b>/data/ID.json</b> + registro <b>/data/vetrine.json</b>
+    </div>
+    <div class="small" style="margin-top:8px">
+      <a href="admin.html">🔐 Amministrazione</a>
+    </div>
   </div>
 
   <div class="card">
-    <h3>Vetrine (locale)</h3>
-    <div id="list"></div>
-    <div class="small" style="margin-top:10px">
-      Per WhatsApp: pubblica sempre <b>/data/ID.json</b> (vedi admin).
-    </div>
+    <h3>Vetrine (locali)</h3>
+    <div id="localList" class="small">Caricamento...</div>
   </div>
+
+  <div class="card">
+    <h3>Vetrine (pubbliche)</h3>
+    <div class="small">Se non si vedono: controlla che esista <b>data/vetrine.json</b>.</div>
+    <div id="publicList" class="small">Caricamento...</div>
+  </div>
+
 </div>
 
 <script src="app.js"></script>
 <script>
-const list = document.getElementById("list");
-const all = loadAll();
-const ids = Object.keys(all);
+(async function(){
+  // Locali
+  const box = document.getElementById("localList");
+  try{
+    const ids = await idbListIds();
+    if(!ids.length){
+      box.innerHTML = "Nessuna vetrina locale.";
+    }else{
+      const rows = [];
+      for(const id of ids){
+        const v = await idbGetVetrina(id);
+        const t = (v && v.title) ? v.title : id;
+        rows.push(`<div style="margin:8px 0">
+          <a href="vetrina.html?id=${encodeURIComponent(id)}">🧩 ${escapeHtml(t)}</a>
+          <div class="small">vetrina.html?id=${escapeHtml(id)}</div>
+        </div>`);
+      }
+      box.innerHTML = rows.join("");
+    }
+  }catch(e){
+    box.innerHTML = "Errore lettura vetrine locali.";
+  }
 
-if(!ids.length){
-  list.innerHTML = "<div class='small'>Nessuna vetrina locale.</div>";
-}else{
-  const base = location.origin + location.pathname.replace("index.html","");
-  list.innerHTML = ids.map(id=>{
-    const link = `${base}vetrina.html?id=${encodeURIComponent(id)}`;
-    return `
-      <div class="card">
-        <b>${id}</b><br>
-        <a href="vetrina.html?id=${encodeURIComponent(id)}" target="_blank">Apri</a><br>
-        <span class="small">Link:</span><br>
-        <a href="${link}" target="_blank">${link}</a>
-      </div>
-    `;
-  }).join("");
-}
+  // Pubbliche
+  const pub = document.getElementById("publicList");
+  try{
+    const r = await fetch("data/vetrine.json", {cache:"no-store"});
+    if(!r.ok) throw new Error("missing");
+    const arr = await r.json();
+    if(!Array.isArray(arr) || !arr.length){
+      pub.innerHTML = "Nessuna vetrina pubblica registrata.";
+      return;
+    }
+    pub.innerHTML = arr.map(v=>{
+      const id = encodeURIComponent(v.id);
+      const t = escapeHtml(v.title || v.id);
+      return `<div style="margin:8px 0">
+        <a href="vetrina.html?id=${id}">🌍 ${t}</a>
+        <div class="small">vetrina.html?id=${escapeHtml(v.id)}</div>
+      </div>`;
+    }).join("");
+  }catch(e){
+    pub.innerHTML = "Manca <b>data/vetrine.json</b> oppure è vuoto.";
+  }
+})();
 </script>
-
 </body>
 </html>
