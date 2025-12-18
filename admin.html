@@ -5,12 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Admin SerCucTech</title>
 <link rel="stylesheet" href="style.css">
+<style>
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.danger{background:#dc2626}
+</style>
 </head>
 <body>
 
 <div class="wrap">
 
-<div class="card" id="login">
+<div class="card" id="loginCard">
   <h3>Accesso Admin</h3>
   <input id="pin" type="password" placeholder="PIN">
   <button onclick="doLogin()">Entra</button>
@@ -21,11 +25,9 @@
 
 <div class="card">
   <h3>Modifica completa vetrina</h3>
-
-  <div class="small">Seleziona una vetrina esistente per modificarla:</div>
-  <select id="pickVetrina"></select>
+  <div class="small">Seleziona vetrina:</div>
+  <select id="pick"></select>
   <button onclick="loadSelected()">Carica in modifica</button>
-
   <hr>
 
   <input id="vid" placeholder="ID vetrina (es: negozio1)">
@@ -49,13 +51,13 @@
 
   <div class="small">Sfondo immagine (opzionale)</div>
   <input type="file" id="bgImage" accept="image/*">
-  <div class="small" id="bgInfo"></div>
+  <div class="small" id="bgInfo">Nessuna immagine di sfondo</div>
   <button class="danger" onclick="removeBg()">Rimuovi sfondo immagine</button>
 
   <hr>
 
   <div class="small">Presentazione (testo + voce)</div>
-  <textarea id="presentationText" placeholder="Testo che verrà letto quando l’utente apre la vetrina..."></textarea>
+  <textarea id="presentationText" placeholder="Testo letto a voce quando l’utente apre la vetrina..."></textarea>
   <select id="voiceLang">
     <option value="it-IT">Italiano (it-IT)</option>
     <option value="uk-UA">Українська (uk-UA)</option>
@@ -67,75 +69,59 @@
 
   <hr>
 
-  <h4>File (upload multiplo)</h4>
-  <input type="file" id="files" multiple accept="image/*,video/*,application/pdf">
-  <label style="display:flex;gap:10px;align-items:center">
-    <input type="checkbox" id="doOcr" style="width:auto">
-    <span class="small">OCR (solo immagini: JPG/PNG/WebP). PDF non supportato in OCR in questa versione.</span>
-  </label>
-  <button onclick="upload()">Carica file</button>
-  <div class="small" id="ocrStatus"></div>
+  <h4>Upload multiplo (galleria)</h4>
+  <input type="file" id="files" multiple accept="image/*,video/*">
+  <div class="small">Su Android: tieni premuto una foto per selezione multipla.</div>
+  <button onclick="addFiles()">Aggiungi file</button>
 
-  <h4>File già presenti</h4>
+  <h4>File presenti</h4>
   <div id="fileList"></div>
 
   <div class="row">
     <button onclick="save()">Salva / Aggiorna</button>
-    <button class="danger" onclick="deleteVetrina()">🗑 Cancella vetrina</button>
+    <button class="danger" onclick="delVetrina()">🗑 Cancella vetrina</button>
   </div>
 
   <div class="card" style="background:#0b1224;margin-top:10px">
-    <button onclick="exportVetrinaJson()">⬇ Esporta JSON (pubblico)</button>
-    <div class="small">Carica su GitHub in: <b>data/ID.json</b> (e se vuoi anteprima WhatsApp: <b>data/ID-cover.jpg</b>)</div>
+    <button onclick="exportPublicJson()">⬇ Esporta JSON (pubblico)</button>
+    <div class="small">
+      Carica su GitHub in: <b>data/ID.json</b> (minuscolo).<br>
+      Test: <b>/data/ID.json</b> deve aprirsi senza 404.
+    </div>
   </div>
-</div>
 
-<div class="card">
-  <h3>Vetrine create</h3>
-  <div id="list"></div>
+  <div class="small" id="status"></div>
 </div>
 
 </div>
-</div>
 
-<!-- OCR: Tesseract.js (client-side) -->
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="app.js"></script>
 <script>
 initPin();
 
-let uploaded = [];          // files della vetrina in modifica (array)
-let currentBgData = null;   // base64 dello sfondo immagine
+let currentBgBlob = null;
+let uploaded = []; // {name,type,blob, ocrText?} -> blob in IndexedDB
 
-function doLogin(){
-  if(pin.value === getPin()){
-    login.style.display="none";
-    panel.classList.remove("hidden");
-    refreshAll();
-  } else alert("PIN errato");
+async function doLogin(){
+  if(pin.value !== getPin()) return alert("PIN errato");
+  loginCard.classList.add("hidden");
+  panel.classList.remove("hidden");
+  await refreshPicker();
+  await renderFiles();
 }
 
-function refreshAll(){
-  renderPicker();
-  renderList();
-  renderFiles();
-  updateBgInfo();
+async function refreshPicker(){
+  const ids = await idbListIds();
+  pick.innerHTML = `<option value="">-- Seleziona --</option>` + ids.map(id=>`<option value="${id}">${id}</option>`).join("");
 }
 
-function renderPicker(){
-  const all = loadAll();
-  const ids = Object.keys(all);
-  pickVetrina.innerHTML = `<option value="">-- Seleziona --</option>` + ids.map(id=>`<option value="${id}">${id}</option>`).join("");
-}
-
-function loadSelected(){
-  const id = pickVetrina.value;
+async function loadSelected(){
+  const id = pick.value;
   if(!id) return alert("Seleziona una vetrina");
-  const all = loadAll();
-  const v = all[id];
+  const v = await idbGetVetrina(id);
   if(!v) return alert("Non trovata");
 
-  vid.value = id;
+  vid.value = v.id;
   title.value = v.title || "";
   desc.value = v.desc || "";
   fontFamily.value = v.fontFamily || "system-ui";
@@ -143,98 +129,127 @@ function loadSelected(){
   titleSize.value = v.titleSize ?? 32;
   titleColor.value = v.titleColor || "#ffffff";
   bgColor.value = v.bgColor || "#0b1020";
-
   presentationText.value = v.presentationText || "";
-  voiceLang.value = (v.voice && v.voice.lang) ? v.voice.lang : "it-IT";
-  voiceRate.value = (v.voice && v.voice.rate) ? v.voice.rate : 1;
+  voiceLang.value = v.voice?.lang || "it-IT";
+  voiceRate.value = v.voice?.rate ?? 1;
 
+  currentBgBlob = v.bgBlob || null;
   uploaded = Array.isArray(v.files) ? v.files.slice() : [];
-  currentBgData = v.bgImage || null; // base64
-  bgImage.value = ""; // reset input (browser non permette prefill)
-  refreshAll();
-  window.scrollTo({top:0,behavior:"smooth"});
+
+  bgImage.value = "";
+  updateBgInfo();
+  await renderFiles();
+  status.textContent = "Caricata ✅";
 }
 
-async function upload(){
+async function addFiles(){
   const fl = [...files.files];
-  if(!fl.length) return alert("Seleziona almeno un file");
-
-  ocrStatus.textContent = "";
-
-  // OCR opzionale (solo immagini)
-  const wantOcr = doOcr.checked;
-
+  if(!fl.length) return alert("Seleziona file");
   for(const f of fl){
-    const data = await toBase64(f);
-    const item = { name:f.name, type:f.type, data };
-
-    if(wantOcr && (f.type.startsWith("image/"))){
-      // OCR su immagine
-      try{
-        ocrStatus.textContent = `OCR in corso: ${f.name} ...`;
-        const { data: out } = await Tesseract.recognize(data, "eng"); // OCR engine (base). Se vuoi italiano/ukr/ja, si può estendere.
-        item.ocrText = (out && out.text) ? out.text.trim() : "";
-      }catch(e){
-        item.ocrText = "";
-      }finally{
-        ocrStatus.textContent = "";
-      }
-    }
-    uploaded.push(item);
+    uploaded.push({ name:f.name, type:f.type, blob:f });
   }
-  renderFiles();
+  files.value = "";
+  await renderFiles();
 }
 
-function renderFiles(){
-  fileList.innerHTML = uploaded.length ? uploaded.map((f,i)=>`
-    <div class="card" style="background:#0b1224">
-      <b>${escapeHtml(f.name)}</b>
-      <div class="small">${escapeHtml(f.type || "")}</div>
+async function renderFiles(){
+  if(!uploaded.length){
+    fileList.innerHTML = `<div class="small">Nessun file.</div>`;
+    return;
+  }
+  // preview sicura: objectURL dal blob
+  fileList.innerHTML = "";
+  uploaded.forEach((f,i)=>{
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.background = "#0b1224";
 
-      ${f.ocrText ? `<details><summary class="small">OCR testo (solo admin)</summary><pre class="small" style="white-space:pre-wrap">${escapeHtml(f.ocrText)}</pre></details>` : ""}
+    const top = document.createElement("div");
+    top.innerHTML = `<b>${escapeHtml(f.name)}</b><div class="small">${escapeHtml(f.type||"")}</div>`;
 
-      <div class="row">
-        <button onclick="renameFile(${i})">Rinomina</button>
-        <button class="danger" onclick="delFile(${i})">Elimina</button>
-      </div>
-    </div>
-  `).join("") : `<div class="small">Nessun file caricato.</div>`;
+    const row = document.createElement("div");
+    row.className = "row";
+    const b1 = document.createElement("button");
+    b1.textContent = "Rinomina";
+    b1.onclick = ()=>renameFile(i);
+    const b2 = document.createElement("button");
+    b2.className = "danger";
+    b2.textContent = "Elimina";
+    b2.onclick = ()=>removeFile(i);
+    row.appendChild(b1); row.appendChild(b2);
+
+    // preview mini
+    const preview = document.createElement("div");
+    const url = URL.createObjectURL(f.blob);
+    if((f.type||"").startsWith("image/")){
+      const img = document.createElement("img");
+      img.src = url;
+      img.style.width="120px";
+      img.style.height="120px";
+      img.style.objectFit="cover";
+      img.style.borderRadius="10px";
+      img.onclick = ()=>{ URL.revokeObjectURL(url); };
+      preview.appendChild(img);
+    }else if((f.type||"").startsWith("video/")){
+      const vid = document.createElement("video");
+      vid.src = url;
+      vid.muted = true;
+      vid.controls = true;
+      vid.style.width="180px";
+      vid.style.borderRadius="10px";
+      preview.appendChild(vid);
+    }else{
+      const a = document.createElement("a");
+      a.href = url;
+      a.textContent = "Apri file";
+      a.target = "_blank";
+      preview.appendChild(a);
+    }
+
+    card.appendChild(top);
+    card.appendChild(preview);
+    card.appendChild(row);
+    fileList.appendChild(card);
+  });
 }
 
 function renameFile(i){
-  const n = prompt("Nuovo nome file:", uploaded[i].name);
+  const n = prompt("Nuovo nome:", uploaded[i].name);
   if(n && n.trim()){
     uploaded[i].name = n.trim();
     renderFiles();
   }
 }
 
-function delFile(i){
+function removeFile(i){
   if(!confirm("Eliminare questo file?")) return;
   uploaded.splice(i,1);
   renderFiles();
 }
 
-bgImage.addEventListener("change", async ()=>{
-  if(bgImage.files[0]){
-    currentBgData = await toBase64(bgImage.files[0]); // base64 persistente
-    updateBgInfo();
-  }
+bgImage.addEventListener("change", ()=>{
+  const f = bgImage.files[0];
+  if(!f) return;
+  currentBgBlob = f;
+  updateBgInfo();
 });
 
 function removeBg(){
-  currentBgData = null;
+  currentBgBlob = null;
   bgImage.value = "";
   updateBgInfo();
 }
 
 function updateBgInfo(){
-  bgInfo.textContent = currentBgData ? "✅ Sfondo immagine impostato" : "Nessuna immagine di sfondo";
+  bgInfo.textContent = currentBgBlob ? "✅ Sfondo immagine impostato" : "Nessuna immagine di sfondo";
 }
 
-function buildVetrinaObject(){
-  const id=(vid.value||"").trim();
-  return {
+async function save(){
+  const id = (vid.value||"").trim();
+  if(!id) return alert("ID obbligatorio");
+
+  const obj = {
+    id,
     title: title.value || id,
     desc: desc.value || "",
     fontFamily: fontFamily.value || "system-ui",
@@ -242,59 +257,33 @@ function buildVetrinaObject(){
     titleSize: Number(titleSize.value || 32),
     titleColor: titleColor.value || "#ffffff",
     bgColor: bgColor.value || "#0b1020",
-    bgImage: currentBgData || null, // ✅ immagine sfondo persistente
+    bgBlob: currentBgBlob || null,
     presentationText: presentationText.value || "",
-    voice: {
-      lang: voiceLang.value || "it-IT",
-      rate: Number(voiceRate.value || 1),
-      pitch: 1,
-      volume: 1
-    },
+    voice: { lang: voiceLang.value || "it-IT", rate: Number(voiceRate.value || 1), pitch: 1, volume: 1 },
     files: uploaded
   };
+
+  try{
+    await idbPutVetrina(obj);
+    status.textContent = "Salvato in modo stabile (IndexedDB) ✅";
+    await refreshPicker();
+  }catch(e){
+    console.error(e);
+    alert("Errore salvataggio (IndexedDB). Prova a liberare spazio o cambia browser.");
+  }
 }
 
-function save(){
-  const id=(vid.value||"").trim();
+async function delVetrina(){
+  const id = (vid.value||"").trim();
   if(!id) return alert("ID obbligatorio");
-  const all = loadAll();
-  all[id] = buildVetrinaObject();
-  saveAll(all);
-  alert("Salvato ✅");
-  refreshAll();
-}
-
-function deleteVetrina(){
-  const id=(vid.value||"").trim();
-  if(!id) return alert("Scrivi l’ID della vetrina");
-  const all=loadAll();
-  if(!all[id]) return alert("Non trovata in locale");
   if(!confirm(`Cancellare vetrina "${id}"?`)) return;
-  delete all[id];
-  saveAll(all);
-
-  // reset form
-  pickVetrina.value="";
+  await idbDeleteVetrina(id);
   vid.value=""; title.value=""; desc.value="";
-  uploaded=[]; currentBgData=null; bgImage.value="";
-  refreshAll();
-
-  alert("Cancellata ✅");
-}
-
-function exportVetrinaJson(){
-  const id=(vid.value||"").trim();
-  if(!id) return alert("Scrivi l’ID");
-  const all=loadAll();
-  const v=all[id];
-  if(!v) return alert("Non trovata in locale");
-
-  const blob=new Blob([JSON.stringify(v,null,2)],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=`${id}.json`;
-  a.click();
-  alert(`Carica su GitHub in: data/${id}.json`);
+  uploaded=[]; currentBgBlob=null; bgImage.value="";
+  updateBgInfo();
+  await renderFiles();
+  await refreshPicker();
+  status.textContent = "Cancellata ✅";
 }
 
 function testVoice(){
@@ -302,20 +291,34 @@ function testVoice(){
   if(!ok) alert("Sintesi vocale non disponibile su questo browser.");
 }
 
-function renderList(){
-  const all=loadAll();
-  const base = location.origin + location.pathname.replace("admin.html","");
-  const ids=Object.keys(all);
-  list.innerHTML = ids.length ? ids.map(id=>{
-    const link = `${base}vetrina.html?id=${encodeURIComponent(id)}`;
-    return `
-      <div class="card">
-        <b>${id}</b>
-        <div class="small">${escapeHtml(all[id].desc||"")}</div>
-        <a href="${link}" target="_blank">${link}</a>
-      </div>
-    `;
-  }).join("") : `<div class="small">Nessuna vetrina.</div>`;
+async function exportPublicJson(){
+  const id = (vid.value||"").trim();
+  if(!id) return alert("ID obbligatorio");
+  const v = await idbGetVetrina(id);
+  if(!v) return alert("Vetrina non trovata");
+
+  // Convertiamo blob->base64 SOLO per export pubblico
+  const out = {
+    title: v.title, desc: v.desc,
+    fontFamily: v.fontFamily, baseFontSize: v.baseFontSize,
+    titleSize: v.titleSize, titleColor: v.titleColor,
+    bgColor: v.bgColor,
+    bgImage: v.bgBlob ? await blobToDataURL(v.bgBlob) : null,
+    presentationText: v.presentationText,
+    voice: v.voice,
+    files: []
+  };
+
+  for(const f of (v.files||[])){
+    out.files.push({
+      name: f.name,
+      type: f.type,
+      data: await blobToDataURL(f.blob)
+    });
+  }
+
+  await downloadJson(`${id}.json`, out);
+  alert(`Ora carica su GitHub in: data/${id}.json`);
 }
 
 function escapeHtml(s){
