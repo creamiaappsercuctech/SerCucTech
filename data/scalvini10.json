@@ -5,6 +5,7 @@
   "titleSize": 32,
   "titleColor": "#ffffff",
   "bgColor": "#ffff00",
-  "files": []
+  "files": [],
+  "voiceLang": "it-IT",
+  "voiceText": "Benvenuto nella vetrina Scalvini 10. Qui trovi la presentazione e i file disponibili."
 }
-
