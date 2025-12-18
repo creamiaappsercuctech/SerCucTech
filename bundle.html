@@ -5,12 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Gruppo Vetrine</title>
 <link rel="stylesheet" href="style.css">
-<meta property="og:title" content="SerCucTech – Gruppo Vetrine">
-<meta property="og:description" content="Vetrine collegate in un unico link">
-<meta property="og:type" content="website">
 </head>
 <body>
-
 <div id="app"></div>
 
 <script src="app.js"></script>
@@ -45,87 +41,62 @@ async function loadPublicVetrina(id){
     return;
   }
 
-  // 1) gruppo pubblico
-  let group = await loadPublicGroup(gid);
-  let isPublicGroup = !!group;
-
-  // 2) fallback gruppo locale
+  const group = await loadPublicGroup(gid);
   if(!group){
-    const localGroups = JSON.parse(localStorage.getItem("sercuctech_groups") || "{}");
-    group = localGroups[gid] || null;
-  }
-
-  if(!group){
-    app.innerHTML = `
-      <div class="wrap card">
-        Gruppo <b>${gid}</b> non trovato.<br><br>
-        <div class="small">
-          Per renderlo pubblico, carica su GitHub: <b>data/groups/${gid}.json</b>
-        </div>
-      </div>`;
+    app.innerHTML = `<div class="wrap card">
+      Gruppo <b>${escapeHtml(gid)}</b> non trovato.<br><br>
+      <div class="small">Serve: <b>data/groups/${escapeHtml(gid)}.json</b></div>
+    </div>`;
     return;
   }
 
-  const localAll = loadAll();
   const blocks = [];
-
   for(const id of (group.ids||[])){
-    const pub = await loadPublicVetrina(id);
-    const v = pub || localAll[id];
-    if(!v){
-      blocks.push({id, v:null});
-      continue;
-    }
-    blocks.push({id, v, pub: !!pub});
+    const v = await loadPublicVetrina(id);
+    blocks.push({id, v});
   }
 
-  document.body.style.overflow="hidden";
   app.innerHTML = `
     <div style="width:100vw;height:100vh;overflow:auto;padding:14px">
       <div class="card">
-        <h2>${group.title || gid}</h2>
-        <div class="small">
-          ${isPublicGroup ? "Gruppo pubblico ✅" : "Gruppo locale ⚠️"} •
-          ${blocks.length} vetrine
-        </div>
-        <div class="small">Link: ${location.href}</div>
+        <h2>${escapeHtml(group.title || gid)}</h2>
+        <div class="small">Gruppo pubblico ✅ • ${blocks.length} vetrine</div>
       </div>
 
-      ${blocks.map(({id,v,pub})=>{
+      ${blocks.map(({id,v})=>{
         if(!v){
-          return `
-            <div class="card" style="background:#3b1d1d">
-              <b>${id}</b>
-              <div class="small">❌ Vetrina non trovata. Pubblica: <b>data/${id}.json</b></div>
-            </div>`;
+          return `<div class="card" style="background:#3b1d1d">
+            <b>${escapeHtml(id)}</b>
+            <div class="small">❌ manca data/${escapeHtml(id)}.json</div>
+          </div>`;
         }
-        return `
-          <div class="card" style="background:${v.bgColor||"#111827"}">
-            <div style="font-family:${v.fontFamily||"system-ui"};font-size:${v.baseFontSize||16}px">
-              <div style="font-weight:900;font-size:${v.titleSize||32}px;color:${v.titleColor||"#fff"}">
-                ${v.title || id}
-              </div>
-              <div class="small">${v.desc||""} ${pub ? "" : "(locale)"}</div>
-            </div>
 
-            <div class="grid">
-              ${(v.files||[]).map(f=>{
-                if((f.type||"").startsWith("video")){
-                  return `<video class="thumb" src="${f.data}" muted controls onclick="event.stopPropagation();showFull('<video src=&quot;${f.data}&quot; controls autoplay></video>')"></video>`;
-                }
-                if((f.type||"").startsWith("image")){
-                  return `<img class="thumb" src="${f.data}" onclick="event.stopPropagation();showFull('<img src=&quot;${f.data}&quot;>')">`;
-                }
-                return "";
-              }).join("")}
+        return `
+        <div class="card" style="background:${v.bgColor||"#0b1020"}">
+          <div style="font-family:${v.fontFamily||"system-ui"};font-size:${v.baseFontSize||16}px">
+            <div style="font-weight:900;font-size:${v.titleSize||32}px;color:${v.titleColor||"#fff"}">
+              ${escapeHtml(v.title || id)}
             </div>
+            <div class="small">${escapeHtml(v.desc||"")}</div>
+            <div class="small"><a href="vetrina.html?id=${encodeURIComponent(id)}">Apri vetrina</a></div>
           </div>
-        `;
+
+          <div class="grid">
+            ${(v.files||[]).slice(0,12).map(f=>{
+              if((f.type||"").startsWith("video/")){
+                return `<video class="thumb" src="${f.data}" muted controls onclick="event.stopPropagation();showFull('<video src=&quot;${f.data}&quot; controls autoplay></video>')"></video>`;
+              }
+              if((f.type||"").startsWith("image/")){
+                return `<img class="thumb" src="${f.data}" onclick="event.stopPropagation();showFull('<img src=&quot;${f.data}&quot;>')">`;
+              }
+              return "";
+            }).join("")}
+          </div>
+        </div>`;
       }).join("")}
     </div>
   `;
 })();
 </script>
-
 </body>
 </html>
