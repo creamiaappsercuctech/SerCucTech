@@ -1,97 +1,101 @@
-<!doctype html>
+  <!doctype html>
 <html lang="it">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Admin SerCucTech</title>
 <link rel="stylesheet" href="style.css">
-<style>
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.danger{background:#dc2626}
-</style>
 </head>
 <body>
-
 <div class="wrap">
 
-<div class="card" id="loginCard">
-  <h3>Accesso Admin</h3>
-  <input id="pin" type="password" placeholder="PIN">
-  <button onclick="doLogin()">Entra</button>
-  <div class="small">PIN default: <b>1234</b></div>
-</div>
-
-<div id="panel" class="hidden">
-
-<div class="card">
-  <h3>Modifica completa vetrina</h3>
-  <div class="small">Seleziona vetrina:</div>
-  <select id="pick"></select>
-  <button onclick="loadSelected()">Carica in modifica</button>
-  <hr>
-
-  <input id="vid" placeholder="ID vetrina (es: negozio1)">
-  <input id="title" placeholder="Titolo">
-  <textarea id="desc" placeholder="Descrizione"></textarea>
-
-  <div class="small">Font e dimensioni</div>
-  <select id="fontFamily">
-    <option value="system-ui">System</option>
-    <option value="Arial, sans-serif">Arial</option>
-    <option value="'Times New Roman', serif">Times</option>
-    <option value="Georgia, serif">Georgia</option>
-    <option value="'Courier New', monospace">Courier</option>
-  </select>
-  <input type="number" id="baseFontSize" value="16" placeholder="Dimensione testo base (px)">
-  <input type="number" id="titleSize" value="32" placeholder="Dimensione titolo (px)">
-  <label>Colore titolo</label>
-  <input type="color" id="titleColor" value="#ffffff">
-  <label>Colore sfondo</label>
-  <input type="color" id="bgColor" value="#0b1020">
-
-  <div class="small">Sfondo immagine (opzionale)</div>
-  <input type="file" id="bgImage" accept="image/*">
-  <div class="small" id="bgInfo">Nessuna immagine di sfondo</div>
-  <button class="danger" onclick="removeBg()">Rimuovi sfondo immagine</button>
-
-  <hr>
-
-  <div class="small">Presentazione (testo + voce)</div>
-  <textarea id="presentationText" placeholder="Testo letto a voce quando l’utente apre la vetrina..."></textarea>
-  <select id="voiceLang">
-    <option value="it-IT">Italiano (it-IT)</option>
-    <option value="uk-UA">Українська (uk-UA)</option>
-    <option value="en-US">English (en-US)</option>
-    <option value="ja-JP">日本語 (ja-JP)</option>
-  </select>
-  <input type="number" id="voiceRate" value="1" step="0.1" placeholder="Velocità voce (1 = normale)">
-  <button onclick="testVoice()">▶ Test voce</button>
-
-  <hr>
-
-  <h4>Upload multiplo (galleria)</h4>
-  <input type="file" id="files" multiple accept="image/*,video/*">
-  <div class="small">Su Android: tieni premuto una foto per selezione multipla.</div>
-  <button onclick="addFiles()">Aggiungi file</button>
-
-  <h4>File presenti</h4>
-  <div id="fileList"></div>
-
-  <div class="row">
-    <button onclick="save()">Salva / Aggiorna</button>
-    <button class="danger" onclick="delVetrina()">🗑 Cancella vetrina</button>
+  <div class="card" id="loginCard">
+    <h3>Accesso Admin</h3>
+    <input id="pin" type="password" placeholder="PIN">
+    <button id="btnLogin">Entra</button>
+    <div class="small">PIN default: <b>1234</b></div>
   </div>
 
-  <div class="card" style="background:#0b1224;margin-top:10px">
-    <button onclick="exportPublicJson()">⬇ Esporta JSON (pubblico)</button>
-    <div class="small">
-      Carica su GitHub in: <b>data/ID.json</b> (minuscolo).<br>
-      Test: <b>/data/ID.json</b> deve aprirsi senza 404.
+  <div id="panel" class="hidden">
+
+    <div class="card">
+      <h3>Vetrine locali</h3>
+      <select id="pick"></select>
+      <div class="row">
+        <button id="btnLoad">Carica</button>
+        <button class="danger" id="btnNew">Nuova vetrina</button>
+      </div>
+      <div class="small" id="status"></div>
+    </div>
+
+    <div class="card">
+      <h3>Editor vetrina</h3>
+
+      <label class="small">ID vetrina (solo minuscolo, senza spazi)</label>
+      <input id="vid" placeholder="es: sergio10">
+
+      <input id="title" placeholder="Titolo">
+      <textarea id="desc" placeholder="Descrizione"></textarea>
+
+      <div class="small">Font e dimensioni</div>
+      <select id="fontFamily">
+        <option value="system-ui">System</option>
+        <option value="Arial, sans-serif">Arial</option>
+        <option value="'Times New Roman', serif">Times</option>
+        <option value="Georgia, serif">Georgia</option>
+        <option value="'Courier New', monospace">Courier</option>
+      </select>
+      <input type="number" id="baseFontSize" value="16" placeholder="Dimensione testo (px)">
+      <input type="number" id="titleSize" value="32" placeholder="Dimensione titolo (px)">
+      <label class="small">Colore titolo</label>
+      <input type="color" id="titleColor" value="#ffffff">
+      <label class="small">Colore sfondo</label>
+      <input type="color" id="bgColor" value="#0b1020">
+
+      <div class="small">Sfondo immagine (opzionale)</div>
+      <input type="file" id="bgImage" accept="image/*">
+      <div class="small" id="bgInfo">Nessuna immagine di sfondo</div>
+      <button class="danger" id="btnRemoveBg">Rimuovi sfondo immagine</button>
+
+      <hr>
+
+      <div class="small">Presentazione (testo + voce)</div>
+      <textarea id="presentationText" placeholder="Testo letto a voce quando l’utente apre la vetrina..."></textarea>
+      <select id="voiceLang">
+        <option value="it-IT">Italiano (it-IT)</option>
+        <option value="uk-UA">Українська (uk-UA)</option>
+        <option value="en-US">English (en-US)</option>
+        <option value="ja-JP">日本語 (ja-JP)</option>
+      </select>
+      <input type="number" id="voiceRate" value="1" step="0.1" placeholder="Velocità voce">
+      <button id="btnTestVoice">▶ Test voce</button>
+
+      <hr>
+
+      <h4>Upload multiplo (immagini/video)</h4>
+      <input type="file" id="files" multiple accept="image/*,video/*">
+      <div class="small">Android: tieni premuto su una foto per selezione multipla.</div>
+      <button id="btnAddFiles">Aggiungi file</button>
+
+      <h4>File presenti</h4>
+      <div id="fileList"></div>
+
+      <div class="row">
+        <button id="btnSave">💾 Salva / Aggiorna</button>
+        <button class="danger" id="btnDelete">🗑 Cancella vetrina</button>
+      </div>
+
+      <div class="card" style="background:#0b1224;margin-top:10px">
+        <h4>Pubblicazione GitHub</h4>
+        <button id="btnExportPublic">⬇ Esporta ID.json (pubblico)</button>
+        <div class="small">Carica in: <b>data/ID.json</b> (stesso ID)</div>
+        <hr>
+        <button id="btnExportRegistry">⬇ Esporta vetrine.json</button>
+        <div class="small">Carica in: <b>data/vetrine.json</b></div>
+      </div>
+
     </div>
   </div>
-
-  <div class="small" id="status"></div>
-</div>
 
 </div>
 
@@ -100,22 +104,133 @@
 initPin();
 
 let currentBgBlob = null;
-let uploaded = []; // {name,type,blob, ocrText?} -> blob in IndexedDB
+let uploaded = []; // {name,type,blob}
 
-async function doLogin(){
-  if(pin.value !== getPin()) return alert("PIN errato");
-  loginCard.classList.add("hidden");
-  panel.classList.remove("hidden");
-  await refreshPicker();
-  await renderFiles();
+// ===== ID NORMALIZATION (TUTTI E 2: auto + blocco) =====
+function normalizeId(raw){
+  return String(raw||"")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g,"")
+    .replace(/[^a-z0-9_-]/g,"");
 }
+function isValidId(id){
+  return /^[a-z0-9][a-z0-9_-]{1,50}$/.test(id);
+}
+function requireValidIdOrAlert(){
+  const clean = normalizeId(vid.value);
+  vid.value = clean;
+  if(!clean){ alert("ID obbligatorio. Esempio: sergio10"); return null; }
+  if(!isValidId(clean)){
+    alert("ID non valido. Usa solo a-z 0-9 _ - (senza spazi).");
+    return null;
+  }
+  return clean;
+}
+vid.addEventListener("input", ()=>{ vid.value = normalizeId(vid.value); });
+
+// ===== UI =====
+function setStatus(t){ status.textContent = t || ""; }
 
 async function refreshPicker(){
   const ids = await idbListIds();
   pick.innerHTML = `<option value="">-- Seleziona --</option>` + ids.map(id=>`<option value="${id}">${id}</option>`).join("");
 }
 
-async function loadSelected(){
+function updateBgInfo(){
+  bgInfo.textContent = currentBgBlob ? "✅ Sfondo immagine impostato" : "Nessuna immagine di sfondo";
+}
+
+async function renderFiles(){
+  if(!uploaded.length){
+    fileList.innerHTML = `<div class="small">Nessun file.</div>`;
+    return;
+  }
+  fileList.innerHTML = "";
+  uploaded.forEach((f,i)=>{
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.background = "#0b1224";
+
+    const head = document.createElement("div");
+    head.innerHTML = `<b>${escapeHtml(f.name)}</b><div class="small">${escapeHtml(f.type||"")}</div>`;
+
+    const url = URL.createObjectURL(f.blob);
+    const prev = document.createElement("div");
+    if((f.type||"").startsWith("image/")){
+      const img = document.createElement("img");
+      img.src = url;
+      img.style.width="120px"; img.style.height="120px";
+      img.style.objectFit="cover"; img.style.borderRadius="10px";
+      prev.appendChild(img);
+    }else if((f.type||"").startsWith("video/")){
+      const v = document.createElement("video");
+      v.src = url; v.controls = true; v.muted = true;
+      v.style.width="180px"; v.style.borderRadius="10px";
+      prev.appendChild(v);
+    }
+
+    const row = document.createElement("div");
+    row.className="row";
+
+    const rn = document.createElement("button");
+    rn.textContent="Rinomina";
+    rn.onclick=()=>{
+      const n = prompt("Nuovo nome:", f.name);
+      if(n && n.trim()){ uploaded[i].name = n.trim(); renderFiles(); }
+    };
+
+    const del = document.createElement("button");
+    del.className="danger";
+    del.textContent="Elimina";
+    del.onclick=()=>{
+      if(!confirm("Eliminare questo file?")) return;
+      uploaded.splice(i,1);
+      renderFiles();
+    };
+
+    row.appendChild(rn);
+    row.appendChild(del);
+
+    card.appendChild(head);
+    card.appendChild(prev);
+    card.appendChild(row);
+    fileList.appendChild(card);
+  });
+}
+
+function clearForm(){
+  pick.value="";
+  vid.value=""; title.value=""; desc.value="";
+  fontFamily.value="system-ui";
+  baseFontSize.value=16;
+  titleSize.value=32;
+  titleColor.value="#ffffff";
+  bgColor.value="#0b1020";
+  presentationText.value="";
+  voiceLang.value="it-IT";
+  voiceRate.value=1;
+  uploaded=[];
+  currentBgBlob=null;
+  bgImage.value="";
+  updateBgInfo();
+  renderFiles();
+  setStatus("Pronto ✅");
+}
+
+// ===== LOGIN =====
+btnLogin.onclick = async ()=>{
+  if(pin.value !== getPin()) return alert("PIN errato");
+  loginCard.classList.add("hidden");
+  panel.classList.remove("hidden");
+  await refreshPicker();
+  updateBgInfo();
+  await renderFiles();
+  setStatus("Admin OK ✅");
+};
+
+// ===== LOAD =====
+btnLoad.onclick = async ()=>{
   const id = pick.value;
   if(!id) return alert("Seleziona una vetrina");
   const v = await idbGetVetrina(id);
@@ -135,118 +250,49 @@ async function loadSelected(){
 
   currentBgBlob = v.bgBlob || null;
   uploaded = Array.isArray(v.files) ? v.files.slice() : [];
-
-  bgImage.value = "";
+  bgImage.value="";
   updateBgInfo();
   await renderFiles();
-  status.textContent = "Caricata ✅";
-}
+  setStatus("Caricata ✅");
+};
 
-async function addFiles(){
-  const fl = [...files.files];
-  if(!fl.length) return alert("Seleziona file");
-  for(const f of fl){
-    uploaded.push({ name:f.name, type:f.type, blob:f });
-  }
-  files.value = "";
-  await renderFiles();
-}
+btnNew.onclick = ()=> clearForm();
 
-async function renderFiles(){
-  if(!uploaded.length){
-    fileList.innerHTML = `<div class="small">Nessun file.</div>`;
-    return;
-  }
-  // preview sicura: objectURL dal blob
-  fileList.innerHTML = "";
-  uploaded.forEach((f,i)=>{
-    const card = document.createElement("div");
-    card.className = "card";
-    card.style.background = "#0b1224";
-
-    const top = document.createElement("div");
-    top.innerHTML = `<b>${escapeHtml(f.name)}</b><div class="small">${escapeHtml(f.type||"")}</div>`;
-
-    const row = document.createElement("div");
-    row.className = "row";
-    const b1 = document.createElement("button");
-    b1.textContent = "Rinomina";
-    b1.onclick = ()=>renameFile(i);
-    const b2 = document.createElement("button");
-    b2.className = "danger";
-    b2.textContent = "Elimina";
-    b2.onclick = ()=>removeFile(i);
-    row.appendChild(b1); row.appendChild(b2);
-
-    // preview mini
-    const preview = document.createElement("div");
-    const url = URL.createObjectURL(f.blob);
-    if((f.type||"").startsWith("image/")){
-      const img = document.createElement("img");
-      img.src = url;
-      img.style.width="120px";
-      img.style.height="120px";
-      img.style.objectFit="cover";
-      img.style.borderRadius="10px";
-      img.onclick = ()=>{ URL.revokeObjectURL(url); };
-      preview.appendChild(img);
-    }else if((f.type||"").startsWith("video/")){
-      const vid = document.createElement("video");
-      vid.src = url;
-      vid.muted = true;
-      vid.controls = true;
-      vid.style.width="180px";
-      vid.style.borderRadius="10px";
-      preview.appendChild(vid);
-    }else{
-      const a = document.createElement("a");
-      a.href = url;
-      a.textContent = "Apri file";
-      a.target = "_blank";
-      preview.appendChild(a);
-    }
-
-    card.appendChild(top);
-    card.appendChild(preview);
-    card.appendChild(row);
-    fileList.appendChild(card);
-  });
-}
-
-function renameFile(i){
-  const n = prompt("Nuovo nome:", uploaded[i].name);
-  if(n && n.trim()){
-    uploaded[i].name = n.trim();
-    renderFiles();
-  }
-}
-
-function removeFile(i){
-  if(!confirm("Eliminare questo file?")) return;
-  uploaded.splice(i,1);
-  renderFiles();
-}
-
+// ===== BG =====
 bgImage.addEventListener("change", ()=>{
   const f = bgImage.files[0];
   if(!f) return;
   currentBgBlob = f;
   updateBgInfo();
 });
-
-function removeBg(){
-  currentBgBlob = null;
-  bgImage.value = "";
+btnRemoveBg.onclick = ()=>{
+  currentBgBlob=null;
+  bgImage.value="";
   updateBgInfo();
-}
+};
 
-function updateBgInfo(){
-  bgInfo.textContent = currentBgBlob ? "✅ Sfondo immagine impostato" : "Nessuna immagine di sfondo";
-}
+// ===== VOICE =====
+btnTestVoice.onclick = ()=>{
+  const ok = speakText(presentationText.value, {lang: voiceLang.value, rate: Number(voiceRate.value||1)});
+  if(!ok) alert("Sintesi vocale non disponibile.");
+};
 
-async function save(){
-  const id = (vid.value||"").trim();
-  if(!id) return alert("ID obbligatorio");
+// ===== ADD FILES =====
+btnAddFiles.onclick = async ()=>{
+  const fl = [...files.files];
+  if(!fl.length) return alert("Seleziona file");
+  for(const f of fl){
+    uploaded.push({name:f.name, type:f.type, blob:f});
+  }
+  files.value="";
+  await renderFiles();
+  setStatus("File aggiunti ✅");
+};
+
+// ===== SAVE =====
+btnSave.onclick = async ()=>{
+  const id = requireValidIdOrAlert();
+  if(!id) return;
 
   const obj = {
     id,
@@ -263,41 +309,29 @@ async function save(){
     files: uploaded
   };
 
-  try{
-    await idbPutVetrina(obj);
-    status.textContent = "Salvato in modo stabile (IndexedDB) ✅";
-    await refreshPicker();
-  }catch(e){
-    console.error(e);
-    alert("Errore salvataggio (IndexedDB). Prova a liberare spazio o cambia browser.");
-  }
-}
+  await idbPutVetrina(obj);
+  await refreshPicker();
+  setStatus("Salvata (locale) ✅");
+};
 
-async function delVetrina(){
-  const id = (vid.value||"").trim();
-  if(!id) return alert("ID obbligatorio");
+// ===== DELETE =====
+btnDelete.onclick = async ()=>{
+  const id = requireValidIdOrAlert();
+  if(!id) return;
   if(!confirm(`Cancellare vetrina "${id}"?`)) return;
   await idbDeleteVetrina(id);
-  vid.value=""; title.value=""; desc.value="";
-  uploaded=[]; currentBgBlob=null; bgImage.value="";
-  updateBgInfo();
-  await renderFiles();
+  clearForm();
   await refreshPicker();
-  status.textContent = "Cancellata ✅";
-}
+  setStatus("Cancellata ✅");
+};
 
-function testVoice(){
-  const ok = speakText(presentationText.value, {lang: voiceLang.value, rate: voiceRate.value});
-  if(!ok) alert("Sintesi vocale non disponibile su questo browser.");
-}
-
-async function exportPublicJson(){
-  const id = (vid.value||"").trim();
-  if(!id) return alert("ID obbligatorio");
+// ===== EXPORT PUBLIC =====
+btnExportPublic.onclick = async ()=>{
+  const id = requireValidIdOrAlert();
+  if(!id) return;
   const v = await idbGetVetrina(id);
   if(!v) return alert("Vetrina non trovata");
 
-  // Convertiamo blob->base64 SOLO per export pubblico
   const out = {
     title: v.title, desc: v.desc,
     fontFamily: v.fontFamily, baseFontSize: v.baseFontSize,
@@ -319,52 +353,21 @@ async function exportPublicJson(){
 
   await downloadJson(`${id}.json`, out);
   alert(`Ora carica su GitHub in: data/${id}.json`);
-}
+};
 
-function escapeHtml(s){
-  return String(s||"")
-    .replaceAll("&","&amp;").replaceAll("<","&lt;")
-    .replaceAll(">","&gt;").replaceAll('"',"&quot;");
-}
-  function normalizeId(raw){
-  // minuscolo, elimina spazi, caratteri strani -> solo a-z 0-9 _ -
-  return String(raw||"")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "")        // rimuove tutti gli spazi
-    .replace(/[^a-z0-9_-]/g, ""); // elimina caratteri non permessi
-}
-
-function isValidId(id){
-  // minimo 2 caratteri, deve iniziare con lettera o numero
-  return /^[a-z0-9][a-z0-9_-]{1,50}$/.test(id);
-}
-
-function enforceIdInput(){
-  const raw = vid.value;
-  const clean = normalizeId(raw);
-  if(raw !== clean){
-    vid.value = clean;
+// ===== EXPORT REGISTRY =====
+btnExportRegistry.onclick = async ()=>{
+  const ids = await idbListIds();
+  const arr = [];
+  for(const id of ids){
+    const v = await idbGetVetrina(id);
+    arr.push({ id, title: v?.title || id });
   }
-}
+  await downloadJson("vetrine.json", arr);
+  alert("Carica su GitHub in: data/vetrine.json");
+};
 
-vid.addEventListener("input", enforceIdInput);
-vid.addEventListener("blur", enforceIdInput);
-
-function requireValidIdOrAlert(){
-  const id = normalizeId(vid.value);
-  vid.value = id;
-  if(!id){
-    alert("ID obbligatorio. Esempio: sergio10");
-    return null;
-  }
-  if(!isValidId(id)){
-    alert("ID non valido. Usa solo: a-z 0-9 _ - (senza spazi). Esempio: sergio10");
-    return null;
-  }
-  return id;
-}
+updateBgInfo();
 </script>
-
 </body>
 </html>
