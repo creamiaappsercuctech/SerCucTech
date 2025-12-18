@@ -31,27 +31,52 @@ async function loadPublic(id){
   const id = new URLSearchParams(location.search).get("id");
   if(!id){ app.innerHTML="<div class='wrap card'>ID mancante</div>"; return; }
 
-  // 1) prova JSON pubblico, 2) fallback locale
+  // 1) pubblico
   let v = await loadPublic(id);
+
+  // 2) fallback locale (IndexedDB)
   if(!v){
-    const all = loadAll();
-    v = all[id] || null;
+    const local = await idbGetVetrina(id);
+    if(local){
+      // convertiamo in un formato “renderabile” con objectURL
+      const files = (local.files||[]).map(f=>({
+        name: f.name, type: f.type,
+        url: URL.createObjectURL(f.blob)
+      }));
+      const bgUrl = local.bgBlob ? URL.createObjectURL(local.bgBlob) : null;
+
+      v = {
+        title: local.title, desc: local.desc,
+        fontFamily: local.fontFamily, baseFontSize: local.baseFontSize,
+        titleSize: local.titleSize, titleColor: local.titleColor,
+        bgColor: local.bgColor,
+        bgUrl,
+        presentationText: local.presentationText,
+        voice: local.voice,
+        filesLocal: files
+      };
+    }
   }
+
   if(!v){
     app.innerHTML = `<div class="wrap card">
       Vetrina <b>${id}</b> non trovata.<br><br>
-      <div class="small">Per renderla pubblica: carica <b>data/${id}.json</b> nella repo.</div>
+      <div class="small">Per condividerla: pubblica <b>data/${id}.json</b> su GitHub.</div>
     </div>`;
     return;
   }
 
   document.body.style.overflow="hidden";
 
-  const bgImg = v.bgImage ? `background-image:url(${v.bgImage});` : "";
+  // Se pubblico: usa v.bgImage + v.files[].data (base64)
+  // Se locale: usa v.bgUrl + v.filesLocal[].url (objectURL)
+  const bg = v.bgImage ? `background-image:url(${v.bgImage});`
+           : v.bgUrl ? `background-image:url(${v.bgUrl});` : "";
+
   app.innerHTML = `
     <div style="
       width:100vw;height:100vh;overflow:auto;
-      ${bgImg}
+      ${bg}
       background-size:cover;background-position:center;
       background-color:${v.bgColor||"#0b1020"};
       font-family:${v.fontFamily||"system-ui"};
@@ -60,46 +85,40 @@ async function loadPublic(id){
     ">
       <div style="text-align:center;background:rgba(0,0,0,.35);border-radius:12px;padding:12px">
         <div style="font-weight:900;font-size:${v.titleSize||32}px;color:${v.titleColor||"#fff"}">
-          ${v.title||id}
+          ${(v.title||id)}
         </div>
-        <div class="small">${v.desc||""}</div>
+        <div class="small">${(v.desc||"")}</div>
       </div>
 
       <div class="card" style="background:rgba(11,18,36,.85)">
         <button id="btnSpeak">▶ Ascolta presentazione</button>
-        <div class="small">Se l’autoplay è bloccato dal browser, premi il pulsante.</div>
+        <div class="small">Se l’autoplay è bloccato, premi il pulsante.</div>
       </div>
 
       <div class="grid" id="grid"></div>
     </div>
   `;
 
-  const grid=document.getElementById("grid");
-  (v.files||[]).forEach(f=>{
-    if((f.type||"").startsWith("video")){
+  const grid = document.getElementById("grid");
+
+  const items = v.files ? v.files.map(f=>({type:f.type, src:f.data}))
+                        : (v.filesLocal||[]).map(f=>({type:f.type, src:f.url}));
+
+  items.forEach(f=>{
+    if((f.type||"").startsWith("video/")){
       const el=document.createElement("video");
       el.className="thumb";
-      el.src=f.data;
+      el.src=f.src;
       el.muted=true;
       el.controls=true;
       el.onclick=()=>showFull(`<video src="${el.src}" controls autoplay></video>`);
       grid.appendChild(el);
-    }else if((f.type||"").startsWith("image")){
+    }else if((f.type||"").startsWith("image/")){
       const img=document.createElement("img");
       img.className="thumb";
-      img.src=f.data;
+      img.src=f.src;
       img.onclick=()=>showFull(`<img src="${img.src}">`);
       grid.appendChild(img);
-    }else{
-      // altri file: mostra link download
-      const a=document.createElement("a");
-      a.href=f.data;
-      a.download=f.name||"file";
-      a.textContent=`Scarica: ${f.name||"file"}`;
-      a.className="card";
-      a.style.display="block";
-      a.style.background="rgba(11,18,36,.85)";
-      grid.appendChild(a);
     }
   });
 
@@ -112,9 +131,8 @@ async function loadPublic(id){
     const ok=playVoice();
     if(!ok) alert("Sintesi vocale non disponibile su questo browser.");
   };
-  // tentativo autoplay
   playVoice();
 })();
 </script>
 </body>
-</html>
+</html>                            
