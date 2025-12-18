@@ -1,181 +1,424 @@
-
-  <!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vetrina</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SerCucTech | Vetrina</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --fg:#e5e7eb;
+      --muted:#94a3b8;
+      --card:#0f172a;
+      --border:#1f2a44;
+      --btn:#2563eb;
+      --btn2:#0b1220;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:var(--bg);
+      color:var(--fg);
+      min-height:100vh;
+    }
+    header{
+      padding:16px;
+      border-bottom:1px solid var(--border);
+      background:rgba(0,0,0,.18);
+      position:sticky; top:0;
+      backdrop-filter: blur(8px);
+    }
+    .wrap{max-width:1050px;margin:0 auto;padding:18px}
+    h1{margin:0;font-size:26px;line-height:1.1}
+    .desc{margin-top:8px;color:var(--muted)}
+    .topRow{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top:12px; align-items:center;
+    }
+    .pill{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .btn{
+      border:0; cursor:pointer;
+      padding:10px 14px;
+      border-radius:10px;
+      background:var(--btn);
+      color:white;
+      font-weight:600;
+    }
+    .btn.secondary{
+      background:transparent;
+      border:1px solid var(--border);
+      color:var(--fg);
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+      gap:12px;
+      margin-top:16px;
+    }
+    .card{
+      background:rgba(0,0,0,.18);
+      border:1px solid var(--border);
+      border-radius:14px;
+      overflow:hidden;
+      min-height:140px;
+      display:flex;
+      flex-direction:column;
+    }
+    .thumb{
+      width:100%;
+      aspect-ratio:1/1;
+      background:rgba(255,255,255,.06);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    }
+    .thumb img, .thumb video{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .meta{
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .name{font-weight:700;font-size:14px;word-break:break-word}
+    .type{font-size:12px;color:var(--muted)}
+    .empty{
+      margin-top:18px;
+      padding:16px;
+      border-radius:14px;
+      border:1px dashed var(--border);
+      color:var(--muted);
+      background:rgba(255,255,255,.03);
+    }
 
-<style>
-  body{
-    margin:0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    background:#0b1020;
-    color:#fff;
-    text-align:center;
-  }
-  header{ padding:22px 14px; }
-  #title{ font-weight:800; line-height:1.1; margin:0 0 10px 0; }
-  #desc{ opacity:.9; margin:0 0 12px 0; }
+    /* Fullscreen viewer */
+    .viewer{
+      position:fixed; inset:0;
+      background:rgba(0,0,0,.92);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:14px;
+      z-index:9999;
+    }
+    .viewer.active{display:flex}
+    .viewerContent{
+      max-width:100%;
+      max-height:100%;
+    }
+    .viewerContent img, .viewerContent video{
+      max-width:100%;
+      max-height:100%;
+      border-radius:12px;
+      display:block;
+    }
+    .viewerHint{
+      position:fixed; bottom:18px; left:50%;
+      transform:translateX(-50%);
+      color:#cbd5e1;
+      font-size:13px;
+      opacity:.9;
+      background:rgba(0,0,0,.35);
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+    }
 
-  .gallery{
-    display:grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px,1fr));
-    gap:10px;
-    padding:12px;
-    max-width:1100px;
-    margin:0 auto 30px auto;
-  }
-  .card{
-    border-radius:10px;
-    overflow:hidden;
-    background: rgba(255,255,255,.06);
-  }
-  .thumb{
-    width:100%;
-    height:120px;
-    object-fit:cover;
-    display:block;
-    cursor:pointer;
-  }
-  .name{
-    font-size:12px;
-    padding:8px 10px;
-    text-align:left;
-    opacity:.9;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-  }
-
-  .overlay{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.95);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    z-index:9999;
-    padding:10px;
-  }
-  .overlay img{
-    max-width:96vw;
-    max-height:96vh;
-  }
-
-  .error{
-    padding:42px 18px;
-    font-size:20px;
-  }
-  code{ background:rgba(255,255,255,.08); padding:2px 6px; border-radius:6px; }
-</style>
+    /* Tap-to-audio overlay */
+    .audioGate{
+      position:fixed; inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background:rgba(0,0,0,.45);
+      z-index:9998;
+    }
+    .audioGate.active{display:flex}
+    .audioBox{
+      width:min(560px,100%);
+      background:rgba(15,23,42,.96);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:16px;
+    }
+    .audioBox h2{margin:0 0 8px 0;font-size:18px}
+    .audioBox p{margin:0 0 12px 0;color:var(--muted);font-size:14px;line-height:1.4}
+    .audioBox .row{display:flex;gap:10px;flex-wrap:wrap}
+  </style>
 </head>
-
 <body>
 <header>
-  <div id="title"></div>
-  <div id="desc"></div>
+  <div class="wrap">
+    <h1 id="title">Vetrina</h1>
+    <div class="desc" id="desc"></div>
+    <div class="topRow">
+      <span class="pill" id="pillId">ID: -</span>
+      <button class="btn" id="btnSpeak">▶ Ascolta presentazione</button>
+      <button class="btn secondary" id="btnStop">■ Stop</button>
+    </div>
+  </div>
 </header>
 
-<div class="gallery" id="gallery"></div>
+<main class="wrap">
+  <div id="files"></div>
+</main>
 
-<div class="overlay" id="overlay" onclick="closeFull()">
-  <img id="fullImg" alt="">
+<!-- Fullscreen viewer -->
+<div class="viewer" id="viewer" aria-hidden="true">
+  <div class="viewerContent" id="viewerContent"></div>
+  <div class="viewerHint">Tocca per chiudere</div>
+</div>
+
+<!-- Tap-to-audio overlay (when autoplay is blocked) -->
+<div class="audioGate" id="audioGate">
+  <div class="audioBox">
+    <h2>Audio bloccato dal browser</h2>
+    <p>Su Android l’audio può partire solo dopo un tocco. Premi qui per ascoltare la presentazione.</p>
+    <div class="row">
+      <button class="btn" id="gatePlay">▶ Tocca per ascoltare</button>
+      <button class="btn secondary" id="gateClose">Chiudi</button>
+    </div>
+  </div>
 </div>
 
 <script>
-/* ================================
-   ID (FORZATO MINUSCOLO)
-================================ */
-const params = new URLSearchParams(location.search);
-const id = (params.get("id") || "").toLowerCase();
+(function(){
+  const qs = new URLSearchParams(location.search);
+  const idRaw = (qs.get('id') || '').trim();
+  const id = idRaw || 'demo';
 
-if(!id){
-  document.body.innerHTML = "<div class='error'><b>ID vetrina mancante</b></div>";
-  throw new Error("ID mancante");
-}
+  const elTitle = document.getElementById('title');
+  const elDesc  = document.getElementById('desc');
+  const elFiles = document.getElementById('files');
+  const pillId  = document.getElementById('pillId');
 
-/* ================================
-   BASE URL (ANTI-ERRORI GITHUB PAGES)
-   - prende la cartella dove sta vetrina.html
-   - poi risolve data/<id>.json in modo corretto
-================================ */
-const base = new URL('.', location.href);               // es: .../SerCucTech/
-const url  = new URL(`data/${id}.json`, base).href;     // es: .../SerCucTech/data/scalvini10.json
+  const btnSpeak = document.getElementById('btnSpeak');
+  const btnStop  = document.getElementById('btnStop');
 
-fetch(url, { cache: "no-store" })
-  .then(r=>{
-    if(!r.ok) throw new Error("not found");
-    return r.json();
-  })
-  .then(data=>{
-    // se c'è data.id, lo confrontiamo
-    if(data.id && String(data.id).toLowerCase() !== id){
-      throw new Error("id mismatch");
+  const viewer = document.getElementById('viewer');
+  const viewerContent = document.getElementById('viewerContent');
+
+  const audioGate = document.getElementById('audioGate');
+  const gatePlay = document.getElementById('gatePlay');
+  const gateClose = document.getElementById('gateClose');
+
+  pillId.textContent = 'ID: ' + id;
+
+  // URL pubblico del JSON
+  const dataUrl = `data/${encodeURIComponent(id)}.json`;
+
+  // --- Speech helpers ---
+  function stopSpeech(){
+    try { window.speechSynthesis.cancel(); } catch(e){}
+  }
+
+  function speak(text, lang){
+    stopSpeech();
+    if(!text || !('speechSynthesis' in window)) return false;
+
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang || navigator.language || 'it-IT';
+
+    // Prova voce disponibile nella lingua (se esiste)
+    try {
+      const voices = speechSynthesis.getVoices();
+      const pick = voices.find(v => (v.lang||'').toLowerCase() === (u.lang||'').toLowerCase())
+              || voices.find(v => (v.lang||'').toLowerCase().startsWith((u.lang||'').slice(0,2).toLowerCase()));
+      if(pick) u.voice = pick;
+    } catch(e){}
+
+    try {
+      speechSynthesis.speak(u);
+      return true;
+    } catch(e){
+      return false;
     }
-    render(data);
-  })
-  .catch(()=>{
-    document.body.innerHTML = `
-      <div class="error">
-        <b>Vetrina ${id} non trovata.</b><br><br>
-        Pubblica: <code>data/${id}.json</code><br><br>
-        (URL cercato: <code>${escapeHtml(url)}</code>)
-      </div>`;
+  }
+
+  // Autoplay “best effort”
+  function tryAutoSpeak(voiceText, voiceLang){
+    if(!voiceText) return;
+    // Alcuni browser caricano le voci dopo: riproviamo 2 volte
+    let tries = 0;
+    const attempt = () => {
+      tries++;
+      const ok = speak(voiceText, voiceLang);
+      // Se non parte, mostro il gate (Android spesso blocca finché non tocchi)
+      setTimeout(() => {
+        const stillSpeaking = speechSynthesis.speaking;
+        if(!stillSpeaking && tries >= 2){
+          audioGate.classList.add('active');
+        } else if(!stillSpeaking && tries < 2){
+          attempt();
+        }
+      }, 350);
+    };
+    attempt();
+  }
+
+  btnSpeak.addEventListener('click', () => {
+    if(window.__voiceText){
+      const ok = speak(window.__voiceText, window.__voiceLang);
+      if(!ok) audioGate.classList.add('active');
+    }
+  });
+  btnStop.addEventListener('click', stopSpeech);
+
+  gatePlay.addEventListener('click', () => {
+    audioGate.classList.remove('active');
+    if(window.__voiceText) speak(window.__voiceText, window.__voiceLang);
+  });
+  gateClose.addEventListener('click', () => audioGate.classList.remove('active'));
+
+  // Fullscreen viewer close on tap
+  viewer.addEventListener('click', () => {
+    viewer.classList.remove('active');
+    viewerContent.innerHTML = '';
+    // stop video if any
+    stopSpeech(); // opzionale
   });
 
-function render(v){
-  document.title = v.title ? `Vetrina • ${v.title}` : "Vetrina";
+  function openViewerFor(item){
+    viewerContent.innerHTML = '';
+    if(item.kind === 'video'){
+      const v = document.createElement('video');
+      v.src = item.url;
+      v.controls = true;
+      v.playsInline = true;
+      v.autoplay = true;
+      viewerContent.appendChild(v);
+    } else {
+      const img = document.createElement('img');
+      img.src = item.url;
+      img.alt = item.name || 'media';
+      viewerContent.appendChild(img);
+    }
+    viewer.classList.add('active');
+  }
 
-  const titleEl = document.getElementById("title");
-  const descEl  = document.getElementById("desc");
+  function renderFiles(files){
+    if(!Array.isArray(files) || files.length === 0){
+      elFiles.innerHTML = `
+        <div class="empty">
+          <b>Nessun file in questa vetrina.</b><br>
+          Quando aggiungi immagini o video in admin, compariranno qui.
+        </div>`;
+      return;
+    }
 
-  titleEl.textContent = v.title || "";
-  titleEl.style.fontSize = (Number(v.titleSize || 32)) + "px";
-  titleEl.style.color = v.titleColor || "#ffffff";
+    const grid = document.createElement('div');
+    grid.className = 'grid';
 
-  descEl.textContent = v.desc || "";
+    files.forEach(f => {
+      const kind = (f.kind || f.type || '').toLowerCase();
+      const isVideo = kind.includes('video') || (f.url||'').match(/\.(mp4|webm|ogg)$/i);
 
-  document.body.style.background = v.bgColor || "#0b1020";
+      const card = document.createElement('div');
+      card.className = 'card';
 
-  const g = document.getElementById("gallery");
-  g.innerHTML = "";
+      const thumb = document.createElement('div');
+      thumb.className = 'thumb';
 
-  (v.files || []).forEach(f=>{
-    if(!f || !f.data) return;
+      if(isVideo){
+        const v = document.createElement('video');
+        v.src = f.url;
+        v.muted = true;
+        v.playsInline = true;
+        v.preload = 'metadata';
+        thumb.appendChild(v);
+      } else {
+        const img = document.createElement('img');
+        img.src = f.url;
+        img.alt = f.name || 'immagine';
+        thumb.appendChild(img);
+      }
 
-    const wrap = document.createElement("div");
-    wrap.className = "card";
+      thumb.addEventListener('click', () => {
+        openViewerFor({kind: isVideo ? 'video' : 'image', url: f.url, name: f.name});
+      });
 
-    const img = document.createElement("img");
-    img.className = "thumb";
-    img.src = f.data;
-    img.alt = f.name || "immagine";
-    img.onclick = ()=>openFull(f.data);
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.innerHTML = `
+        <div class="name">${(f.name || 'Senza nome')}</div>
+        <div class="type">${isVideo ? 'Video' : 'Immagine'}</div>
+      `;
 
-    const nm = document.createElement("div");
-    nm.className = "name";
-    nm.textContent = f.name || "";
+      card.appendChild(thumb);
+      card.appendChild(meta);
+      grid.appendChild(card);
+    });
 
-    wrap.appendChild(img);
-    wrap.appendChild(nm);
-    g.appendChild(wrap);
-  });
-}
+    elFiles.innerHTML = '';
+    elFiles.appendChild(grid);
+  }
 
-function openFull(src){
-  document.getElementById("fullImg").src = src;
-  document.getElementById("overlay").style.display = "flex";
-}
-function closeFull(){
-  document.getElementById("overlay").style.display = "none";
-}
+  async function load(){
+    // default UI
+    elTitle.textContent = 'Vetrina ' + id;
+    elDesc.textContent  = '';
 
-function escapeHtml(s){
-  return String(s||"")
-    .replaceAll("&","&amp;").replaceAll("<","&lt;")
-    .replaceAll(">","&gt;").replaceAll('"',"&quot;");
-}
+    try{
+      const res = await fetch(dataUrl, {cache:'no-store'});
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+
+      // Styling
+      if(data.bgColor) document.body.style.background = data.bgColor;
+      if(data.bgImage){
+        document.body.style.backgroundImage = `url(${data.bgImage})`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+      }
+
+      // Title / desc
+      elTitle.textContent = data.title || ('Vetrina ' + id);
+      elDesc.textContent  = data.desc || '';
+
+      // Title style
+      if(data.titleColor) elTitle.style.color = data.titleColor;
+      if(data.titleSize) elTitle.style.fontSize = (Number(data.titleSize) || 26) + 'px';
+      if(data.fontFamily) elTitle.style.fontFamily = data.fontFamily + ', system-ui, Arial';
+
+      // Save voice in globals for buttons
+      window.__voiceLang = data.voiceLang || (navigator.language || 'it-IT');
+      window.__voiceText = data.voiceText || '';
+
+      // Render files
+      renderFiles(data.files || []);
+
+      // Autoplay voice (best effort)
+      if(window.__voiceText){
+        tryAutoSpeak(window.__voiceText, window.__voiceLang);
+      }
+
+    }catch(err){
+      document.body.style.background = '#0b1220';
+      elFiles.innerHTML = `
+        <div class="empty">
+          <b>Vetrina non trovata.</b><br>
+          Pubblica: <code>${dataUrl}</code><br>
+          Errore: ${String(err)}
+        </div>`;
+    }
+  }
+
+  load();
+})();
 </script>
 </body>
 </html>
