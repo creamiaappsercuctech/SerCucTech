@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+
+  <!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -13,32 +14,40 @@
     color:#fff;
     text-align:center;
   }
-  header{
-    padding:20px;
-  }
-  #title{
-    font-weight:700;
-    margin-bottom:10px;
-  }
-  #desc{
-    opacity:.9;
-    margin-bottom:20px;
-  }
+  header{ padding:22px 14px; }
+  #title{ font-weight:800; line-height:1.1; margin:0 0 10px 0; }
+  #desc{ opacity:.9; margin:0 0 12px 0; }
+
   .gallery{
     display:grid;
     grid-template-columns: repeat(auto-fill, minmax(120px,1fr));
     gap:10px;
-    padding:10px;
+    padding:12px;
+    max-width:1100px;
+    margin:0 auto 30px auto;
   }
-  .gallery img{
+  .card{
+    border-radius:10px;
+    overflow:hidden;
+    background: rgba(255,255,255,.06);
+  }
+  .thumb{
     width:100%;
     height:120px;
     object-fit:cover;
-    border-radius:8px;
+    display:block;
     cursor:pointer;
   }
+  .name{
+    font-size:12px;
+    padding:8px 10px;
+    text-align:left;
+    opacity:.9;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
 
-  /* fullscreen image */
   .overlay{
     position:fixed;
     inset:0;
@@ -47,21 +56,22 @@
     align-items:center;
     justify-content:center;
     z-index:9999;
+    padding:10px;
   }
   .overlay img{
-    max-width:95%;
-    max-height:95%;
+    max-width:96vw;
+    max-height:96vh;
   }
 
   .error{
-    padding:40px;
+    padding:42px 18px;
     font-size:20px;
   }
+  code{ background:rgba(255,255,255,.08); padding:2px 6px; border-radius:6px; }
 </style>
 </head>
 
 <body>
-
 <header>
   <div id="title"></div>
   <div id="desc"></div>
@@ -70,42 +80,37 @@
 <div class="gallery" id="gallery"></div>
 
 <div class="overlay" id="overlay" onclick="closeFull()">
-  <img id="fullImg">
+  <img id="fullImg" alt="">
 </div>
 
 <script>
 /* ================================
-   LETTURA ID (FORZATO MINUSCOLO)
+   ID (FORZATO MINUSCOLO)
 ================================ */
 const params = new URLSearchParams(location.search);
 const id = (params.get("id") || "").toLowerCase();
 
 if(!id){
-  document.body.innerHTML =
-    "<div class='error'>ID vetrina mancante</div>";
+  document.body.innerHTML = "<div class='error'><b>ID vetrina mancante</b></div>";
   throw new Error("ID mancante");
 }
 
-// === BASE PATH GITHUB PAGES ===
-const REPO = "SerCucTech"; // <-- NOME ESATTO REPO
-const BASE = location.hostname.includes("github.io")
-  ? "/" + REPO + "/"
-  : "/";
-
-// === URL JSON ===
-const url = BASE + "data/" + id + ".json";
-
 /* ================================
-   CARICAMENTO DATI
+   BASE URL (ANTI-ERRORI GITHUB PAGES)
+   - prende la cartella dove sta vetrina.html
+   - poi risolve data/<id>.json in modo corretto
 ================================ */
-fetch(url)
+const base = new URL('.', location.href);               // es: .../SerCucTech/
+const url  = new URL(`data/${id}.json`, base).href;     // es: .../SerCucTech/data/scalvini10.json
+
+fetch(url, { cache: "no-store" })
   .then(r=>{
     if(!r.ok) throw new Error("not found");
     return r.json();
   })
   .then(data=>{
-    // controllo ID interno (sicurezza)
-    if(data.id && data.id.toLowerCase() !== id){
+    // se c'è data.id, lo confrontiamo
+    if(data.id && String(data.id).toLowerCase() !== id){
       throw new Error("id mismatch");
     }
     render(data);
@@ -114,43 +119,50 @@ fetch(url)
     document.body.innerHTML = `
       <div class="error">
         <b>Vetrina ${id} non trovata.</b><br><br>
-        Pubblica: <code>data/${id}.json</code>
+        Pubblica: <code>data/${id}.json</code><br><br>
+        (URL cercato: <code>${escapeHtml(url)}</code>)
       </div>`;
   });
 
-/* ================================
-   RENDER
-================================ */
 function render(v){
-  document.title = v.title || "Vetrina";
+  document.title = v.title ? `Vetrina • ${v.title}` : "Vetrina";
 
   const titleEl = document.getElementById("title");
   const descEl  = document.getElementById("desc");
 
   titleEl.textContent = v.title || "";
-  titleEl.style.fontSize = (v.titleSize || 32) + "px";
+  titleEl.style.fontSize = (Number(v.titleSize || 32)) + "px";
   titleEl.style.color = v.titleColor || "#ffffff";
 
   descEl.textContent = v.desc || "";
 
-  document.body.style.background =
-    v.bgColor || "#0b1020";
+  document.body.style.background = v.bgColor || "#0b1020";
 
   const g = document.getElementById("gallery");
   g.innerHTML = "";
 
   (v.files || []).forEach(f=>{
-    if(!f.data) return;
+    if(!f || !f.data) return;
+
+    const wrap = document.createElement("div");
+    wrap.className = "card";
+
     const img = document.createElement("img");
+    img.className = "thumb";
     img.src = f.data;
+    img.alt = f.name || "immagine";
     img.onclick = ()=>openFull(f.data);
-    g.appendChild(img);
+
+    const nm = document.createElement("div");
+    nm.className = "name";
+    nm.textContent = f.name || "";
+
+    wrap.appendChild(img);
+    wrap.appendChild(nm);
+    g.appendChild(wrap);
   });
 }
 
-/* ================================
-   FULLSCREEN IMAGE
-================================ */
 function openFull(src){
   document.getElementById("fullImg").src = src;
   document.getElementById("overlay").style.display = "flex";
@@ -158,7 +170,12 @@ function openFull(src){
 function closeFull(){
   document.getElementById("overlay").style.display = "none";
 }
-</script>
 
+function escapeHtml(s){
+  return String(s||"")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;")
+    .replaceAll(">","&gt;").replaceAll('"',"&quot;");
+}
+</script>
 </body>
 </html>
