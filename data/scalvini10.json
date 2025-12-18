@@ -5,7 +5,22 @@
   "titleSize": 32,
   "titleColor": "#ffffff",
   "bgColor": "#ffff00",
-  "files": [],
+  "bgImage": "",
+  "fontFamily": "system-ui",
   "voiceLang": "it-IT",
-  "voiceText": "Benvenuto nella vetrina Scalvini 10. Qui trovi la presentazione e i file disponibili."
+  "voiceText": "Benvenuto nella vetrina Scalvini 10. Qui trovi la presentazione e i file disponibili.",
+  "files": [
+    {
+      "name": "Foto 1",
+      "kind": "image",
+      "mime": "image/jpeg",
+      "url": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD..."
+    },
+    {
+      "name": "Video 1",
+      "kind": "video",
+      "mime": "video/mp4",
+      "url": "data:video/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAG1wN..."
+    }
+  ]
 }
