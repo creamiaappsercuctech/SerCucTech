@@ -326,6 +326,44 @@ function escapeHtml(s){
     .replaceAll("&","&amp;").replaceAll("<","&lt;")
     .replaceAll(">","&gt;").replaceAll('"',"&quot;");
 }
+  function normalizeId(raw){
+  // minuscolo, elimina spazi, caratteri strani -> solo a-z 0-9 _ -
+  return String(raw||"")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "")        // rimuove tutti gli spazi
+    .replace(/[^a-z0-9_-]/g, ""); // elimina caratteri non permessi
+}
+
+function isValidId(id){
+  // minimo 2 caratteri, deve iniziare con lettera o numero
+  return /^[a-z0-9][a-z0-9_-]{1,50}$/.test(id);
+}
+
+function enforceIdInput(){
+  const raw = vid.value;
+  const clean = normalizeId(raw);
+  if(raw !== clean){
+    vid.value = clean;
+  }
+}
+
+vid.addEventListener("input", enforceIdInput);
+vid.addEventListener("blur", enforceIdInput);
+
+function requireValidIdOrAlert(){
+  const id = normalizeId(vid.value);
+  vid.value = id;
+  if(!id){
+    alert("ID obbligatorio. Esempio: sergio10");
+    return null;
+  }
+  if(!isValidId(id)){
+    alert("ID non valido. Usa solo: a-z 0-9 _ - (senza spazi). Esempio: sergio10");
+    return null;
+  }
+  return id;
+}
 </script>
 
 </body>
