@@ -1,587 +1,209 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SerCucTech | Admin Vetrine</title>
-  <style>
-    :root{
-      --bg:#0b1220; --fg:#e5e7eb; --muted:#94a3b8;
-      --card:#0f172a; --border:#1f2a44; --btn:#2563eb;
-      --danger:#ef4444; --ok:#22c55e;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg)}
-    header{position:sticky;top:0;z-index:5;background:rgba(0,0,0,.25);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
-    .wrap{max-width:1100px;margin:0 auto;padding:14px 16px}
-    h1{margin:0;font-size:20px}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
-    .pill{padding:8px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.03);color:var(--muted);font-size:13px}
-    .btn{border:0;cursor:pointer;border-radius:10px;padding:10px 12px;background:var(--btn);color:white;font-weight:700}
-    .btn.secondary{background:transparent;border:1px solid var(--border);color:var(--fg)}
-    .btn.danger{background:var(--danger)}
-    .btn.ok{background:var(--ok);color:#06210f}
-    main{padding:16px}
-    .grid{display:grid;grid-template-columns:1fr;gap:14px}
-    @media(min-width:980px){.grid{grid-template-columns:420px 1fr}}
-    .card{background:rgba(0,0,0,.18);border:1px solid var(--border);border-radius:16px;padding:14px}
-    .card h2{margin:0 0 10px 0;font-size:16px}
-    label{display:block;font-size:13px;color:var(--muted);margin:10px 0 6px}
-    input,textarea,select{
-      width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--border);
-      background:rgba(255,255,255,.03);color:var(--fg);outline:none
-    }
-    textarea{min-height:80px;resize:vertical}
-    .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-    .small{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.35}
-    .list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
-    .item{border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(255,255,255,.03)}
-    .itemTop{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-    .title{font-weight:800}
-    .links{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    a{color:#93c5fd;text-decoration:none}
-    a:hover{text-decoration:underline}
-    .hr{height:1px;background:var(--border);margin:12px 0}
-    .thumbs{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:10px}
-    .thumb{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:rgba(255,255,255,.05)}
-    .thumbMedia{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;overflow:hidden}
-    .thumb img,.thumb video{width:100%;height:100%;object-fit:cover;display:block}
-    .thumbMeta{padding:8px;font-size:12px;color:var(--muted);word-break:break-word}
-    .viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;padding:14px;z-index:9999}
-    .viewer.active{display:flex}
-    .viewerContent img,.viewerContent video{max-width:100%;max-height:100%;border-radius:14px;display:block}
-    .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:rgba(15,23,42,.95);border:1px solid var(--border);
-      padding:10px 12px;border-radius:999px;color:var(--fg);font-size:13px;display:none;z-index:10000}
-    .toast.show{display:block}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SerCucTech | Admin</title>
+
+<style>
+:root{
+  --bg:#0b1220; --fg:#e5e7eb; --muted:#94a3b8;
+  --card:#0f172a; --border:#1f2a44; --btn:#2563eb;
+  --danger:#ef4444; --ok:#22c55e;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg)}
+header{position:sticky;top:0;z-index:5;background:rgba(0,0,0,.25);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.wrap{max-width:1100px;margin:0 auto;padding:14px 16px}
+h1{margin:0;font-size:20px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.btn{border:0;cursor:pointer;border-radius:10px;padding:10px 12px;background:var(--btn);color:white;font-weight:700}
+.btn.secondary{background:transparent;border:1px solid var(--border);color:var(--fg)}
+.btn.danger{background:var(--danger)}
+.btn.ok{background:var(--ok);color:#06210f}
+main{padding:16px}
+.grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:980px){.grid{grid-template-columns:420px 1fr}}
+.card{background:rgba(0,0,0,.18);border:1px solid var(--border);border-radius:16px;padding:14px}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 6px}
+input,textarea,select{
+  width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--border);
+  background:rgba(255,255,255,.03);color:var(--fg);outline:none
+}
+textarea{min-height:80px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.small{font-size:12px;color:var(--muted);margin-top:8px}
+.list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.item{border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(255,255,255,.03)}
+.links{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+a{color:#93c5fd;text-decoration:none}
+a:hover{text-decoration:underline}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:10px}
+.thumb{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:rgba(255,255,255,.05)}
+.thumbMedia{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.thumb img,.thumb video{width:100%;height:100%;object-fit:cover}
+.viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:9999}
+.viewer.active{display:flex}
+.viewer img,.viewer video{max-width:96%;max-height:96%;border-radius:14px}
+.toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
+  background:rgba(15,23,42,.95);border:1px solid var(--border);
+  padding:10px 12px;border-radius:999px;display:none}
+.toast.show{display:block}
+
+/* ===== LOCK SCREEN INVISIBILE ===== */
+#lockScreen{
+  position:fixed;inset:0;z-index:10000;
+  background:#0b1220;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+}
+#secretSentence{max-width:420px;line-height:1.7;opacity:.9}
+#secretSentence span{cursor:pointer}
+#pinError{display:none;color:#ff6b6b;margin-top:14px}
+</style>
 </head>
+
 <body>
+
+<!-- ===== ACCESSO INVISIBILE ===== -->
+<div id="lockScreen">
+  <div>
+    <p id="secretSentence">
+      L’accesso alla gestione avviene solo quando la
+      <span data-k="a">luce</span>
+      incontra la
+      <span data-k="b">porta</span>
+      giusta nel momento corretto.
+    </p>
+    <p id="pinError">Accesso negato</p>
+  </div>
+</div>
+
 <header>
   <div class="wrap">
     <h1>Admin Vetrine — SerCucTech</h1>
     <div class="row">
-      <span class="pill">Salvataggio: locale (browser) + esportazione JSON per /data/ID.json</span>
       <button class="btn secondary" id="btnExportIndex">⬇ Esporta data/vetrine.json</button>
-      <label class="btn secondary" style="display:inline-flex;gap:8px;align-items:center">
-        ⬆ Importa ID.json
-        <input id="importJson" type="file" accept="application/json" style="display:none">
-      </label>
     </div>
   </div>
 </header>
 
 <main class="wrap grid">
   <section class="card">
-    <h2>Crea / Modifica vetrina</h2>
-
-    <label>ID vetrina (solo lettere/numeri, senza spazi) — es: scalvini10</label>
-    <input id="f_id" placeholder="scalvini10" />
+    <label>ID vetrina</label>
+    <input id="f_id" placeholder="scalvini10"/>
 
     <label>Titolo</label>
-    <input id="f_title" placeholder="Scalvini 10" />
+    <input id="f_title"/>
 
     <label>Descrizione</label>
-    <textarea id="f_desc" placeholder="Testo descrizione..."></textarea>
+    <textarea id="f_desc"></textarea>
 
     <div class="two">
+      <div><label>Dimensione titolo</label><input id="f_titleSize" type="number" value="32"/></div>
       <div>
-        <label>Dimensione titolo (px)</label>
-        <input id="f_titleSize" type="number" min="12" max="96" value="32" />
-      </div>
-      <div>
-        <label>Tipo carattere (font)</label>
+        <label>Font</label>
         <select id="f_fontFamily">
           <option value="system-ui">System</option>
-          <option value="Arial">Arial</option>
-          <option value="Georgia">Georgia</option>
-          <option value="Times New Roman">Times New Roman</option>
-          <option value="Verdana">Verdana</option>
-          <option value="Trebuchet MS">Trebuchet MS</option>
-          <option value="Courier New">Courier New</option>
+          <option>Arial</option><option>Georgia</option><option>Verdana</option>
         </select>
       </div>
     </div>
 
     <div class="three">
-      <div>
-        <label>Colore titolo</label>
-        <input id="f_titleColor" type="color" value="#ffffff" />
-      </div>
-      <div>
-        <label>Colore sfondo</label>
-        <input id="f_bgColor" type="color" value="#0b1220" />
-      </div>
-      <div>
-        <label>Immagine sfondo (opzionale)</label>
-        <input id="f_bgImage" type="file" accept="image/*" />
-      </div>
+      <div><label>Colore titolo</label><input id="f_titleColor" type="color" value="#ffffff"/></div>
+      <div><label>Colore sfondo</label><input id="f_bgColor" type="color" value="#0b1220"/></div>
+      <div><label>Immagine sfondo</label><input id="f_bgImage" type="file" accept="image/*"/></div>
     </div>
 
-    <div class="hr"></div>
+    <label>Voce (lingua)</label>
+    <input id="f_voiceLang" value="it-IT"/>
 
-    <h2 style="margin-top:0">Presentazione vocale</h2>
-    <div class="two">
-      <div>
-        <label>Lingua voce (es: it-IT / uk-UA / en-US / ja-JP)</label>
-        <input id="f_voiceLang" placeholder="it-IT" value="it-IT" />
-      </div>
-      <div>
-        <label>Test rapido voce (play)</label>
-        <button class="btn secondary" id="btnTestVoice">▶ Test voce</button>
-      </div>
-    </div>
-    <label>Testo presentazione (partirà su vetrina.html con “best effort”)</label>
-    <textarea id="f_voiceText" placeholder="Benvenuto nella vetrina..."></textarea>
+    <label>Testo voce</label>
+    <textarea id="f_voiceText"></textarea>
 
-    <div class="hr"></div>
+    <label>Upload immagini / video (multiplo)</label>
+    <input id="f_files" type="file" accept="image/*,video/*" multiple/>
 
-    <h2 style="margin-top:0">Files (upload multiplo)</h2>
-    <label>Seleziona immagini e/o video (puoi selezionare più file dalla galleria)</label>
-    <input id="f_files" type="file" accept="image/*,video/*" multiple />
-
-    <div class="row" style="margin-top:12px">
+    <div class="row">
       <button class="btn ok" id="btnSave">💾 Salva (locale)</button>
-      <button class="btn secondary" id="btnPreview">👁 Anteprima</button>
-      <button class="btn secondary" id="btnExportOne">⬇ Esporta ID.json (pubblico)</button>
-      <button class="btn danger" id="btnDelete">🗑 Cancella vetrina</button>
-    </div>
-
-    <div class="small">
-      Pubblicazione su GitHub Pages:
-      1) Esporta “ID.json” → salva sul telefono<br>
-      2) Carica quel file nella repo in <b>/data/ID.json</b><br>
-      3) Link pubblico: <code>vetrina.html?id=ID</code>
+      <button class="btn secondary" id="btnExportOne">⬇ Esporta ID.json</button>
+      <button class="btn danger" id="btnDelete">🗑 Cancella</button>
     </div>
   </section>
 
   <section class="card">
-    <h2>Vetrine salvate (locali)</h2>
     <div id="list" class="list"></div>
-
-    <div class="hr"></div>
-
-    <h2>Anteprima media</h2>
     <div id="thumbs" class="thumbs"></div>
   </section>
 </main>
 
-<div class="viewer" id="viewer">
-  <div class="viewerContent" id="viewerContent"></div>
-</div>
-
+<div class="viewer" id="viewer"></div>
 <div class="toast" id="toast"></div>
 
 <script>
-(() => {
-  const LS_INDEX = "sct_vetrine_index_v1";
-  const LS_PREFIX = "sct_vetrina_";
+/* ===== ACCESSO INVISIBILE ===== */
+const SECRET_SEQUENCE=["a","b"]; // luce → porta
+let seq=[];
+const unlock=()=>{document.getElementById("lockScreen").style.display="none";localStorage.setItem("adminUnlocked","1");}
+const err=()=>{const e=document.getElementById("pinError");e.style.display="block";setTimeout(()=>e.style.display="none",1200);}
+document.getElementById("secretSentence").addEventListener("click",e=>{
+  const k=e.target.getAttribute("data-k"); if(!k) return;
+  seq.push(k);
+  for(let i=0;i<seq.length;i++){ if(seq[i]!==SECRET_SEQUENCE[i]){seq=[];err();return;} }
+  if(seq.length===SECRET_SEQUENCE.length){unlock();seq=[];}
+});
+if(localStorage.getItem("adminUnlocked")==="1") unlock();
 
-  const $ = (id)=>document.getElementById(id);
+/* ===== LOGICA ADMIN (salvataggio + export) ===== */
+const LS="sct_"; const idxKey="sct_index";
+const $=id=>document.getElementById(id);
+const show=m=>{const t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2000);}
+const clean=x=>(x||"").trim().replace(/\s+/g,"").replace(/[^a-z0-9_-]/gi,"");
+const getIndex=()=>JSON.parse(localStorage.getItem(idxKey)||"[]");
+const setIndex=a=>localStorage.setItem(idxKey,JSON.stringify(a));
+const load=id=>JSON.parse(localStorage.getItem(LS+id)||"null");
+const save=o=>{localStorage.setItem(LS+o.id,JSON.stringify(o));const i=getIndex().filter(x=>x.id!==o.id);i.unshift({id:o.id,title:o.title});setIndex(i);}
+const del=id=>{localStorage.removeItem(LS+id);setIndex(getIndex().filter(x=>x.id!==id));}
 
-  const f_id = $("f_id");
-  const f_title = $("f_title");
-  const f_desc = $("f_desc");
-  const f_titleSize = $("f_titleSize");
-  const f_titleColor = $("f_titleColor");
-  const f_bgColor = $("f_bgColor");
-  const f_bgImage = $("f_bgImage");
-  const f_fontFamily = $("f_fontFamily");
-  const f_voiceLang = $("f_voiceLang");
-  const f_voiceText = $("f_voiceText");
-  const f_files = $("f_files");
+const toDataURL=f=>new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f);});
 
-  const list = $("list");
-  const thumbs = $("thumbs");
-
-  const btnSave = $("btnSave");
-  const btnPreview = $("btnPreview");
-  const btnExportOne = $("btnExportOne");
-  const btnExportIndex = $("btnExportIndex");
-  const btnDelete = $("btnDelete");
-  const btnTestVoice = $("btnTestVoice");
-  const importJson = $("importJson");
-
-  const viewer = $("viewer");
-  const viewerContent = $("viewerContent");
-  const toast = $("toast");
-
-  function showToast(msg){
-    toast.textContent = msg;
-    toast.classList.add("show");
-    setTimeout(()=>toast.classList.remove("show"), 2200);
-  }
-
-  function sanitizeId(x){
-    return (x||"").trim().replace(/\s+/g,"").replace(/[^a-zA-Z0-9_-]/g,"");
-  }
-
-  function getIndex(){
-    try { return JSON.parse(localStorage.getItem(LS_INDEX) || "[]"); }
-    catch(e){ return []; }
-  }
-  function setIndex(arr){
-    localStorage.setItem(LS_INDEX, JSON.stringify(arr));
-  }
-
-  function loadVetrina(id){
-    try { return JSON.parse(localStorage.getItem(LS_PREFIX+id) || "null"); }
-    catch(e){ return null; }
-  }
-  function saveVetrina(obj){
-    localStorage.setItem(LS_PREFIX+obj.id, JSON.stringify(obj));
-    // aggiorna indice
-    const idx = getIndex().filter(x => x.id !== obj.id);
-    idx.unshift({id: obj.id, title: obj.title || obj.id});
-    setIndex(idx);
-  }
-  function deleteVetrina(id){
-    localStorage.removeItem(LS_PREFIX+id);
-    const idx = getIndex().filter(x => x.id !== id);
-    setIndex(idx);
-  }
-
-  function downloadText(filename, text){
-    const blob = new Blob([text], {type:"application/json;charset=utf-8"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url), 800);
-  }
-
-  function fileToDataURL(file){
-    return new Promise((resolve,reject)=>{
-      const r = new FileReader();
-      r.onload = ()=>resolve(String(r.result||""));
-      r.onerror = reject;
-      r.readAsDataURL(file);
-    });
-  }
-
-  async function bgImageToDataURL(){
-    const file = (f_bgImage.files && f_bgImage.files[0]) ? f_bgImage.files[0] : null;
-    if(!file) return "";
-    return await fileToDataURL(file);
-  }
-
-  function clearForm(keepId=false){
-    if(!keepId) f_id.value = "";
-    f_title.value = "";
-    f_desc.value = "";
-    f_titleSize.value = 32;
-    f_titleColor.value = "#ffffff";
-    f_bgColor.value = "#0b1220";
-    f_bgImage.value = "";
-    f_fontFamily.value = "system-ui";
-    f_voiceLang.value = "it-IT";
-    f_voiceText.value = "";
-    f_files.value = "";
-    thumbs.innerHTML = "";
-  }
-
-  function renderThumbs(files){
-    thumbs.innerHTML = "";
-    if(!Array.isArray(files) || files.length === 0){
-      thumbs.innerHTML = `<div class="small">Nessun file.</div>`;
-      return;
+$("btnSave").onclick=async()=>{
+  const id=clean($("f_id").value); if(!id) return alert("ID mancante");
+  $("f_id").value=id;
+  const prev=load(id)||{};
+  const files=[...(prev.files||[])];
+  if($("f_files").files.length){
+    for(const f of $("f_files").files){
+      files.push({name:f.name,kind:f.type.startsWith("video")?"video":"image",mime:f.type,url:await toDataURL(f)});
     }
-    files.forEach((f, i)=>{
-      const div = document.createElement("div");
-      div.className = "thumb";
-      const isVideo = (f.kind === "video") || (f.mime||"").startsWith("video/");
-      const media = document.createElement("div");
-      media.className = "thumbMedia";
-      if(isVideo){
-        const v = document.createElement("video");
-        v.src = f.url;
-        v.muted = true;
-        v.playsInline = true;
-        v.preload = "metadata";
-        media.appendChild(v);
-      } else {
-        const img = document.createElement("img");
-        img.src = f.url;
-        img.alt = f.name || "immagine";
-        media.appendChild(img);
-      }
-
-      media.addEventListener("click", ()=>{
-        viewerContent.innerHTML = "";
-        if(isVideo){
-          const v = document.createElement("video");
-          v.src = f.url;
-          v.controls = true;
-          v.autoplay = true;
-          v.playsInline = true;
-          viewerContent.appendChild(v);
-        } else {
-          const img = document.createElement("img");
-          img.src = f.url;
-          viewerContent.appendChild(img);
-        }
-        viewer.classList.add("active");
-      });
-
-      const meta = document.createElement("div");
-      meta.className = "thumbMeta";
-      meta.textContent = (f.name || `File ${i+1}`) + " — " + (f.kind||"");
-
-      div.appendChild(media);
-      div.appendChild(meta);
-      thumbs.appendChild(div);
-    });
   }
+  const bg=$("f_bgImage").files[0]?await toDataURL($("f_bgImage").files[0]):(prev.bgImage||"");
+  const obj={
+    id,title:$("f_title").value||id,desc:$("f_desc").value||"",
+    titleSize:+$("f_titleSize").value||32,titleColor:$("f_titleColor").value,
+    bgColor:$("f_bgColor").value,bgImage:bg,fontFamily:$("f_fontFamily").value,
+    voiceLang:$("f_voiceLang").value,voiceText:$("f_voiceText").value,files
+  };
+  save(obj); show("Salvato");
+};
 
-  viewer.addEventListener("click", ()=>{
-    viewer.classList.remove("active");
-    viewerContent.innerHTML = "";
-  });
+$("btnExportOne").onclick=()=>{
+  const id=clean($("f_id").value); const o=load(id); if(!o) return alert("Salva prima");
+  const b=new Blob([JSON.stringify(o,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=id+".json";a.click();
+};
 
-  function currentPublicLinks(id){
-    const base = location.origin + location.pathname.replace(/\/[^\/]*$/, "/");
-    return {
-      vetrina: base + "vetrina.html?id=" + encodeURIComponent(id),
-      json: base + "data/" + encodeURIComponent(id) + ".json",
-      index: base + "data/vetrine.json"
-    };
-  }
+$("btnExportIndex").onclick=()=>{
+  const out=getIndex().map(x=>({id:x.id,title:x.title}));
+  const b=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="vetrine.json";a.click();
+};
 
-  function renderList(){
-    const idx = getIndex();
-    list.innerHTML = "";
-    if(idx.length === 0){
-      list.innerHTML = `<div class="small">Nessuna vetrina salvata in locale.</div>`;
-      return;
-    }
-    idx.forEach(entry=>{
-      const id = entry.id;
-      const obj = loadVetrina(id);
-      const div = document.createElement("div");
-      div.className = "item";
-
-      const top = document.createElement("div");
-      top.className = "itemTop";
-
-      const left = document.createElement("div");
-      left.innerHTML = `<div class="title">${(entry.title||id)}</div><div class="small">ID: <code>${id}</code></div>`;
-
-      const right = document.createElement("div");
-      right.className = "row";
-      right.innerHTML = `
-        <button class="btn secondary" data-act="open" data-id="${id}">✏ Modifica</button>
-        <button class="btn secondary" data-act="export" data-id="${id}">⬇ ID.json</button>
-        <button class="btn danger" data-act="del" data-id="${id}">🗑</button>
-      `;
-
-      top.appendChild(left);
-      top.appendChild(right);
-
-      const links = currentPublicLinks(id);
-      const linksDiv = document.createElement("div");
-      linksDiv.className = "links";
-      linksDiv.innerHTML = `
-        <a href="${links.vetrina}" target="_blank">Apri vetrina</a>
-        <a href="${links.json}" target="_blank">Apri JSON pubblico</a>
-      `;
-
-      div.appendChild(top);
-      div.appendChild(linksDiv);
-      list.appendChild(div);
-    });
-
-    list.querySelectorAll("button").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        const id = btn.getAttribute("data-id");
-        const act = btn.getAttribute("data-act");
-        if(act==="open") fillFormFromId(id);
-        if(act==="export") exportOne(id);
-        if(act==="del"){
-          if(confirm("Vuoi cancellare la vetrina "+id+"?")){
-            deleteVetrina(id);
-            if(sanitizeId(f_id.value)===id) clearForm(true);
-            renderList();
-            showToast("Cancellata: " + id);
-          }
-        }
-      });
-    });
-  }
-
-  function fillFormFromId(id){
-    const obj = loadVetrina(id);
-    if(!obj){ showToast("Non trovata in locale"); return; }
-    f_id.value = obj.id || "";
-    f_title.value = obj.title || "";
-    f_desc.value = obj.desc || "";
-    f_titleSize.value = Number(obj.titleSize || 32);
-    f_titleColor.value = obj.titleColor || "#ffffff";
-    f_bgColor.value = obj.bgColor || "#0b1220";
-    f_fontFamily.value = obj.fontFamily || "system-ui";
-    f_voiceLang.value = obj.voiceLang || "it-IT";
-    f_voiceText.value = obj.voiceText || "";
-    // bgImage file input non si può ricaricare per sicurezza → lo lasciamo vuoto, ma conserviamo in JSON
-    // files
-    renderThumbs(obj.files || []);
-    showToast("Caricata: " + id);
-  }
-
-  async function buildObjectFromForm(keepExistingFiles=true){
-    const id = sanitizeId(f_id.value);
-    if(!id) throw new Error("ID mancante");
-    f_id.value = id;
-
-    const existing = loadVetrina(id);
-
-    // bgImage: se selezionata nuova immagine, converti; altrimenti mantieni quella esistente
-    let bgImage = "";
-    if(f_bgImage.files && f_bgImage.files[0]) bgImage = await bgImageToDataURL();
-    else bgImage = (existing && existing.bgImage) ? existing.bgImage : "";
-
-    // files: se selezionati nuovi file, li aggiungiamo; altrimenti manteniamo
-    let filesArr = [];
-    if(keepExistingFiles && existing && Array.isArray(existing.files)) filesArr = [...existing.files];
-
-    if(f_files.files && f_files.files.length){
-      // carica multiplo
-      for(const file of f_files.files){
-        const url = await fileToDataURL(file);
-        const mime = file.type || "";
-        const kind = mime.startsWith("video/") ? "video" : "image";
-        filesArr.push({
-          name: file.name,
-          kind,
-          mime,
-          url
-        });
-      }
-    }
-
-    return {
-      id,
-      title: (f_title.value||"").trim() || id,
-      desc: (f_desc.value||"").trim(),
-      titleSize: Number(f_titleSize.value || 32),
-      titleColor: f_titleColor.value || "#ffffff",
-      bgColor: f_bgColor.value || "#0b1220",
-      bgImage: bgImage || "",
-      fontFamily: f_fontFamily.value || "system-ui",
-      voiceLang: (f_voiceLang.value||"").trim() || "it-IT",
-      voiceText: (f_voiceText.value||"").trim(),
-      files: filesArr
-    };
-  }
-
-  btnSave.addEventListener("click", async ()=>{
-    try{
-      const obj = await buildObjectFromForm(true);
-      saveVetrina(obj);
-      renderList();
-      renderThumbs(obj.files);
-      // reset file inputs (ma non cancellare la vetrina)
-      f_files.value = "";
-      f_bgImage.value = "";
-      showToast("Salvata in locale: " + obj.id);
-    }catch(e){
-      alert("Errore: " + e.message);
-    }
-  });
-
-  btnPreview.addEventListener("click", async ()=>{
-    try{
-      const obj = await buildObjectFromForm(true);
-      // preview in nuova finestra usando data:URL HTML minimal
-      const html = `
-        <html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-        <body style="margin:0;font-family:system-ui;background:${obj.bgColor};background-image:url('${obj.bgImage||""}');background-size:cover;background-position:center;color:#fff">
-          <div style="padding:16px;text-align:center">
-            <div style="font-size:${obj.titleSize}px;color:${obj.titleColor};font-family:${obj.fontFamily},system-ui;font-weight:900">${obj.title}</div>
-            <div style="opacity:.8;margin-top:6px">${obj.desc||""}</div>
-            <div style="margin-top:14px;opacity:.7;font-size:12px">Anteprima (admin)</div>
-          </div>
-        </body></html>`;
-      const w = window.open();
-      w.document.write(html);
-      w.document.close();
-    }catch(e){
-      alert("Errore preview: " + e.message);
-    }
-  });
-
-  function exportOne(idMaybe){
-    const id = sanitizeId(idMaybe || f_id.value);
-    const obj = loadVetrina(id);
-    if(!obj){ alert("Prima salva la vetrina in locale."); return; }
-    downloadText(id + ".json", JSON.stringify(obj, null, 2));
-    showToast("Esportato: " + id + ".json");
-  }
-
-  btnExportOne.addEventListener("click", ()=>exportOne());
-
-  btnExportIndex.addEventListener("click", ()=>{
-    const idx = getIndex();
-    // formato pubblico per data/vetrine.json
-    const out = idx.map(x => ({id: x.id, title: x.title || x.id}));
-    downloadText("vetrine.json", JSON.stringify(out, null, 2));
-    showToast("Esportato: vetrine.json");
-  });
-
-  btnDelete.addEventListener("click", ()=>{
-    const id = sanitizeId(f_id.value);
-    if(!id) return;
-    if(confirm("Vuoi cancellare la vetrina " + id + " dal browser?")){
-      deleteVetrina(id);
-      clearForm();
-      renderList();
-      showToast("Cancellata: " + id);
-    }
-  });
-
-  // Voice test
-  function speak(text, lang){
-    try{ speechSynthesis.cancel(); }catch(e){}
-    if(!text) return;
-    if(!("speechSynthesis" in window)) { alert("Speech non supportato"); return; }
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang || navigator.language || "it-IT";
-    speechSynthesis.speak(u);
-  }
-  btnTestVoice.addEventListener("click", ()=>{
-    speak(f_voiceText.value || "Test voce SerCucTech", f_voiceLang.value || "it-IT");
-  });
-
-  // Import ID.json
-  importJson.addEventListener("change", async ()=>{
-    const file = importJson.files && importJson.files[0] ? importJson.files[0] : null;
-    if(!file) return;
-    try{
-      const txt = await file.text();
-      const obj = JSON.parse(txt);
-      if(!obj || !obj.id) throw new Error("JSON non valido (manca id)");
-      // salva in locale e carica nel form
-      obj.id = sanitizeId(obj.id);
-      saveVetrina(obj);
-      renderList();
-      fillFormFromId(obj.id);
-      showToast("Importato: " + obj.id);
-    }catch(e){
-      alert("Errore import: " + e.message);
-    }finally{
-      importJson.value = "";
-    }
-  });
-
-  // Auto-carica la prima vetrina se esiste
-  function init(){
-    renderList();
-    const idx = getIndex();
-    if(idx[0]) fillFormFromId(idx[0].id);
-  }
-  init();
-})();
+$("btnDelete").onclick=()=>{
+  const id=clean($("f_id").value); if(!id) return;
+  if(confirm("Cancellare "+id+"?")){del(id); show("Cancellata");}
+};
 </script>
 </body>
 </html>
