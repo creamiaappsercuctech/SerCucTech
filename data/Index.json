@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "version": 1,
+    "updatedAt": "2025-12-18T00:00:00+01:00"
+  },
+  "groups": {
+    "scalvini": {
+      "title": "Gruppo Scalvini",
+      "description": "Vetrine collegate alla zona Scalvini",
+      "items": ["scalvini10"]
+    }
+  },
+  "vetrine": {
+    "scalvini10": {
+      "id": "scalvini10",
+      "title": "Vetrina Scalvini 10",
+      "file": "data/scalvini10.json",
+      "tags": ["casa", "documenti", "video"],
+      "updatedAt": "2025-12-18T00:00:00+01:00"
+    }
+  }
+}
