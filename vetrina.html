@@ -1,179 +1,156 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SerCucTech – Vetrina</title>
-  <style>
-    :root { --txt:#e8eefc; --mut:#a9b8dd; --acc:#5ee1a2; --b:#22345f; }
-    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:linear-gradient(180deg,#081024,#0b1220); color:var(--txt); }
-    .wrap{ max-width:980px; margin:0 auto; padding:18px; }
-    .card{ background:rgba(17,27,46,.92); border:1px solid #1b2a4f; border-radius:18px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,.22); }
-    h1{ margin:0 0 8px 0; font-size:22px; }
-    h2{ margin:0 0 10px 0; font-size:18px; }
-    .mut{ color:var(--mut); }
-    .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
-    button{ cursor:pointer; border:0; padding:10px 14px; border-radius:12px; font-weight:900; background:var(--acc); color:#052014; }
-    .sec{ background:#22345f; color:var(--txt); }
-    .grid{ display:grid; gap:12px; grid-template-columns:1fr; margin-top:14px; }
-    @media(min-width:900px){ .grid{ grid-template-columns:1fr 1fr; } }
-    .media{ display:grid; gap:10px; }
-    img, video{ width:100%; border-radius:14px; border:1px solid var(--b); background:#0f1830; }
-    a{ color:#9fe9ff; }
-    .item{ padding:10px; border-radius:14px; border:1px solid var(--b); background:#0c1530; margin-bottom:10px; }
-    .pdfWrap{ margin-top:10px; border:1px solid var(--b); border-radius:14px; overflow:hidden; background:#0f1830; }
-    iframe{ width:100%; height:420px; border:0; }
-    .mini{ font-size:12px; color:var(--mut); line-height:1.35; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SerCucTech – Vetrina</title>
+
+<style>
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:#0b1220;
+  color:#e8eefc;
+}
+.wrap{
+  max-width:1000px;
+  margin:auto;
+  padding:16px;
+}
+.card{
+  background:#111b2e;
+  border-radius:18px;
+  padding:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+h1{margin:0 0 10px 0}
+.mut{color:#a9b8dd}
+.media{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:12px;
+  margin-top:16px;
+}
+.media img, .media video{
+  width:100%;
+  border-radius:12px;
+  background:#000;
+}
+.files{
+  margin-top:16px;
+  display:grid;
+  gap:8px;
+}
+.files a{
+  display:block;
+  padding:10px 12px;
+  background:#0f1a31;
+  border-radius:12px;
+  color:#9fe9ff;
+  text-decoration:none;
+}
+.files a:hover{background:#16254a}
+
+.guide-box{
+  margin-top:14px;
+  padding:12px;
+  border:2px dashed #5ee1a2;
+  border-radius:14px;
+  background:#0f1a31;
+}
+.guide-box button{
+  border:0;
+  padding:12px 16px;
+  border-radius:12px;
+  font-weight:800;
+  background:#5ee1a2;
+  cursor:pointer;
+}
+</style>
 </head>
+
 <body>
 <div class="wrap">
   <div class="card">
-    <h1 id="title">Caricamento…</h1>
-    <div class="mut" id="desc"></div>
-    <div class="btns">
-      <button id="speakBtn" class="sec">🔊 Voce</button>
-      <button id="stopBtn" class="sec">⏹ Stop</button>
-    </div>
-    <div class="mut" style="margin-top:10px;" id="hint"></div>
-  </div>
+    <h1 id="title">Vetrina</h1>
+    <div class="mut" id="description"></div>
 
-  <div class="grid">
-    <div class="card">
-      <h2>Media</h2>
-      <div class="media" id="media"></div>
+    <!-- GUIDA PASSO PASSO (solo se abilitata) -->
+    <div id="publicGuide" class="guide-box" style="display:none">
+      <div class="mut" style="margin-bottom:6px">
+        Hai bisogno di aiuto? Segui la guida passo-passo.
+      </div>
+      <button onclick="openGuide()">📘 Guida passo-passo</button>
     </div>
-    <div class="card">
-      <h2>File</h2>
-      <div id="files"></div>
-      <div class="mini">PDF: se disponibile, vedrai l’anteprima direttamente qui.</div>
-    </div>
+
+    <!-- MEDIA -->
+    <div class="media" id="media"></div>
+
+    <!-- FILES -->
+    <div class="files" id="files"></div>
   </div>
 </div>
 
 <script>
-const INDEX_PATH = "data/index.json";
+/* ================= PARAM ================= */
+const params = new URL(location.href).searchParams;
+const VETRINA_ID = params.get("id") || "scalvini10";
 
-function getParam(name){
-  const url = new URL(location.href);
-  return url.searchParams.get(name);
-}
-
-function stopTTS(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }
-function speak(text, lang){
-  stopTTS();
-  if(!('speechSynthesis' in window)) return;
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = lang || "it-IT";
-  window.speechSynthesis.speak(u);
-}
-document.getElementById("stopBtn").onclick = stopTTS;
-
-function escapeHTML(s){
-  return String(s||"")
-    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-}
-function escapeAttr(s){ return escapeHTML(s).replaceAll("`","&#096;"); }
-
-function isPdf(url){
-  return String(url||"").toLowerCase().split("?")[0].endsWith(".pdf");
-}
-
-async function main(){
-  const id = (getParam("id") || "").trim();
-  const group = (getParam("group") || "").trim();
-
-  const idxRes = await fetch(INDEX_PATH + "?t=" + Date.now(), {cache:"no-store"});
-  const indexDB = await idxRes.json();
-  const vIndex = indexDB.vetrine || {};
-  const groups = indexDB.groups || {};
-
-  if(group){
-    const g = groups[group];
-    if(!g){
-      document.getElementById("title").textContent = "Gruppo non trovato";
-      document.getElementById("desc").textContent = "Controlla ?group=";
-      return;
-    }
-    document.getElementById("title").textContent = g.title || ("Gruppo: " + group);
-    document.getElementById("desc").textContent = g.description || "";
-    document.getElementById("hint").textContent = "Elenco vetrine:";
-    document.getElementById("speakBtn").onclick = ()=> speak((g.title||"") + ". " + (g.description||""), "it-IT");
-
-    const mediaEl = document.getElementById("media");
-    mediaEl.innerHTML = "";
-    (g.items||[]).forEach(vid=>{
-      const rec = vIndex[vid];
-      if(!rec) return;
-      const div = document.createElement("div");
-      div.className = "item";
-      div.innerHTML = `
-        <b>${escapeHTML(rec.title || vid)}</b><br>
-        <span class="mut">ID: ${escapeHTML(vid)}</span><br>
-        <a href="vetrina.html?id=${encodeURIComponent(vid)}">Apri vetrina</a>
-      `;
-      mediaEl.appendChild(div);
-    });
-
-    document.getElementById("files").innerHTML = `<div class="mut">Apri una vetrina per vedere i file.</div>`;
-    return;
-  }
-
-  if(!id || !vIndex[id] || !vIndex[id].file){
+/* ================= LOAD JSON ================= */
+fetch(`data/${VETRINA_ID}.json?t=` + Date.now())
+  .then(r => {
+    if(!r.ok) throw new Error("Vetrina non trovata");
+    return r.json();
+  })
+  .then(v => initVetrina(v))
+  .catch(err => {
     document.getElementById("title").textContent = "Vetrina non trovata";
-    document.getElementById("desc").textContent = "Usa: vetrina.html?id=scalvini10";
-    return;
+    document.getElementById("description").textContent = err.message;
+  });
+
+/* ================= INIT ================= */
+function initVetrina(v){
+  // titolo e descrizione
+  document.getElementById("title").textContent = v.title || v.id;
+  document.getElementById("description").textContent = v.description || "";
+
+  /* ===== GUIDA ===== */
+  if(v.showGuide === true){
+    document.getElementById("publicGuide").style.display = "block";
   }
 
-  const filePath = vIndex[id].file;
-  const vRes = await fetch(filePath + "?t=" + Date.now(), {cache:"no-store"});
-  const v = await vRes.json();
-
-  document.getElementById("title").textContent = v.title || id;
-  document.getElementById("desc").textContent = v.description || "";
-  document.getElementById("hint").textContent = "ID: " + id;
-
-  const voiceText = (v.voice && v.voice.text) ? v.voice.text : ((v.title||"") + ". " + (v.description||""));
-  const voiceLang = (v.voice && v.voice.lang) ? v.voice.lang : "it-IT";
-  document.getElementById("speakBtn").onclick = ()=> speak(voiceText, voiceLang);
-
-  const mediaEl = document.getElementById("media");
-  mediaEl.innerHTML = "";
-  (v.media||[]).forEach(m=>{
-    if(m.type === "video"){
-      const vid = document.createElement("video");
-      vid.controls = true;
-      vid.src = m.url;
-      mediaEl.appendChild(vid);
-    } else {
+  /* ===== MEDIA ===== */
+  const mediaBox = document.getElementById("media");
+  (v.media || []).forEach(m => {
+    if(m.type === "image"){
       const img = document.createElement("img");
       img.src = m.url;
       img.alt = m.title || "";
-      mediaEl.appendChild(img);
+      mediaBox.appendChild(img);
+    }
+    if(m.type === "video"){
+      const vid = document.createElement("video");
+      vid.src = m.url;
+      vid.controls = true;
+      mediaBox.appendChild(vid);
     }
   });
-  if((v.media||[]).length === 0) mediaEl.innerHTML = `<div class="mut">Nessun media.</div>`;
 
-  const filesEl = document.getElementById("files");
-  filesEl.innerHTML = "";
-  (v.files||[]).forEach(f=>{
-    const div = document.createElement("div");
-    div.className = "item";
-    div.innerHTML = `
-      <a href="${escapeAttr(f.url)}" target="_blank" rel="noopener">${escapeHTML(f.label||"Apri file")}</a>
-      ${isPdf(f.url) ? `<div class="pdfWrap"><iframe src="${escapeAttr(f.url)}"></iframe></div>` : ``}
-    `;
-    filesEl.appendChild(div);
+  /* ===== FILES ===== */
+  const filesBox = document.getElementById("files");
+  (v.files || []).forEach(f => {
+    const a = document.createElement("a");
+    a.href = f.url;
+    a.target = "_blank";
+    a.textContent = "📄 " + (f.label || f.url);
+    filesBox.appendChild(a);
   });
-  if((v.files||[]).length === 0) filesEl.innerHTML = `<div class="mut">Nessun file.</div>`;
 }
 
-main().catch(err=>{
-  console.error(err);
-  document.getElementById("title").textContent = "Errore caricamento";
-  document.getElementById("desc").textContent = "Controlla che data/index.json esista e sia valido.";
-});
+/* ================= OPEN GUIDE ================= */
+function openGuide(){
+  window.open(`checklist.html?id=${VETRINA_ID}`, "_blank");
+}
 </script>
 </body>
 </html>
