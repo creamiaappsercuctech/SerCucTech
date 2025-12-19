@@ -26,15 +26,24 @@
     .cur{ outline:2px dashed var(--acc); outline-offset:4px; }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas; }
     .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .small{ padding:8px 10px; border-radius:10px; }
+    .toast{
+      position:fixed; left:50%; bottom:16px; transform:translateX(-50%);
+      background:#0f1a31; border:1px solid #22345f; color:var(--txt);
+      padding:10px 14px; border-radius:999px; display:none; z-index:9999;
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    .box{
+      margin-top:10px; border:1px solid var(--b); background:#0c1530; border-radius:14px; padding:10px;
+    }
+    code{ display:block; white-space:pre-wrap; word-break:break-word; color:#d7e3ff; }
   </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card">
     <h1>Percorso guida – Vetrine SerCucTech (Audio + Testo)</h1>
-    <div class="mut" id="sub">
-      Spunta gli step che vuoi usare. Premi “Voce” per ascoltare lo step corrente.
-    </div>
+    <div class="mut" id="sub">Spunta gli step che vuoi usare. Premi “Voce” per ascoltare lo step corrente.</div>
 
     <div class="row" style="margin-top:10px;">
       <span class="pill">Vetrina ID: <b id="vId">—</b></span>
@@ -51,6 +60,34 @@
 
     <div class="btns" id="quickLinks"></div>
 
+    <div class="box">
+      <div class="pill">Copia rapida JSON</div>
+      <div class="mut" style="margin-top:8px;">PDF manuale (metti il nome file che hai caricato):</div>
+      <div class="row" style="margin-top:8px;">
+        <input id="pdfName" placeholder="manuale.pdf" style="flex:1; min-width:160px;">
+        <button class="sec small" id="copyPdfBtn">📋 Copia riga PDF</button>
+      </div>
+      <code id="pdfCode"></code>
+
+      <div class="mut" style="margin-top:12px;">Media (metti il nome file dentro /media/):</div>
+      <div class="row" style="margin-top:8px;">
+        <select id="mediaType" style="flex:1; min-width:140px;">
+          <option value="image">image</option>
+          <option value="video">video</option>
+        </select>
+        <input id="mediaName" placeholder="foto1.jpg oppure video1.mp4" style="flex:2; min-width:200px;">
+        <button class="sec small" id="copyMediaBtn">📋 Copia riga Media</button>
+      </div>
+      <code id="mediaCode"></code>
+
+      <div class="mut" style="margin-top:12px;">OCR TXT (nome file dentro /files/):</div>
+      <div class="row" style="margin-top:8px;">
+        <input id="ocrTxtName" placeholder="ocr-...txt" style="flex:1; min-width:160px;">
+        <button class="sec small" id="copyOcrBtn">📋 Copia riga OCR</button>
+      </div>
+      <code id="ocrCode"></code>
+    </div>
+
     <div class="pill" style="margin-top:10px;">
       Step corrente: <b id="curLabel">—</b>
     </div>
@@ -60,6 +97,8 @@
 
   <div class="list" id="steps"></div>
 </div>
+
+<div class="toast" id="toast">Copiato ✅</div>
 
 <script>
 /* =================== CONFIG =================== */
@@ -76,8 +115,16 @@ function sanitizeId(s){
 const requestedIdRaw = getParam("id");
 const VETRINA_ID = sanitizeId(requestedIdRaw) || "scalvini10";
 
+/* =================== repo upload link ===================
+   NON posso sapere con certezza il tuo repo da qui (GitHub Pages non espone owner/repo),
+   quindi uso il TUO valore fisso (quello che stai usando già).
+*/
+const GH_OWNER = "creamiaappsercuctech";
+const GH_REPO  = "SerCucTech";
+const GH_UPLOAD = `https://github.com/${GH_OWNER}/${GH_REPO}/upload/main`;
+
 /* LocalStorage key separata per ogni vetrina */
-const KEY = "sercuctech_guida_vetrine_v2_" + VETRINA_ID;
+const KEY = "sercuctech_guida_vetrine_v3_" + VETRINA_ID;
 
 /* =================== TTS =================== */
 function stopTTS(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }
@@ -99,9 +146,19 @@ function L_filesFolder(){ return "files/"; }
 function L_jsonNew(newId){ return `data/${encodeURIComponent(newId)}.json`; }
 function L_vetrinaNew(newId){ return `vetrina.html?id=${encodeURIComponent(newId)}`; }
 
+/* =================== Helpers ID next =================== */
+function suggestNextId(id){
+  const m = String(id).match(/^(.*?)(\d+)$/);
+  if(!m) return id + "2";
+  const base = m[1];
+  const num = parseInt(m[2], 10);
+  const next = isNaN(num) ? (m[2] + "2") : String(num + 1);
+  return base + next;
+}
+
 /* =================== STEPS TEMPLATE =================== */
 function buildSteps(){
-  const nextIdSuggestion = suggestNextId(VETRINA_ID); // es: scalvini10 -> scalvini11
+  const nextIdSuggestion = suggestNextId(VETRINA_ID);
   return [
     {
       id:"S1",
@@ -117,10 +174,13 @@ function buildSteps(){
       id:"S2",
       title:"Carica index dal repo (data/index.json)",
       speak:"In admin, carica l’index dal repo. Controlla che vedi la lista vetrine e gruppi.",
-      links:[ {label:"Apri index.json", url:L_index()} ],
+      links:[
+        {label:"Apri index.json", url:L_index()},
+        {label:"GitHub Upload (carica file)", url:GH_UPLOAD}
+      ],
       detail:[
         "Admin → 'Carica index dal repo'",
-        "Devi vedere le vetrine nel menu a tendina"
+        "Se manca qualcosa: carica file su GitHub (Upload)"
       ]
     },
     {
@@ -141,10 +201,13 @@ function buildSteps(){
       id:"S4",
       title:"Aggiungi un PDF in files[]",
       speak:"Se vuoi un PDF, caricalo in files e aggiungi la riga dentro files nel JSON della vetrina.",
-      links:[ {label:"Cartella /files/", url:L_filesFolder()} ],
+      links:[
+        {label:"Cartella /files/", url:L_filesFolder()},
+        {label:"GitHub Upload (carica il PDF)", url:GH_UPLOAD}
+      ],
       detail:[
         "Carica manuale.pdf su GitHub dentro /files/",
-        `Nel JSON:  { "label":"Manuale", "url":"files/manuale.pdf" }`,
+        "Nella guida: usa 'Copia riga PDF' e incollala dentro files[]",
         `Poi scarica ${VETRINA_ID}.json e ricaricalo in /data/`
       ]
     },
@@ -152,19 +215,22 @@ function buildSteps(){
       id:"S5",
       title:"Upload multiplo Media + ZIP",
       speak:"Se vuoi foto o video, seleziona più file. Aggiungili al JSON. Scarica lo ZIP e carica i file dentro media.",
-      links:[ {label:"Cartella /media/", url:L_mediaFolder()} ],
+      links:[
+        {label:"Cartella /media/", url:L_mediaFolder()},
+        {label:"GitHub Upload (carica media)", url:GH_UPLOAD}
+      ],
       detail:[
         "Admin → Media → seleziona più file",
         "Clic 'Aggiungi al JSON'",
         "Clic 'Scarica ZIP media'",
-        "Estrai e carica i file su GitHub in /media/"
+        "Estrai e carica su GitHub in /media/"
       ]
     },
     {
       id:"S6",
       title:"Riordino Media e Files (DnD oppure ↑ ↓)",
       speak:"Riordina media e files con trascinamento o con frecce. Poi scarica il JSON e ricaricalo nel repo.",
-      links:[ {label:`Scarica poi: ${VETRINA_ID}.json`, url:"#"} ],
+      links:[ {label:`JSON: ${VETRINA_ID}.json`, url:L_json()} ],
       detail:[
         "Admin → Media presenti: trascina o usa ↑ ↓",
         "Admin → Files presenti: trascina o usa ↑ ↓",
@@ -175,12 +241,16 @@ function buildSteps(){
       id:"S7",
       title:"OCR (solo Admin) + TXT in /files/",
       speak:"Usa OCR in admin. Scarica il testo TXT e caricalo in files. Poi aggiungi il link in files della vetrina.",
-      links:[ {label:"Cartella /files/", url:L_filesFolder()} ],
+      links:[
+        {label:"Cartella /files/", url:L_filesFolder()},
+        {label:"GitHub Upload (carica TXT)", url:GH_UPLOAD}
+      ],
       detail:[
         "Admin → OCR → carica immagine",
         "Avvia OCR → Scarica TXT",
         "Carica TXT in /files/",
-        "In Admin: 'Aggiungi TXT in files[]' → poi scarica JSON e ricaricalo in /data/"
+        "Nella guida: usa 'Copia riga OCR' e incollala dentro files[]",
+        "Poi scarica JSON e ricaricalo in /data/"
       ]
     },
     {
@@ -208,22 +278,11 @@ function buildSteps(){
       ],
       detail:[
         "Percorsi corretti: media/nomefile e files/nomefile",
-        "Attenzione: maiuscole/minuscole devono combaciare",
-        "Se PDF non si vede: verifica che il file è davvero in /files/"
+        "Maiuscole/minuscole devono combaciare",
+        "Se PDF non si vede: verifica che è in /files/"
       ]
     }
   ];
-}
-
-/* =================== Helpers ID next =================== */
-function suggestNextId(id){
-  // se finisce con numero, incrementa (scalvini10 -> scalvini11)
-  const m = String(id).match(/^(.*?)(\d+)$/);
-  if(!m) return id + "2";
-  const base = m[1];
-  const num = parseInt(m[2], 10);
-  const next = isNaN(num) ? (m[2] + "2") : String(num + 1);
-  return base + next;
 }
 
 /* =================== STATE =================== */
@@ -237,7 +296,7 @@ let state = loadState();
 if(!state.enabled) state.enabled = {};
 if(typeof state.currentIndex !== "number") state.currentIndex = 0;
 
-// default: se è la prima volta, abilito tutti gli step
+// default: prima volta -> abilito tutto
 if(!state._init){
   steps.forEach(s => state.enabled[s.id] = true);
   state.currentIndex = 0;
@@ -245,7 +304,31 @@ if(!state._init){
   saveState(state);
 }
 
-/* =================== RENDER =================== */
+/* =================== UI helpers =================== */
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg || "Copiato ✅";
+  t.style.display = "block";
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(()=>{ t.style.display="none"; }, 1400);
+}
+async function copyText(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast("Copiato ✅");
+  }catch(e){
+    // fallback
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    showToast("Copiato ✅");
+  }
+}
+
+/* =================== QUICK LINKS =================== */
 function renderQuickLinks(){
   const box = document.getElementById("quickLinks");
   box.innerHTML = `
@@ -255,9 +338,11 @@ function renderQuickLinks(){
     <a class="pill mono" href="${L_index()}" target="_blank" rel="noopener">index.json</a>
     <a class="pill" href="${L_mediaFolder()}" target="_blank" rel="noopener">/media/</a>
     <a class="pill" href="${L_filesFolder()}" target="_blank" rel="noopener">/files/</a>
+    <a class="pill" href="${GH_UPLOAD}" target="_blank" rel="noopener">GitHub Upload</a>
   `;
 }
 
+/* =================== RENDER STEPS =================== */
 function render(){
   document.getElementById("vId").textContent = VETRINA_ID;
   renderQuickLinks();
@@ -269,10 +354,8 @@ function render(){
     const div = document.createElement("div");
     div.className = "item" + (idx === state.currentIndex ? " cur" : "");
     const checked = !!state.enabled[s.id];
-    const linksHTML = (s.links||[]).map(l => {
-      if(l.url === "#") return `<span class="mut">${l.label}</span>`;
-      return `<a href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`;
-    }).join(" • ");
+
+    const linksHTML = (s.links||[]).map(l => `<a href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join(" • ");
     const detailsHTML = (s.detail||[]).map(x => `<li>${x}</li>`).join("");
 
     div.innerHTML = `
@@ -319,6 +402,42 @@ function prev(){
   if(i > 0){ state.currentIndex--; saveState(state); render(); }
 }
 
+/* =================== JSON COPY BOX =================== */
+function updateJsonPreview(){
+  const pdfName = (document.getElementById("pdfName").value || "manuale.pdf").trim();
+  const mediaType = document.getElementById("mediaType").value;
+  const mediaName = (document.getElementById("mediaName").value || "foto1.jpg").trim();
+  const ocrName = (document.getElementById("ocrTxtName").value || "ocr-file.txt").trim();
+
+  const pdfRow = `{ "label": "Manuale", "url": "files/${pdfName}" }`;
+  const mediaRow = `{ "type": "${mediaType}", "url": "media/${mediaName}", "title": "${mediaName}", "note": "" }`;
+  const ocrRow = `{ "label": "Testo OCR", "url": "files/${ocrName}" }`;
+
+  document.getElementById("pdfCode").textContent = pdfRow;
+  document.getElementById("mediaCode").textContent = mediaRow;
+  document.getElementById("ocrCode").textContent = ocrRow;
+
+  return { pdfRow, mediaRow, ocrRow };
+}
+
+document.getElementById("pdfName").addEventListener("input", updateJsonPreview);
+document.getElementById("mediaType").addEventListener("change", updateJsonPreview);
+document.getElementById("mediaName").addEventListener("input", updateJsonPreview);
+document.getElementById("ocrTxtName").addEventListener("input", updateJsonPreview);
+
+document.getElementById("copyPdfBtn").onclick = ()=>{
+  const {pdfRow} = updateJsonPreview();
+  copyText(pdfRow);
+};
+document.getElementById("copyMediaBtn").onclick = ()=>{
+  const {mediaRow} = updateJsonPreview();
+  copyText(mediaRow);
+};
+document.getElementById("copyOcrBtn").onclick = ()=>{
+  const {ocrRow} = updateJsonPreview();
+  copyText(ocrRow);
+};
+
 /* =================== BUTTONS =================== */
 document.getElementById("speakBtn").onclick = ()=>{
   const cur = steps[state.currentIndex];
@@ -358,7 +477,7 @@ async function checkId(){
 }
 
 /* =================== INIT =================== */
-document.getElementById("vId").textContent = VETRINA_ID;
+updateJsonPreview();
 render();
 checkId();
 </script>
