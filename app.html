@@ -1,55 +1,183 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SerCucTech App</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SerCucTech</title>
 
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#F2B705">
-<link rel="icon" href="./icon-192.png">
-<link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#F2B705">
+  <link rel="icon" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
 
-<style>
-body{margin:0;font-family:system-ui;background:#0b1220;color:#e8eefc}
-header{padding:12px;background:#111b2e;display:flex;gap:8px;flex-wrap:wrap}
-button{padding:10px 14px;border:0;border-radius:12px;font-weight:800;background:#5ee1a2}
-.sec{background:#22345f;color:#fff}
-iframe{border:0;width:100%;height:calc(100vh - 70px);background:#000}
-</style>
+  <style>
+    :root{--bg:#0b1220;--bar:#111b2e;--card:#0f1a32;--txt:#e8eefc;--mut:#a9b8dd;--ok:#5ee1a2;}
+    body{margin:0;font-family:system-ui;background:var(--bg);color:var(--txt);}
+    header{position:sticky;top:0;z-index:50;background:var(--bar);padding:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btn{border:0;border-radius:14px;padding:10px 14px;font-weight:900;cursor:pointer}
+    .a{background:var(--ok);color:#082016}
+    .b{background:#2a3f6e;color:#fff}
+    .c{background:#22345f;color:#fff}
+    iframe{border:0;width:100%;height:calc(100vh - 70px);background:#fff;}
+    /* Panel guida */
+    .panel{position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;padding:12px;}
+    .sheet{max-width:820px;width:100%;background:#0b1220;border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.55);padding:14px;}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+    .tog{display:flex;gap:10px;align-items:center;font-weight:800}
+    .mini{opacity:.9;font-size:13px}
+    .tip{margin-top:10px;background:#0f1a32;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px;}
+  </style>
+
+  <script src="./guide.js"></script>
 </head>
 
 <body>
 <header>
-<button onclick="openPage('admin.html')">🔐 Admin</button>
-<button onclick="openPage('checklist.html')">📘 Guida</button>
-<button onclick="openPage('vetrina.html')">🌍 Vetrina</button>
-<button class="sec" onclick="openPage('data/index.json')">📄 JSON</button>
-<button class="sec" onclick="openPage('https://github.com/creamiaappsercuctech/SerCucTech/upload/main')">⬆️ Upload</button>
+  <button class="btn a" id="btnAdmin">🧰 Admin</button>
+  <button class="btn a" id="btnGuida">📘 Guida</button>
+  <button class="btn a" id="btnVetrina">🌍 Vetrina</button>
+  <button class="btn c" id="btnJSON">📄 JSON</button>
+  <button class="btn c" id="btnUpload">⬆ Upload</button>
 </header>
 
 <iframe id="view"></iframe>
 
+<!-- Pannello Guida -->
+<div class="panel" id="guidePanel">
+  <div class="sheet">
+    <div class="row">
+      <div style="font-weight:1000;font-size:18px;">📘 SerCucTech — Percorso guida</div>
+      <button class="btn b" id="closeGuide">Chiudi</button>
+    </div>
+
+    <div class="tip">
+      <div class="mini" style="margin-bottom:8px;">Spunte (puoi accendere/spegnere quando vuoi):</div>
+
+      <div class="row">
+        <label class="tog"><input type="checkbox" id="gAdmin"> Guida in Admin</label>
+        <label class="tog"><input type="checkbox" id="gVetrina"> Guida in Vetrina</label>
+        <label class="tog"><input type="checkbox" id="gChecklist"> Guida in Checklist</label>
+      </div>
+
+      <div class="row" style="margin-top:8px;">
+        <label class="tog"><input type="checkbox" id="gVoice"> Voce telefono</label>
+        <label class="tog"><input type="checkbox" id="gAskFirst"> Chiedi al primo accesso</label>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <button class="btn a" id="startGuideNow">▶ Avvia guida adesso</button>
+        <button class="btn b" id="stopVoice">⏹ Stop voce</button>
+      </div>
+
+      <div class="mini" style="margin-top:10px;">
+        La guida è interattiva: quando tocchi un pulsante, lei capisce e ti dice il prossimo passo.
+      </div>
+    </div>
+
+    <div class="tip" id="nextBox">
+      <div style="font-weight:1000;">Prossimo passo</div>
+      <div class="mini" id="nextText">Apri una sezione per iniziare.</div>
+    </div>
+  </div>
+</div>
+
 <script>
-const params = new URL(location.href).searchParams;
-const ID = params.get("id") || "scalvini10";
+  // --- First run prompt
+  SCTGuide.firstRunPrompt();
 
-function openPage(page){
-  if(page.includes("admin.html"))
-    view.src = "admin.html";
-  else if(page.includes("checklist.html"))
-    view.src = "checklist.html?id="+ID;
-  else if(page.includes("vetrina.html"))
-    view.src = "vetrina.html?id="+ID;
-  else
-    view.src = page;
-}
+  const params = new URL(location.href).searchParams;
+  const ID = params.get("id") || "scalvini10";
 
-openPage("vetrina.html");
+  const view = document.getElementById("view");
+  const btnAdmin = document.getElementById("btnAdmin");
+  const btnGuida = document.getElementById("btnGuida");
+  const btnVetrina = document.getElementById("btnVetrina");
+  const btnJSON = document.getElementById("btnJSON");
+  const btnUpload = document.getElementById("btnUpload");
 
-if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw.js");
-}
+  const guidePanel = document.getElementById("guidePanel");
+  const closeGuide = document.getElementById("closeGuide");
+  const nextText = document.getElementById("nextText");
+
+  function setNext(t){
+    nextText.textContent = t;
+    // parla solo se almeno una guida è attiva
+    const anyGuide = SCTGuide.getBool(SCTGuide.LS.guideAdmin,true) ||
+                     SCTGuide.getBool(SCTGuide.LS.guideVetrina,true) ||
+                     SCTGuide.getBool(SCTGuide.LS.guideChecklist,true);
+    if(anyGuide) SCTGuide.speak(t);
+  }
+
+  function openPage(type){
+    if(type==="admin") view.src = "./admin.html?id="+encodeURIComponent(ID);
+    if(type==="vetrina") view.src = "./vetrina.html?id="+encodeURIComponent(ID);
+    if(type==="checklist") view.src = "./checklist.html?id="+encodeURIComponent(ID);
+    if(type==="json") view.src = "./data/index.json";
+    if(type==="upload") view.src = "https://github.com/creamiaappsercuctech/SerCucTech/upload/main";
+  }
+
+  // --- Buttons main nav
+  btnAdmin.onclick = () => {
+    openPage("admin");
+    if(SCTGuide.getBool(SCTGuide.LS.guideAdmin,true)) setNext("Sei in Admin. Prima cosa: scegli la vetrina e poi modifica titoli, media e files.");
+  };
+
+  btnVetrina.onclick = () => {
+    openPage("vetrina");
+    if(SCTGuide.getBool(SCTGuide.LS.guideVetrina,true)) setNext("Sei in Vetrina. Tocca un file per aprirlo. Se vedi ‘Guida’, puoi aprire la checklist.");
+  };
+
+  btnJSON.onclick = () => {
+    openPage("json");
+    setNext("Qui vedi il JSON. Se devi modificare, apri GitHub e cambia i file nella cartella data.");
+  };
+
+  btnUpload.onclick = () => {
+    openPage("upload");
+    setNext("Qui carichi file su GitHub. Carica PDF in files/ e foto-video in media/.");
+  };
+
+  // --- Panel
+  btnGuida.onclick = () => {
+    guidePanel.style.display="flex";
+    setNext("Apri una sezione. La guida ti dirà il prossimo passo.");
+  };
+  closeGuide.onclick = () => guidePanel.style.display="none";
+
+  // --- Toggle bindings
+  const gAdmin = document.getElementById("gAdmin");
+  const gVetrina = document.getElementById("gVetrina");
+  const gChecklist = document.getElementById("gChecklist");
+  const gVoice = document.getElementById("gVoice");
+  const gAskFirst = document.getElementById("gAskFirst");
+
+  function syncToggles(){
+    gAdmin.checked = SCTGuide.getBool(SCTGuide.LS.guideAdmin,true);
+    gVetrina.checked = SCTGuide.getBool(SCTGuide.LS.guideVetrina,true);
+    gChecklist.checked = SCTGuide.getBool(SCTGuide.LS.guideChecklist,true);
+    gVoice.checked = SCTGuide.getBool(SCTGuide.LS.voiceEnabled,true);
+    gAskFirst.checked = SCTGuide.getBool(SCTGuide.LS.askOnFirstRun,true);
+  }
+  syncToggles();
+
+  gAdmin.onchange = () => { SCTGuide.setBool(SCTGuide.LS.guideAdmin, gAdmin.checked); SCTGuide.toast(gAdmin.checked?"Guida Admin ON":"Guida Admin OFF"); };
+  gVetrina.onchange = () => { SCTGuide.setBool(SCTGuide.LS.guideVetrina, gVetrina.checked); SCTGuide.toast(gVetrina.checked?"Guida Vetrina ON":"Guida Vetrina OFF"); };
+  gChecklist.onchange = () => { SCTGuide.setBool(SCTGuide.LS.guideChecklist, gChecklist.checked); SCTGuide.toast(gChecklist.checked?"Guida Checklist ON":"Guida Checklist OFF"); };
+  gVoice.onchange = () => { SCTGuide.setBool(SCTGuide.LS.voiceEnabled, gVoice.checked); SCTGuide.toast(gVoice.checked?"Voce ON":"Voce OFF"); };
+  gAskFirst.onchange = () => { SCTGuide.setBool(SCTGuide.LS.askOnFirstRun, gAskFirst.checked); SCTGuide.toast(gAskFirst.checked?"Domanda primo accesso ON":"Domanda primo accesso OFF"); };
+
+  document.getElementById("stopVoice").onclick = () => { try{ speechSynthesis.cancel(); }catch(e){} };
+
+  document.getElementById("startGuideNow").onclick = () => {
+    // Avvio guida “intelligente” in base alla pagina corrente
+    const src = (view.src || "").toLowerCase();
+    if(src.includes("admin.html")) btnAdmin.click();
+    else if(src.includes("checklist.html")) { openPage("checklist"); setNext("Sei in Checklist. Spunta ‘Fatto’ ad ogni passo e la guida ti dice il prossimo."); }
+    else btnVetrina.click();
+  };
+
+  // --- Default open
+  openPage("vetrina");
 </script>
 </body>
 </html>
