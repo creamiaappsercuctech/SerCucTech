@@ -1,26 +1,32 @@
 {
   "id": "scalvini10",
-  "title": "Scalvini 10",
-  "desc": "molto bene",
-  "titleSize": 32,
-  "titleColor": "#ffffff",
-  "bgColor": "#ffff00",
-  "bgImage": "",
-  "fontFamily": "system-ui",
-  "voiceLang": "it-IT",
-  "voiceText": "Benvenuto nella vetrina Scalvini 10. Qui trovi la presentazione e i file disponibili.",
-  "files": [
+  "title": "Vetrina Scalvini 10",
+  "description": "Qui trovi la presentazione e i file disponibili.",
+  "voice": {
+    "lang": "it-IT",
+    "text": "Benvenuto nella vetrina Scalvini 10. Qui trovi la presentazione e i file disponibili."
+  },
+  "tags": ["casa", "documenti", "video"],
+  "media": [
     {
-      "name": "Foto 1",
-      "kind": "image",
-      "mime": "image/jpeg",
-      "url": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD..."
+      "type": "image",
+      "url": "media/scalvini10-1.jpg",
+      "title": "Foto 1",
+      "note": ""
     },
     {
-      "name": "Video 1",
-      "kind": "video",
-      "mime": "video/mp4",
-      "url": "data:video/mp4;base64,AAAAHGZ0eXBtcDQyAAAAAG1wN..."
+      "type": "video",
+      "url": "media/scalvini10-tour.mp4",
+      "title": "Tour",
+      "note": ""
     }
-  ]
+  ],
+  "files": [
+    {
+      "label": "Documento 1",
+      "url": "files/doc1.pdf"
+    }
+  ],
+  "createdAt": "2025-12-10T00:00:00+01:00",
+  "updatedAt": "2025-12-18T00:00:00+01:00"
 }
