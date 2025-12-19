@@ -310,7 +310,26 @@
   const src = r.ok ? await r.json() : null;
   if(!src){ SCTGuide.toast("Sorgente non trovata"); return; }
 
-  const newTitle = dupTitle.value.trim() || ((src.title || fromId) + " (Copia)");
+  const toTitleInput = dupTitle.value.trim();
+
+// prova a cambiare numero nel titolo (es. "Scalvini 10" -> "Scalvini 11")
+let autoTitle = (src.title || fromId);
+
+// Se fromId e toId finiscono con numeri (10 -> 11), sostituisci nel titolo
+const mFrom = fromId.match(/(\d+)\s*$/);
+const mTo = toId.match(/(\d+)\s*$/);
+if (mFrom && mTo) {
+  const fromNum = mFrom[1];
+  const toNum = mTo[1];
+
+  // sostituzione “pulita” del numero nel titolo (10 -> 11)
+  autoTitle = autoTitle
+    .replace(new RegExp(`\\b${fromNum}\\b`, "g"), toNum)
+    .replace(new RegExp(`\\b${fromNum}$`), toNum);
+}
+
+// se non hai scritto un titolo manuale, usa quello automatico
+const newTitle = toTitleInput || autoTitle;
 
   // 1) JSON base duplicato
   let out = {
