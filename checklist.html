@@ -1,181 +1,123 @@
 <!doctype html>
-<html lang="auto">
+<html lang="it">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SerCucTech – Guida passo passo</title>
-
-<style>
-body{margin:0;font-family:system-ui;background:#0b1220;color:#e8eefc}
-.wrap{max-width:900px;margin:auto;padding:16px}
-.card{background:#111b2e;border-radius:16px;padding:14px}
-h1{margin:0 0 6px 0}
-.mut{color:#a9b8dd}
-.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-button{padding:10px 14px;border:0;border-radius:10px;font-weight:700}
-.primary{background:#5ee1a2}
-.sec{background:#22345f;color:#fff}
-.warn{background:#ffcc66}
-.item{margin-top:10px;border:1px solid #22345f;border-radius:14px;padding:12px}
-.item.cur{outline:2px dashed #5ee1a2}
-label{display:flex;gap:6px;align-items:center}
-select{padding:6px;border-radius:8px}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SerCucTech - Checklist</title>
+  <script src="./guide.js"></script>
+  <style>
+    :root{--bg:#0b1220;--card:#0f1a32;--txt:#e8eefc;--mut:#a9b8dd;--ok:#5ee1a2;}
+    body{margin:0;font-family:system-ui;background:var(--bg);color:var(--txt);}
+    .wrap{max-width:980px;margin:0 auto;padding:18px;}
+    .card{background:rgba(27,46,92,.55);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:16px;}
+    h1{margin:0 0 8px 0;font-size:24px;}
+    .mut{color:var(--mut);}
+    .top{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;}
+    button{cursor:pointer;border:0;padding:10px 14px;border-radius:12px;font-weight:900;background:var(--ok);color:#082016;}
+    .sec{background:#22345f;color:var(--txt);}
+    .step{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.18);margin-top:10px;}
+    .step b{display:block}
+  </style>
 </head>
-
 <body>
-<div class="wrap">
-<div class="card">
-<h1 id="title">Guida passo passo</h1>
-<div class="mut" id="subtitle"></div>
+  <div class="wrap">
+    <div class="card">
+      <h1 id="title">Checklist</h1>
+      <div class="mut" id="desc"></div>
 
-<div class="btns">
-<button class="primary" id="play">🔊</button>
-<button class="sec" id="prev">⬅️</button>
-<button class="sec" id="next">➡️</button>
-<button class="warn" id="done">✅ FATTO</button>
-</div>
+      <div class="top">
+        <label style="display:flex;gap:10px;align-items:center;font-weight:900;">
+          <input type="checkbox" id="enableChecklist">
+          Usa percorso guida (Checklist)
+        </label>
 
-<div class="btns">
-<label><input type="checkbox" id="voiceOn"> Voce</label>
-<label><input type="checkbox" id="handsFree"> Mani libere</label>
+        <label style="display:flex;gap:10px;align-items:center;font-weight:900;">
+          <input type="checkbox" id="enableVoice" checked>
+          Voce telefono
+        </label>
 
-<select id="mode">
-<option value="client">👶 Cliente</option>
-<option value="tech">🛠️ Tecnico</option>
-</select>
+        <button class="sec" id="openVetrina">🌍 Apri Vetrina</button>
+        <button class="sec" id="stopVoice">⏹ Stop</button>
+      </div>
+    </div>
 
-<select id="lang">
-<option value="auto">🌍 Auto</option>
-<option value="it">🇮🇹 IT</option>
-<option value="en">🇬🇧 EN</option>
-<option value="ua">🇺🇦 UA</option>
-</select>
-</div>
-
-<div class="mut" id="stepLabel"></div>
-</div>
-
-<div id="list"></div>
-</div>
+    <div class="card" style="margin-top:14px;">
+      <div style="font-weight:1000;">Passi</div>
+      <div id="steps"></div>
+    </div>
+  </div>
 
 <script>
-/* ================= PARAM ================= */
-const vid=new URL(location.href).searchParams.get("id")||"scalvini10";
-const KEY="sercuctech_guide_"+vid;
+  const id = new URL(location.href).searchParams.get("id") || "scalvini10";
+  const jsonUrl = "./data/" + id + ".json";
 
-/* ================= LANG ================= */
-const SYS_LANG=(navigator.language||"it").slice(0,2);
+  const enableChecklist = document.getElementById("enableChecklist");
+  const enableVoice = document.getElementById("enableVoice");
+  enableChecklist.checked = SCTGuide.getBool(SCTGuide.LS.guideChecklist,true);
+  enableVoice.checked = SCTGuide.getBool(SCTGuide.LS.voiceEnabled,true);
 
-const T={
-it:{
-title:"Guida passo passo",
-sub:"Segui i passaggi. Premi ascolta se vuoi.",
-steps:{
-S1:["Entra nell’admin","Apri admin e tocca LUCE poi PORTA"],
-S2:["Carica index","Premi: Carica index dal repo"],
-S3:["Apri vetrina","Seleziona la vetrina e caricala"],
-S4:["Aggiungi PDF","Carica PDF in files e aggiorna JSON"],
-S5:["Aggiungi media","Foto e video vanno in media"],
-S6:["Riordina","Sistema ordine e salva"],
-S7:["OCR","Leggi testo da una foto"],
-S8:["Duplica","Crea una copia della vetrina"],
-S9:["Controllo","Apri il pubblico e verifica"]
-}
-},
-en:{
-title:"Step by step guide",
-sub:"Follow the steps. Press listen if needed.",
-steps:{
-S1:["Enter admin","Open admin and tap LIGHT then DOOR"],
-S2:["Load index","Click load index from repo"],
-S3:["Open showcase","Select and load showcase"],
-S4:["Add PDF","Upload PDF to files and update JSON"],
-S5:["Add media","Photos and videos go to media"],
-S6:["Reorder","Reorder and save"],
-S7:["OCR","Read text from image"],
-S8:["Duplicate","Create a copy"],
-S9:["Check","Open public page and verify"]
-}
-},
-ua:{
-title:"Покрокова інструкція",
-sub:"Дотримуйтесь кроків.",
-steps:{
-S1:["Увійти в адмін","Відкрий адмін і натисни СВІТЛО потім ДВЕРІ"],
-S2:["Завантажити index","Натисни завантажити index"],
-S3:["Відкрити вітрину","Обери та завантаж"],
-S4:["Додати PDF","Завантаж PDF у files"],
-S5:["Додати медіа","Фото та відео у media"],
-S6:["Впорядкувати","Впорядкуй та збережи"],
-S7:["OCR","Зчитати текст з фото"],
-S8:["Дублювати","Створи копію"],
-S9:["Перевірка","Відкрий публічну сторінку"]
-}
-}
-};
+  enableChecklist.onchange = () => SCTGuide.setBool(SCTGuide.LS.guideChecklist, enableChecklist.checked);
+  enableVoice.onchange = () => SCTGuide.setBool(SCTGuide.LS.voiceEnabled, enableVoice.checked);
 
-/* ================= STATE ================= */
-let st=JSON.parse(localStorage.getItem(KEY)||"{}");
-st.i=st.i||0;
-st.voice=st.voice??true;
-st.hands=st.hands??false;
-st.mode=st.mode||"client";
-st.lang=st.lang||"auto";
+  document.getElementById("stopVoice").onclick = () => { try{ speechSynthesis.cancel(); }catch(e){} };
+  document.getElementById("openVetrina").onclick = () => location.href = "./vetrina.html?id=" + encodeURIComponent(id);
 
-/* ================= HELPERS ================= */
-function lang(){
-if(st.lang!=="auto")return st.lang;
-return T[SYS_LANG]?SYS_LANG:"it";
-}
-function txt(step){
-const l=lang();
-return T[l].steps[step];
-}
-function speak(t){
-if(!st.voice)return;
-speechSynthesis.cancel();
-let u=new SpeechSynthesisUtterance(t);
-u.lang=lang();
-speechSynthesis.speak(u);
-}
+  function say(t){
+    if(SCTGuide.getBool(SCTGuide.LS.guideChecklist,true)) SCTGuide.speak(t);
+  }
 
-/* ================= UI ================= */
-const steps=["S1","S2","S3","S4","S5","S6","S7","S8","S9"];
+  async function load(){
+    const r = await fetch(jsonUrl, {cache:"no-store"});
+    const data = r.ok ? await r.json() : {};
+    document.getElementById("title").textContent = "Checklist — " + (data.title || id);
+    document.getElementById("desc").textContent = "Spunta ‘Fatto’ e la guida ti dice il prossimo passo.";
 
-function render(){
-const l=lang();
-title.textContent=T[l].title+" – "+vid;
-subtitle.textContent=T[l].sub;
+    const steps = [
+      { key:"s1", title:"Apri la vetrina", text:"Tocca ‘Apri Vetrina’ e guarda cosa c’è dentro." },
+      { key:"s2", title:"Leggi la descrizione", text:"Leggi cosa dice la vetrina, così capisci cosa contiene." },
+      { key:"s3", title:"Apri il Manuale", text:"Torna alla vetrina e tocca ‘Manuale’ (o altri file) per aprirli." },
+      { key:"s4", title:"Se manca un file", text:"Se un file dà 404, vai in Admin e controlla che esista in files/ o media/." },
+      { key:"s5", title:"Fine", text:"Hai finito. Se vuoi, aggiungi nuovi file dall’Admin." }
+    ];
 
-voiceOn.checked=st.voice;
-handsFree.checked=st.hands;
-mode.value=st.mode;
-langSel.value=st.lang;
+    const box = document.getElementById("steps");
+    box.innerHTML = "";
 
-list.innerHTML="";
-steps.forEach((id,i)=>{
-const d=document.createElement("div");
-d.className="item"+(i===st.i?" cur":"");
-const [t,s]=txt(id);
-d.innerHTML=`<b>${id}</b> – ${t}<div class="mut">${st.mode==="tech"?s:s}</div>`;
-list.appendChild(d);
-});
-stepLabel.textContent=`STEP ${steps[st.i]}`;
-localStorage.setItem(KEY,JSON.stringify(st));
-}
+    const doneKey = "sct_done_"+id+"_v1";
+    const done = JSON.parse(localStorage.getItem(doneKey) || "{}");
 
-play.onclick=()=>speak(txt(steps[st.i])[1]);
-next.onclick=()=>{if(st.i<steps.length-1)st.i++;render();if(st.hands)speak(txt(steps[st.i])[1])};
-prev.onclick=()=>{if(st.i>0)st.i--;render();if(st.hands)speak(txt(steps[st.i])[1])};
-done.onclick=()=>next();
+    function save(){ localStorage.setItem(doneKey, JSON.stringify(done)); }
 
-voiceOn.onchange=e=>{st.voice=e.target.checked;render()};
-handsFree.onchange=e=>{st.hands=e.target.checked;render()};
-mode.onchange=e=>{st.mode=e.target.value;render()};
-langSel.onchange=e=>{st.lang=e.target.value;render()};
+    function speakNext(){
+      if(!SCTGuide.getBool(SCTGuide.LS.guideChecklist,true)) return;
+      const next = steps.find(s => !done[s.key]);
+      if(next) say("Prossimo passo: " + next.title + ". " + next.text);
+      else say("Tutti i passi completati.");
+    }
 
-render();
+    steps.forEach(s=>{
+      const row = document.createElement("div");
+      row.className = "step";
+      row.innerHTML = `
+        <input type="checkbox" ${done[s.key] ? "checked":""} style="margin-top:4px;">
+        <div>
+          <b>${s.title}</b>
+          <div class="mut">${s.text}</div>
+        </div>
+      `;
+      const cb = row.querySelector("input");
+      cb.onchange = () => {
+        done[s.key] = cb.checked;
+        save();
+        if(cb.checked) speakNext();
+      };
+      box.appendChild(row);
+    });
+
+    speakNext();
+  }
+
+  load();
 </script>
 </body>
 </html>
