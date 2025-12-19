@@ -1,16 +1,14 @@
 {
   "id": "scalvini10",
-  "title": "Bazzar di Bostone",
-  "description": "Qui da noi trovi ottime cose e oggetti di ogni genere usati\nContatta Renzo al 3 3 3 2 9 2 7 8 4 2 per chiarimenti e appuntamento o Sergio su whatsapp al 3 2 0 8 8 5 2 8 5 8\nVi aspettiamo\nFacciamo svuota cantina e soffitti ecc. a pagamento",
+  "title": "Vetrina Scalvini 10",
+  "description": "Qui trovi la presentazione e i file disponibili.",
   "voice": {
     "lang": "it-IT",
-    "text": "Qui da noi trovi ottime cose e oggetti di ogni genere usati Contatta Renzo al 3 3 3 2 9 2 7 8 4 2 per chiarimenti e appuntamento o Sergio su whatsapp al 3 2 0 8 8 5 2 8 5 8 Vi aspettiamo Facciamo svuota cantina e soffitti ecc. a pagamento"
+    "text": "Benvenuto nella vetrina Scalvini 10. Qui trovi la presentazione e i file disponibili."
   },
-  "tags": [
-    "negozio"
-  ],
+  "tags": ["casa", "documenti", "video"],
   "media": [],
   "files": [],
-  "createdAt": "2025-12-19T01:54:48+01:00",
-  "updatedAt": "2025-12-19T01:56:32+01:00"
+  "createdAt": "2025-12-10T00:00:00+01:00",
+  "updatedAt": "2025-12-18T00:00:00+01:00"
 }
