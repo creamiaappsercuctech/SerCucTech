@@ -5,6 +5,21 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>SerCucTech Admin – Vetrine (DnD Media+Files + Duplica + Backup + OCR)</title>
 
+  <div style="margin:10px 0;padding:10px;border:1px dashed #5ee1a2;border-radius:12px">
+<label>
+<input type="checkbox" id="adminGuideOn" checked>
+📘 Guida attiva in Admin
+</label>
+<button onclick="openAdminGuide()">▶️ Apri guida</button>
+</div>
+
+<script>
+function openAdminGuide(){
+if(!document.getElementById("adminGuideOn").checked)return;
+const id=document.getElementById("existingVetrine")?.value||"scalvini10";
+window.open(`checklist.html?id=${id}`,"_blank");
+}
+</script>
   <style>
     :root { --bg:#0b1220; --card:#111b2e; --txt:#e8eefc; --mut:#a9b8dd; --acc:#5ee1a2; --warn:#ffcc66; --danger:#ff6b6b; --b:#22345f; }
     body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:linear-gradient(180deg,#081024,#0b1220); color:var(--txt); }
