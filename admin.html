@@ -23,10 +23,15 @@
     .filesRow{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:8px;}
     .box{background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;margin-top:10px;}
     .code{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.35}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+    .chip{border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.18);color:var(--txt);border-radius:999px;padding:6px 10px;font:900 12px system-ui;cursor:pointer;}
+    .chip:hover{background:rgba(255,255,255,.08);}
   </style>
 </head>
 <body>
 <div class="wrap">
+
+  <!-- ===== HEADER + TOGGLES ===== -->
   <div class="card">
     <h1>🧰 Admin — Vetrine</h1>
 
@@ -47,9 +52,11 @@
 
     <div class="mut" style="margin-top:8px;">
       La guida è interattiva: quando tocchi una casella vuota, ti spiega cosa scrivere e qual è il prossimo passo.
+      Debug: aggiungi <b>?debug=1</b> all’URL per vedere errori e test voce.
     </div>
   </div>
 
+  <!-- ===== SELECT VETRINA + DUPLICA ===== -->
   <div class="card" style="margin-top:14px;">
     <div class="row" style="justify-content:space-between;">
       <div style="font-weight:1000;">Seleziona vetrina</div>
@@ -99,6 +106,7 @@
     </div>
   </div>
 
+  <!-- ===== EDIT VETRINA ===== -->
   <div class="card" style="margin-top:14px;">
     <div class="row" style="justify-content:space-between;">
       <div style="font-weight:1000;">Dati vetrina</div>
@@ -132,6 +140,7 @@
       <button class="btn a" id="copyJson">📋 Copia JSON pronto</button>
       <button class="btn b" id="openVetrina">🌍 Apri Vetrina</button>
       <button class="btn b" id="openChecklist">📘 Apri Checklist</button>
+      <button class="btn b" id="openCards">📚 Guida</button>
     </div>
 
     <div class="mut" style="margin-top:8px;">
@@ -139,15 +148,50 @@
     </div>
   </div>
 
+  <!-- ===== GUIDA TESTUALE LIVE ===== -->
   <div class="card" style="margin-top:14px;">
     <div style="font-weight:1000;">📌 Guida istruttiva (Admin)</div>
     <div class="mut" id="guideText">
       Tocca una casella vuota per sentire cosa scrivere e qual è il prossimo passo.
     </div>
+
+    <div class="chips">
+      <div class="chip" data-chip="titolo">Titolo</div>
+      <div class="chip" data-chip="descrizione">Descrizione</div>
+      <div class="chip" data-chip="voce">Voce</div>
+      <div class="chip" data-chip="showguide">showGuide</div>
+      <div class="chip" data-chip="files">Files</div>
+      <div class="chip" data-chip="duplica">Duplica</div>
+      <div class="chip" data-chip="github">GitHub</div>
+    </div>
   </div>
+
+  <!-- ======= PANEL GUIDA A SCHEDE ======= -->
+  <div class="box" id="cardsGuide" style="display:none;">
+    <div class="row" style="justify-content:space-between;">
+      <div style="font-weight:1000;">📚 Guida a schede</div>
+      <button class="btn b" id="closeCards">Chiudi</button>
+    </div>
+
+    <div class="mut" style="margin-top:6px;">Tocca una scheda: la guida spiega e ti dice il prossimo passo.</div>
+
+    <div style="display:grid;gap:10px;margin-top:10px;">
+      <button class="btn b" data-card="c1">1) Titolo</button>
+      <button class="btn b" data-card="c2">2) Descrizione</button>
+      <button class="btn b" data-card="c3">3) Voce</button>
+      <button class="btn b" data-card="c4">4) showGuide (Sì/No)</button>
+      <button class="btn b" data-card="c5">5) Files (Label + URL)</button>
+      <button class="btn b" data-card="c6">6) Copia JSON → GitHub</button>
+      <button class="btn b" data-card="c7">7) Duplica vetrina</button>
+    </div>
+  </div>
+
 </div>
 
 <script>
+  // Ensure first-run prompt exists (from guide.js)
+  try { if (window.SCTGuide && SCTGuide.firstRunPrompt) SCTGuide.firstRunPrompt(); } catch(e) {}
+
   // === Repo links
   const baseRepo = "https://github.com/creamiaappsercuctech/SerCucTech";
   const editIndex = document.getElementById("editIndex");
@@ -159,6 +203,7 @@
   const gAsk = document.getElementById("gAsk");
   const gVoice = document.getElementById("gVoice");
 
+  // default ON if missing
   gAdmin.checked = SCTGuide.getBool(SCTGuide.LS.guideAdmin,true);
   gVetrina.checked = SCTGuide.getBool(SCTGuide.LS.guideVetrina,true);
   gAsk.checked = SCTGuide.getBool(SCTGuide.LS.askOnFirstRun,true);
@@ -239,8 +284,14 @@
   function msgShowGuide(){
     return "Opzione Mostra guida al pubblico. Se scegli Sì, in vetrina appare il pulsante Guida e l'utente può aprire la checklist. Se scegli No, la checklist resta solo per te. Poi vai su Files.";
   }
+  function msgFiles(){
+    return "Sezione Files. Premi Aggiungi file, poi compila Label e URL. Esempio Label: Manuale. Esempio URL: files manuale punto pdf. Poi premi Copia JSON pronto.";
+  }
+  function msgGitHub(){
+    return "GitHub: dopo Copia JSON, apri Apri JSON su GitHub, incolla dentro data slash id punto json e salva. Se hai creato una nuova vetrina, aggiorna anche index.json.";
+  }
   function msgDuplica(){
-    return "Duplica vetrina. Serve per creare una nuova vetrina uguale. Passi: scrivi nuovo ID, premi Crea duplicato, poi Crea file su GitHub, incolla e salva, poi apri index.json e aggiungi la riga. Infine apri il link pronto.";
+    return "Duplica vetrina. Passi: scrivi nuovo ID, premi Crea duplicato, poi Crea file su GitHub, incolla e salva, poi Apri index.json e aggiungi la riga. Infine apri i link pronti.";
   }
 
   // ====== GUIDA AUTOMATICA SUI CAMPI (quando sono vuoti) ======
@@ -319,11 +370,11 @@
     };
   }
 
-  // ===== Buttons guide
+  // ===== Buttons
   document.getElementById("addFile").addEventListener("click", () => {
     filesBox.appendChild(fileRow("Manuale", "files/manuale.pdf"));
     if (SCTGuide.getBool(SCTGuide.LS.guideAdmin,true)) {
-      guideSay("Hai aggiunto una riga file. Ora compila Etichetta e URL. Esempio: Manuale e files manuale punto pdf. Poi premi Copia JSON pronto.");
+      guideSay("Hai aggiunto una riga file. Ora compila Etichetta e URL. Poi premi Copia JSON pronto.");
     }
   });
 
@@ -354,10 +405,26 @@
   document.getElementById("openVetrina").onclick = () => {
     location.href = "./vetrina.html?id=" + encodeURIComponent(idEl.value);
   };
-
   document.getElementById("openChecklist").onclick = () => {
     location.href = "./checklist.html?id=" + encodeURIComponent(idEl.value);
   };
+
+  // ===== Chips quick guide
+  document.querySelectorAll(".chip").forEach(ch=>{
+    ch.addEventListener("click", ()=>{
+      const k = ch.getAttribute("data-chip");
+      const map = {
+        titolo: msgTitolo(),
+        descrizione: msgDescrizione(),
+        voce: msgVoce(),
+        showguide: msgShowGuide(),
+        files: msgFiles(),
+        duplica: msgDuplica(),
+        github: msgGitHub()
+      };
+      guideSay(map[k] || "Guida non trovata.");
+    });
+  });
 
   // ================= DUPLICA =================
   const dupBtn = document.getElementById("dupBtn");
@@ -371,6 +438,9 @@
 
   const dupOpenNewFile = document.getElementById("dupOpenNewFile");
   const dupOpenIndex = document.getElementById("dupOpenIndex");
+
+  onFocusEmpty(dupTo, () => "Campo nuovo ID. Scrivi per esempio scalvini undici. Poi premi Crea duplicato.");
+  onFocusEmpty(dupTitle, () => "Campo titolo nuovo. Se lo lasci vuoto, io aggiorno automaticamente il numero nel titolo.");
 
   dupBtn.addEventListener("click", () => {
     dupBox.style.display = "block";
@@ -404,7 +474,7 @@
 
     const toTitleInput = dupTitle.value.trim();
 
-    // prova a cambiare numero nel titolo (es. "Scalvini 10" -> "Scalvini 11")
+    // auto title update number (10->11)
     let autoTitle = (src.title || fromId);
     const mFrom = fromId.match(/(\d+)\s*$/);
     const mTo = toId.match(/(\d+)\s*$/);
@@ -417,7 +487,6 @@
     }
     const newTitle = toTitleInput || autoTitle;
 
-    // 1) JSON base duplicato
     let out = {
       ...src,
       id: toId,
@@ -426,21 +495,17 @@
       updatedAt: new Date().toISOString()
     };
 
-    // 2) SOSTITUZIONE ID OVUNQUE (testi/link)
+    // replace fromId -> toId everywhere inside JSON (text/links)
     try {
       const txt = JSON.stringify(out);
       const replaced = txt.split(fromId).join(toId);
       out = JSON.parse(replaced);
-    } catch(e) {
-      // fallback: almeno id/title sono corretti
-    }
+    } catch(e) {}
 
     const outJson = JSON.stringify(out, null, 2);
-
-    // Riga per index.json (schema minimo)
     const indexLine = `"${toId}": { "id": "${toId}", "title": "${newTitle}" }`;
 
-    // Link pronti
+    // ready links
     const basePages = "https://creamiaappsercuctech.github.io/SerCucTech";
     const linkApp = `${basePages}/app.html?id=${encodeURIComponent(toId)}`;
     const linkVetrina = `${basePages}/vetrina.html?id=${encodeURIComponent(toId)}`;
@@ -468,12 +533,59 @@ Admin: ${linkAdmin}
     guideSay("Perfetto. Ho creato la nuova vetrina, sostituito l'ID ovunque, aggiornato il titolo e aggiunto i link pronti. Ora premi Crea file su GitHub, incolla e salva. Poi premi Apri index.json e aggiungi la riga. Infine apri il link della nuova vetrina.");
   };
 
-  // ===== Open JSON edit link updated on load
-  // (set inside loadVetrina)
+  // ====== GUIDA A SCHEDE (Admin) ======
+  const openCards = document.getElementById("openCards");
+  const cardsGuide = document.getElementById("cardsGuide");
+  const closeCards = document.getElementById("closeCards");
 
-  // ====== Extra: guida su duplicazione campi vuoti nel box
-  onFocusEmpty(dupTo, () => "Campo nuovo ID. Scrivi per esempio scalvini undici. Poi premi Crea duplicato.");
-  onFocusEmpty(dupTitle, () => "Campo titolo nuovo. Se vuoi, scrivi il titolo. Se lo lasci vuoto, io aggiorno automaticamente il numero nel titolo.");
+  if(openCards && cardsGuide && closeCards){
+    openCards.onclick = () => {
+      cardsGuide.style.display = "block";
+      if(SCTGuide.getBool(SCTGuide.LS.guideAdmin,true)){
+        SCTGuide.speak("Guida a schede aperta. Tocca una scheda per ascoltare la spiegazione.");
+      }
+    };
+    closeCards.onclick = () => cardsGuide.style.display = "none";
+
+    const texts = {
+      it: {
+        c1:"Titolo: scrivi il nome della vetrina, per esempio Scalvini 10. Poi vai su Descrizione.",
+        c2:"Descrizione: scrivi una o due frasi su cosa contiene la vetrina. Poi vai su Voce.",
+        c3:"Voce: scrivi la frase che il telefono leggerà all’apertura. Poi vai su showGuide.",
+        c4:"showGuide: Sì mostra la checklist al pubblico. No la tiene solo per te. Poi vai su Files.",
+        c5:"Files: premi Aggiungi file. Label è il nome visibile, URL è il percorso, esempio files/manuale.pdf. Poi premi Copia JSON.",
+        c6:"Copia JSON: copia il JSON e incollalo su GitHub dentro data/<id>.json e salva. Se hai creato una nuova vetrina, aggiorna anche index.json.",
+        c7:"Duplica: scrivi nuovo ID, premi Crea duplicato, poi Crea file su GitHub (incolla e salva), poi Apri index.json (aggiungi riga e salva). Infine usa i link pronti."
+      },
+      en: {
+        c1:"Title: type the showcase name. Then go to Description.",
+        c2:"Description: write 1–2 sentences about the content. Then go to Voice.",
+        c3:"Voice: text that the phone reads on open. Then go to showGuide.",
+        c4:"showGuide: Yes shows checklist to public, No keeps it private. Then go to Files.",
+        c5:"Files: press Add file. Label is visible name, URL is path like files/manuale.pdf. Then Copy JSON.",
+        c6:"Copy JSON: paste into GitHub data/<id>.json and save. If new showcase, update index.json.",
+        c7:"Duplicate: new ID → Create duplicate → Create file on GitHub (paste & save) → open index.json (add line & save)."
+      },
+      uk: {
+        c1:"Title: введи назву вітрини. Далі Description.",
+        c2:"Description: 1–2 речення про вміст. Далі Voice.",
+        c3:"Voice: текст, який телефон читає при відкритті. Далі showGuide.",
+        c4:"showGuide: Так показує checklist публічно, Ні — лише для тебе. Далі Files.",
+        c5:"Files: натисни Add file. Label — назва, URL — шлях, наприклад files/manuale.pdf. Далі Copy JSON.",
+        c6:"Copy JSON: встав у GitHub data/<id>.json і збережи. Якщо нова вітрина — онови index.json.",
+        c7:"Duplicate: новий ID → Create duplicate → Create file on GitHub (встав і збережи) → index.json (додай рядок і збережи)."
+      }
+    };
+
+    cardsGuide.querySelectorAll("button[data-card]").forEach(btn=>{
+      btn.onclick = () => {
+        const key = btn.getAttribute("data-card");
+        const pack = texts[SCTGuide.LANG] || texts.it;
+        const msg = pack[key] || "";
+        guideSay(msg);
+      };
+    });
+  }
 
   // init
   loadIndex();
