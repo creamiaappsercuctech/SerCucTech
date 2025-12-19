@@ -36,6 +36,7 @@
           Voce telefono
         </label>
 
+        <button class="sec" id="openAdmin">🧰 Apri Admin</button>
         <button class="sec" id="openVetrina">🌍 Apri Vetrina</button>
         <button class="sec" id="stopVoice">⏹ Stop</button>
       </div>
@@ -61,6 +62,7 @@
 
   document.getElementById("stopVoice").onclick = () => { try{ speechSynthesis.cancel(); }catch(e){} };
   document.getElementById("openVetrina").onclick = () => location.href = "./vetrina.html?id=" + encodeURIComponent(id);
+  document.getElementById("openAdmin").onclick = () => location.href = "./admin.html?id=" + encodeURIComponent(id);
 
   function say(t){
     if(SCTGuide.getBool(SCTGuide.LS.guideChecklist,true)) SCTGuide.speak(t);
@@ -73,19 +75,20 @@
     document.getElementById("desc").textContent = "Spunta ‘Fatto’ e la guida ti dice il prossimo passo.";
 
     const steps = [
-      { key:"s1", title:"Apri la vetrina", text:"Tocca ‘Apri Vetrina’ e guarda cosa c’è dentro." },
-      { key:"s2", title:"Leggi la descrizione", text:"Leggi cosa dice la vetrina, così capisci cosa contiene." },
-      { key:"s3", title:"Apri il Manuale", text:"Torna alla vetrina e tocca ‘Manuale’ (o altri file) per aprirli." },
-      { key:"s4", title:"Se manca un file", text:"Se un file dà 404, vai in Admin e controlla che esista in files/ o media/." },
-      { key:"s5", title:"Fine", text:"Hai finito. Se vuoi, aggiungi nuovi file dall’Admin." }
+      { key:"s1", title:"Apri Admin", text:"Tocca ‘Apri Admin’. Qui gestisci vetrine e file." },
+      { key:"s2", title:"Duplica vetrina", text:"In Admin premi ‘Duplica vetrina’, scrivi nuovo ID (es: scalvini11) e premi ‘Crea duplicato’." },
+      { key:"s3", title:"Crea file su GitHub", text:"In Admin premi ‘Crea file su GitHub’. Si apre data/<nuovoID>.json. Incolla il JSON e salva." },
+      { key:"s4", title:"Aggiorna index.json", text:"In Admin premi ‘Apri index.json’. Dentro vetrine aggiungi la riga nuova e salva." },
+      { key:"s5", title:"Apri Vetrina nuova", text:"Ora apri vetrina.html?id=<nuovoID> e controlla che si veda." },
+      { key:"s6", title:"Se un file dà 404", text:"Controlla che il file esista davvero in /files/ o /media/ e che il nome sia identico." },
+      { key:"s7", title:"Fine", text:"Hai finito. Se vuoi, aggiungi manuale.pdf in files/ e aggiorna i link nel JSON." }
     ];
 
     const box = document.getElementById("steps");
     box.innerHTML = "";
 
-    const doneKey = "sct_done_"+id+"_v1";
+    const doneKey = "sct_done_"+id+"_v2";
     const done = JSON.parse(localStorage.getItem(doneKey) || "{}");
-
     function save(){ localStorage.setItem(doneKey, JSON.stringify(done)); }
 
     function speakNext(){
