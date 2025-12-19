@@ -19,8 +19,10 @@
     .a{background:var(--ok);color:#082016;}
     .b{background:#22345f;color:var(--txt);}
     .mut{color:var(--mut);font-size:13px;}
-    .mini{font-size:12px;opacity:.9;}
+    .mini{font-size:12px;opacity:.9}
     .filesRow{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:8px;}
+    .box{background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;margin-top:10px;}
+    .code{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.35}
   </style>
 </head>
 <body>
@@ -44,7 +46,7 @@
     </div>
 
     <div class="mut" style="margin-top:8px;">
-      Suggerimento: in “Guida in Vetrina” abiliti la guida vocale quando l’utente clicca file e pulsanti.
+      Suggerimento: “Guida in Vetrina” fa parlare la guida quando l’utente clicca file e pulsanti.
     </div>
   </div>
 
@@ -56,6 +58,40 @@
 
     <select id="vetrinaSelect"></select>
     <div class="mut">Se non vedi una vetrina, aggiungila in <b>data/index.json</b>.</div>
+
+    <div class="row" style="margin-top:12px;">
+      <button class="btn b" id="dupBtn">🧬 Duplica vetrina</button>
+    </div>
+
+    <div class="box" id="dupBox" style="display:none;">
+      <div style="font-weight:1000;margin-bottom:6px;">Duplica vetrina</div>
+
+      <div class="mut">Da: <b id="dupFrom"></b></div>
+      <label>Nuovo ID (es: scalvini11)</label>
+      <input id="dupTo" placeholder="scalvini11">
+
+      <label>Titolo nuovo (opzionale)</label>
+      <input id="dupTitle" placeholder="Lascia vuoto = titolo originale + (Copia)">
+
+      <div class="row" style="margin-top:10px;">
+        <button class="btn a" id="dupMake">✅ Crea duplicato (copia negli appunti)</button>
+        <button class="btn b" id="dupClose">Chiudi</button>
+      </div>
+
+      <div class="mut" style="margin-top:10px;">
+        Dopo “Crea duplicato” avrai:
+        <ul>
+          <li>JSON completo per <b>data/&lt;nuovoID&gt;.json</b></li>
+          <li>Riga da aggiungere in <b>data/index.json</b></li>
+        </ul>
+      </div>
+
+      <div class="box">
+        <div class="mut" style="margin-bottom:6px;">Anteprima (copiata negli appunti):</div>
+        <div class="code" id="dupPreview"></div>
+      </div>
+    </div>
+
   </div>
 
   <div class="card" style="margin-top:14px;">
@@ -168,7 +204,6 @@
       select.appendChild(opt);
     });
 
-    // default
     if(list.some(v=>v.id===appId)) select.value = appId;
     else if(list[0]) select.value = list[0].id;
 
@@ -190,7 +225,6 @@
     (data.files || []).forEach(f => filesBox.appendChild(fileRow(f.label||"", f.url||"")));
 
     editJson.href = baseRepo + "/edit/main/data/" + id + ".json";
-
     guideSay("Hai caricato la vetrina. Ora puoi aggiungere file e poi copiare il JSON pronto.");
   }
 
@@ -214,25 +248,97 @@
       return { label: ins[0].value.trim(), url: ins[1].value.trim() };
     }).filter(x=>x.label && x.url);
 
-    const out = {
-      id,
-      title: titleEl.value.trim(),
-      description: descEl.value.trim(),
-      voice: { lang: navigator.language || "it-IT", text: voiceEl.value.trim() || ("Benvenuto nella vetrina " + (titleEl.value.trim()||id)) },
-      showGuide: (showGuideEl.value === "true"),
-      tags: [],
-      media: [],
-      files,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
+    const out = makeJson(id, titleEl.value.trim(), descEl.value.trim(), voiceEl.value.trim(), showGuideEl.value==="true", files);
     const txt = JSON.stringify(out, null, 2);
     await navigator.clipboard.writeText(txt);
     SCTGuide.toast("JSON copiato ✅");
     guideSay("JSON copiato. Ora apri GitHub e incollalo in data/" + id + ".json, poi salva.");
   };
 
+  // ================= DUPLICA =================
+  const dupBtn = document.getElementById("dupBtn");
+  const dupBox = document.getElementById("dupBox");
+  const dupFrom = document.getElementById("dupFrom");
+  const dupTo = document.getElementById("dupTo");
+  const dupTitle = document.getElementById("dupTitle");
+  const dupMake = document.getElementById("dupMake");
+  const dupClose = document.getElementById("dupClose");
+  const dupPreview = document.getElementById("dupPreview");
+
+  dupBtn.onclick = () => {
+    dupBox.style.display = "block";
+    dupFrom.textContent = idEl.value || select.value || "";
+    dupTo.value = "";
+    dupTitle.value = "";
+    dupPreview.textContent = "";
+    guideSay("Inserisci il nuovo ID e premi ‘Crea duplicato’. Ti copio tutto negli appunti.");
+  };
+
+  dupClose.onclick = () => dupBox.style.display = "none";
+
+  function makeJson(id, title, description, voiceText, showGuide, files){
+    return {
+      id,
+      title: title || id,
+      description: description || "",
+      voice: { lang: navigator.language || "it-IT", text: voiceText || ("Benvenuto nella vetrina " + (title||id)) },
+      showGuide: !!showGuide,
+      tags: [],
+      media: [],
+      files: files || [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  dupMake.onclick = async () => {
+    const fromId = (idEl.value || select.value || "").trim();
+    const toId = dupTo.value.trim();
+    if(!fromId || !toId){
+      SCTGuide.toast("Inserisci nuovo ID");
+      return;
+    }
+
+    const r = await fetch("./data/"+fromId+".json", {cache:"no-store"});
+    const src = r.ok ? await r.json() : null;
+    if(!src){
+      SCTGuide.toast("Sorgente non trovata");
+      return;
+    }
+
+    const newTitle = dupTitle.value.trim() || ((src.title || fromId) + " (Copia)");
+    const out = {
+      ...src,
+      id: toId,
+      title: newTitle,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // IMPORTANTISSIMO: se dentro src ci fossero link con id hardcoded, li lasciamo uguali (non rompiamo).
+    // L’utente potrà poi cambiarli.
+
+    const outJson = JSON.stringify(out, null, 2);
+
+    // Riga per index.json (dipende dal tuo schema: qui uso id/title)
+    const indexLine = `"${toId}": { "id": "${toId}", "title": "${newTitle}" }`;
+
+    const all = 
+`=== INCOLLA QUESTO IN data/${toId}.json ===
+${outJson}
+
+=== AGGIUNGI QUESTA RIGA IN data/index.json (dentro vetrine) ===
+${indexLine}
+`;
+
+    await navigator.clipboard.writeText(all);
+    dupPreview.textContent = all;
+
+    SCTGuide.toast("Duplicato copiato ✅");
+    guideSay("Duplicato creato. Ora vai su GitHub: crea data/"+toId+".json e incolla. Poi aggiungi la riga in index.json.");
+  };
+
+  // init
   loadIndex();
 </script>
 </body>
