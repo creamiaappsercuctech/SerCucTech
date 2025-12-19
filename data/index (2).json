@@ -1,0 +1,18 @@
+{
+  "meta": {
+    "version": 1,
+    "updatedAt": "2025-12-19T15:08:09+01:00"
+  },
+  "groups": {},
+  "vetrine": {
+    "renzo11": {
+      "id": "renzo11",
+      "title": "Bazzar di Bostone",
+      "file": "data/renzo11.json",
+      "tags": [
+        "commercio"
+      ],
+      "updatedAt": "2025-12-19T15:07:43+01:00"
+    }
+  }
+}
