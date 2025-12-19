@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SerCucTech App</title>
+
+<link rel="manifest" href="manifest.json">
+
+<style>
+body{margin:0;font-family:system-ui;background:#0b1220;color:#e8eefc}
+header{padding:12px;background:#111b2e;display:flex;gap:8px;flex-wrap:wrap}
+button{padding:10px 14px;border:0;border-radius:12px;font-weight:800;background:#5ee1a2}
+.sec{background:#22345f;color:#fff}
+iframe{border:0;width:100%;height:calc(100vh - 70px);background:#000}
+</style>
+</head>
+
+<body>
+<header>
+<button onclick="openPage('admin.html')">🔐 Admin</button>
+<button onclick="openPage('checklist.html')">📘 Guida</button>
+<button onclick="openPage('vetrina.html')">🌍 Vetrina</button>
+<button class="sec" onclick="openPage('data/index.json')">📄 JSON</button>
+<button class="sec" onclick="openPage('https://github.com/creamiaappsercuctech/SerCucTech/upload/main')">⬆️ Upload</button>
+</header>
+
+<iframe id="view"></iframe>
+
+<script>
+const params = new URL(location.href).searchParams;
+const ID = params.get("id") || "scalvini10";
+
+function openPage(page){
+  if(page.includes("admin.html"))
+    view.src = "admin.html";
+  else if(page.includes("checklist.html"))
+    view.src = "checklist.html?id="+ID;
+  else if(page.includes("vetrina.html"))
+    view.src = "vetrina.html?id="+ID;
+  else
+    view.src = page;
+}
+
+openPage("vetrina.html");
+
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js");
+}
+</script>
+</body>
+</html>
