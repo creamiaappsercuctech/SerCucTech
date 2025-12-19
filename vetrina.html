@@ -1,156 +1,131 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SerCucTech – Vetrina</title>
-
-<style>
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-  background:#0b1220;
-  color:#e8eefc;
-}
-.wrap{
-  max-width:1000px;
-  margin:auto;
-  padding:16px;
-}
-.card{
-  background:#111b2e;
-  border-radius:18px;
-  padding:16px;
-  box-shadow:0 10px 30px rgba(0,0,0,.25);
-}
-h1{margin:0 0 10px 0}
-.mut{color:#a9b8dd}
-.media{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-  gap:12px;
-  margin-top:16px;
-}
-.media img, .media video{
-  width:100%;
-  border-radius:12px;
-  background:#000;
-}
-.files{
-  margin-top:16px;
-  display:grid;
-  gap:8px;
-}
-.files a{
-  display:block;
-  padding:10px 12px;
-  background:#0f1a31;
-  border-radius:12px;
-  color:#9fe9ff;
-  text-decoration:none;
-}
-.files a:hover{background:#16254a}
-
-.guide-box{
-  margin-top:14px;
-  padding:12px;
-  border:2px dashed #5ee1a2;
-  border-radius:14px;
-  background:#0f1a31;
-}
-.guide-box button{
-  border:0;
-  padding:12px 16px;
-  border-radius:12px;
-  font-weight:800;
-  background:#5ee1a2;
-  cursor:pointer;
-}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SerCucTech - Vetrina</title>
+  <script src="./guide.js"></script>
+  <style>
+    :root{--bg:#0b1220;--card:rgba(27,46,92,.55);--txt:#e8eefc;--mut:#a9b8dd;--b:#22345f;}
+    body{margin:0;font-family:system-ui;background:var(--bg);color:var(--txt);}
+    .wrap{max-width:980px;margin:0 auto;padding:18px;}
+    .card{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:16px;}
+    h1{margin:0 0 8px 0;font-size:26px;}
+    .mut{color:var(--mut);}
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+    button{cursor:pointer;border:0;padding:10px 14px;border-radius:12px;font-weight:900;}
+    .sec{background:var(--b);color:var(--txt);}
+    .grid{display:grid;gap:12px;margin-top:14px;grid-template-columns:1fr;}
+    @media(min-width:900px){.grid{grid-template-columns:1fr 1fr;}}
+    a.file{display:flex;gap:10px;align-items:center;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.18);text-decoration:none;color:var(--txt);font-weight:800;}
+    .pill{display:inline-block;font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.1);opacity:.9}
+  </style>
 </head>
-
 <body>
-<div class="wrap">
-  <div class="card">
-    <h1 id="title">Vetrina</h1>
-    <div class="mut" id="description"></div>
+  <div class="wrap">
+    <div class="card">
+      <h1 id="title">Caricamento…</h1>
+      <div class="mut" id="desc"></div>
 
-    <!-- GUIDA PASSO PASSO (solo se abilitata) -->
-    <div id="publicGuide" class="guide-box" style="display:none">
-      <div class="mut" style="margin-bottom:6px">
-        Hai bisogno di aiuto? Segui la guida passo-passo.
+      <div class="btns">
+        <button class="sec" id="speakBtn">🔊 Voce</button>
+        <button class="sec" id="stopBtn">⏹ Stop</button>
+        <button class="sec" id="guideBtn" style="display:none;">📘 Guida</button>
+        <span class="pill" id="hint"></span>
       </div>
-      <button onclick="openGuide()">📘 Guida passo-passo</button>
     </div>
 
-    <!-- MEDIA -->
-    <div class="media" id="media"></div>
-
-    <!-- FILES -->
-    <div class="files" id="files"></div>
+    <div class="grid">
+      <div class="card">
+        <h2 style="margin:0 0 8px 0;">Files</h2>
+        <div id="files"></div>
+      </div>
+      <div class="card">
+        <h2 style="margin:0 0 8px 0;">Media</h2>
+        <div class="mut">Apri la cartella media dall’Admin/Upload.</div>
+      </div>
+    </div>
   </div>
-</div>
 
 <script>
-/* ================= PARAM ================= */
-const params = new URL(location.href).searchParams;
-const VETRINA_ID = params.get("id") || "scalvini10";
+  const id = new URL(location.href).searchParams.get("id") || "scalvini10";
+  const jsonUrl = "./data/" + id + ".json";
 
-/* ================= LOAD JSON ================= */
-fetch(`data/${VETRINA_ID}.json?t=` + Date.now())
-  .then(r => {
-    if(!r.ok) throw new Error("Vetrina non trovata");
-    return r.json();
-  })
-  .then(v => initVetrina(v))
-  .catch(err => {
-    document.getElementById("title").textContent = "Vetrina non trovata";
-    document.getElementById("description").textContent = err.message;
-  });
+  const elTitle = document.getElementById("title");
+  const elDesc = document.getElementById("desc");
+  const elFiles = document.getElementById("files");
+  const elHint = document.getElementById("hint");
+  const guideBtn = document.getElementById("guideBtn");
 
-/* ================= INIT ================= */
-function initVetrina(v){
-  // titolo e descrizione
-  document.getElementById("title").textContent = v.title || v.id;
-  document.getElementById("description").textContent = v.description || "";
-
-  /* ===== GUIDA ===== */
-  if(v.showGuide === true){
-    document.getElementById("publicGuide").style.display = "block";
+  function absUrl(u){
+    if(!u) return "";
+    if(u.startsWith("http://") || u.startsWith("https://")) return u;
+    const base = location.origin + location.pathname.replace(/[^\/]+$/, "");
+    return new URL(u, base).toString();
   }
 
-  /* ===== MEDIA ===== */
-  const mediaBox = document.getElementById("media");
-  (v.media || []).forEach(m => {
-    if(m.type === "image"){
-      const img = document.createElement("img");
-      img.src = m.url;
-      img.alt = m.title || "";
-      mediaBox.appendChild(img);
-    }
-    if(m.type === "video"){
-      const vid = document.createElement("video");
-      vid.src = m.url;
-      vid.controls = true;
-      mediaBox.appendChild(vid);
-    }
-  });
+  function speakWelcome(text){
+    if(SCTGuide.getBool(SCTGuide.LS.guideVetrina,true)) SCTGuide.speak(text);
+  }
 
-  /* ===== FILES ===== */
-  const filesBox = document.getElementById("files");
-  (v.files || []).forEach(f => {
-    const a = document.createElement("a");
-    a.href = f.url;
-    a.target = "_blank";
-    a.textContent = "📄 " + (f.label || f.url);
-    filesBox.appendChild(a);
-  });
-}
+  async function load() {
+    const r = await fetch(jsonUrl, {cache:"no-store"});
+    if(!r.ok){ elTitle.textContent = "Vetrina non trovata"; elDesc.textContent="Controlla data/"+id+".json"; return; }
+    const data = await r.json();
 
-/* ================= OPEN GUIDE ================= */
-function openGuide(){
-  window.open(`checklist.html?id=${VETRINA_ID}`, "_blank");
-}
+    elTitle.textContent = data.title || id;
+    elDesc.textContent = data.description || "";
+
+    // pulsante guida pubblico SOLO se showGuide=true
+    const showGuide = !!data.showGuide;
+    if(showGuide){
+      guideBtn.style.display="inline-block";
+      guideBtn.onclick = () => {
+        // apri checklist
+        location.href = "./checklist.html?id=" + encodeURIComponent(id);
+      };
+    }
+
+    // files
+    elFiles.innerHTML = "";
+    const files = Array.isArray(data.files) ? data.files : [];
+    if(files.length === 0){
+      elFiles.innerHTML = `<div class="mut">Nessun file. Aggiungi in Admin.</div>`;
+    } else {
+      files.forEach((f, idx) => {
+        const a = document.createElement("a");
+        a.className = "file";
+        a.href = absUrl(f.url);
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.dataset.step = "file_" + idx;
+        a.innerHTML = `📄 <span>${f.label || ("File " + (idx+1))}</span>`;
+        a.onclick = () => {
+          if(SCTGuide.getBool(SCTGuide.LS.guideVetrina,true)){
+            SCTGuide.speak("Hai aperto " + (f.label || "un file") + ". Se vuoi, torna indietro e apri gli altri file.");
+          }
+        };
+        elFiles.appendChild(a);
+      });
+    }
+
+    // voce vetrina
+    const voiceText = (data.voice && data.voice.text) ? data.voice.text : ("Benvenuto nella vetrina " + (data.title||id));
+    const voiceLang = (data.voice && data.voice.lang) ? data.voice.lang : (navigator.language||"it-IT");
+    document.getElementById("speakBtn").onclick = () => {
+      if(!SCTGuide.getBool(SCTGuide.LS.voiceEnabled,true)) SCTGuide.setBool(SCTGuide.LS.voiceEnabled,true);
+      try{ speechSynthesis.cancel(); }catch(e){}
+      const u = new SpeechSynthesisUtterance(voiceText);
+      u.lang = voiceLang;
+      speechSynthesis.speak(u);
+    };
+    document.getElementById("stopBtn").onclick = () => { try{ speechSynthesis.cancel(); }catch(e){} };
+
+    elHint.textContent = showGuide ? "Guida disponibile" : "Guida non attiva";
+    speakWelcome("Sei nella vetrina. Tocca un file per aprirlo. Se vedi ‘Guida’, puoi seguire il percorso passo passo.");
+  }
+
+  load();
 </script>
 </body>
 </html>
