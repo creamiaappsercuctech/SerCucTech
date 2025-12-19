@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>SerCucTech – Vetrina</title>
   <style>
-    :root { --card:#111b2e; --txt:#e8eefc; --mut:#a9b8dd; --acc:#5ee1a2; --b:#22345f; }
+    :root { --txt:#e8eefc; --mut:#a9b8dd; --acc:#5ee1a2; --b:#22345f; }
     body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:linear-gradient(180deg,#081024,#0b1220); color:var(--txt); }
     .wrap{ max-width:980px; margin:0 auto; padding:18px; }
     .card{ background:rgba(17,27,46,.92); border:1px solid #1b2a4f; border-radius:18px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,.22); }
@@ -15,111 +15,46 @@
     .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
     button{ cursor:pointer; border:0; padding:10px 14px; border-radius:12px; font-weight:900; background:var(--acc); color:#052014; }
     .sec{ background:#22345f; color:var(--txt); }
-    .danger{ background:#ff6b6b; color:#2b0909; }
     .grid{ display:grid; gap:12px; grid-template-columns:1fr; margin-top:14px; }
     @media(min-width:900px){ .grid{ grid-template-columns:1fr 1fr; } }
     .media{ display:grid; gap:10px; }
     img, video{ width:100%; border-radius:14px; border:1px solid var(--b); background:#0f1830; }
     a{ color:#9fe9ff; }
     .item{ padding:10px; border-radius:14px; border:1px solid var(--b); background:#0c1530; }
-    input, select, textarea { width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px; border:1px solid var(--b); background:#0f1830; color:var(--txt); outline:none; }
-    textarea { min-height:120px; resize:vertical; }
-    .row { display:grid; gap:10px; grid-template-columns:1fr; }
-    @media(min-width:700px){ .row{ grid-template-columns: 1fr 1fr; } }
-    .pill { display:inline-flex; gap:8px; align-items:center; padding:8px 12px; border-radius:999px; background:#0f1a31; border:1px solid #1b2a4f; color:var(--mut); font-size:13px; }
-    .bar { height:10px; border:1px solid var(--b); border-radius:999px; overflow:hidden; background:#0f1830; }
-    .bar > div { height:100%; width:0%; background:var(--acc); }
-    .mini { font-size:12px; line-height:1.35; }
   </style>
-
-  <!-- OCR -->
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
-  <div class="wrap">
+<div class="wrap">
+  <div class="card">
+    <h1 id="title">Caricamento…</h1>
+    <div class="mut" id="desc"></div>
+    <div class="btns">
+      <button id="speakBtn" class="sec">🔊 Voce</button>
+      <button id="stopBtn" class="sec">⏹ Stop</button>
+    </div>
+    <div class="mut" style="margin-top:10px;" id="hint"></div>
+  </div>
+
+  <div class="grid">
     <div class="card">
-      <h1 id="title">Caricamento…</h1>
-      <div class="mut" id="desc"></div>
-      <div class="btns">
-        <button id="speakBtn" class="sec">🔊 Voce</button>
-        <button id="stopBtn" class="sec">⏹ Stop</button>
-      </div>
-      <div class="mut" style="margin-top:10px;" id="hint"></div>
+      <h2>Media</h2>
+      <div class="media" id="media"></div>
     </div>
-
-    <div class="grid">
-      <div class="card">
-        <h2>Media</h2>
-        <div class="media" id="media"></div>
-      </div>
-
-      <div class="card">
-        <h2>File</h2>
-        <div id="files"></div>
-      </div>
-    </div>
-
-    <!-- OCR -->
-    <div class="card" style="margin-top:12px;">
-      <h2>OCR – Estrai testo da immagine</h2>
-      <div class="mut mini">
-        Carica una foto (cartello, ricevuta, documento) e ottieni il testo. Foto nitida = OCR migliore.
-      </div>
-
-      <div class="row" style="margin-top:10px;">
-        <div>
-          <label class="mut mini">Lingua OCR</label>
-          <select id="ocrLang">
-            <option value="ita">Italiano (ita)</option>
-            <option value="eng">Inglese (eng)</option>
-            <option value="ukr">Ucraino (ukr)</option>
-            <option value="deu">Tedesco (deu)</option>
-            <option value="spa">Spagnolo (spa)</option>
-            <option value="fra">Francese (fra)</option>
-          </select>
-        </div>
-        <div>
-          <label class="mut mini">Carica immagine</label>
-          <input id="ocrFile" type="file" accept="image/*" />
-        </div>
-      </div>
-
-      <div class="btns">
-        <button id="ocrBtn">🧠 Avvia OCR</button>
-        <button id="ocrCopyBtn" class="sec">📋 Copia testo</button>
-        <button id="ocrSpeakBtn" class="sec">🔊 Leggi testo</button>
-        <button id="ocrClearBtn" class="danger">🧹 Pulisci</button>
-      </div>
-
-      <div style="margin-top:10px;">
-        <div class="pill">Stato: <b id="ocrStatus">Pronto</b></div>
-        <div style="margin-top:10px;" class="bar"><div id="ocrBar"></div></div>
-      </div>
-
-      <div class="row" style="margin-top:12px;">
-        <div>
-          <div class="mut mini" style="margin-bottom:6px;">Anteprima</div>
-          <img id="ocrPreview" alt="Anteprima OCR" style="display:none;" />
-          <div id="ocrNoPreview" class="mut mini">Nessuna immagine caricata.</div>
-        </div>
-        <div>
-          <div class="mut mini" style="margin-bottom:6px;">Testo estratto</div>
-          <textarea id="ocrText" placeholder="Qui comparirà il testo..." spellcheck="false"></textarea>
-        </div>
-      </div>
+    <div class="card">
+      <h2>File</h2>
+      <div id="files"></div>
     </div>
   </div>
+</div>
 
 <script>
 const INDEX_PATH = "data/index.json";
 
-/* params */
 function getParam(name){
   const url = new URL(location.href);
   return url.searchParams.get(name);
 }
 
-/* tts */
 function stopTTS(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }
 function speak(text, lang){
   stopTTS();
@@ -130,7 +65,6 @@ function speak(text, lang){
 }
 document.getElementById("stopBtn").onclick = stopTTS;
 
-/* escape */
 function escapeHTML(s){
   return String(s||"")
     .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
@@ -138,7 +72,6 @@ function escapeHTML(s){
 }
 function escapeAttr(s){ return escapeHTML(s).replaceAll("`","&#096;"); }
 
-/* load */
 async function main(){
   const id = (getParam("id") || "").trim();
   const group = (getParam("group") || "").trim();
@@ -148,7 +81,6 @@ async function main(){
   const vIndex = indexDB.vetrine || {};
   const groups = indexDB.groups || {};
 
-  // group mode
   if(group){
     const g = groups[group];
     if(!g){
@@ -158,8 +90,7 @@ async function main(){
     }
     document.getElementById("title").textContent = g.title || ("Gruppo: " + group);
     document.getElementById("desc").textContent = g.description || "";
-    document.getElementById("hint").innerHTML = "Vetrine nel gruppo:";
-
+    document.getElementById("hint").textContent = "Elenco vetrine:";
     document.getElementById("speakBtn").onclick = ()=> speak((g.title||"") + ". " + (g.description||""), "it-IT");
 
     const mediaEl = document.getElementById("media");
@@ -176,14 +107,14 @@ async function main(){
       `;
       mediaEl.appendChild(div);
     });
+
     document.getElementById("files").innerHTML = `<div class="mut">Apri una vetrina per vedere i file.</div>`;
     return;
   }
 
-  // single vetrina mode
   if(!id || !vIndex[id] || !vIndex[id].file){
     document.getElementById("title").textContent = "Vetrina non trovata";
-    document.getElementById("desc").textContent = "Usa: vetrina.html?id=scalvini10 (e crea data/index.json)";
+    document.getElementById("desc").textContent = "Usa: vetrina.html?id=scalvini10";
     return;
   }
 
@@ -199,7 +130,6 @@ async function main(){
   const voiceLang = (v.voice && v.voice.lang) ? v.voice.lang : "it-IT";
   document.getElementById("speakBtn").onclick = ()=> speak(voiceText, voiceLang);
 
-  // media
   const mediaEl = document.getElementById("media");
   mediaEl.innerHTML = "";
   (v.media||[]).forEach(m=>{
@@ -217,7 +147,6 @@ async function main(){
   });
   if((v.media||[]).length === 0) mediaEl.innerHTML = `<div class="mut">Nessun media.</div>`;
 
-  // files
   const filesEl = document.getElementById("files");
   filesEl.innerHTML = "";
   (v.files||[]).forEach(f=>{
@@ -228,88 +157,6 @@ async function main(){
   });
   if((v.files||[]).length === 0) filesEl.innerHTML = `<div class="mut">Nessun file.</div>`;
 }
-
-/* OCR */
-let ocrImage = null;
-const ocrFile = document.getElementById("ocrFile");
-const ocrPreview = document.getElementById("ocrPreview");
-const ocrNoPreview = document.getElementById("ocrNoPreview");
-const ocrText = document.getElementById("ocrText");
-const ocrStatus = document.getElementById("ocrStatus");
-const ocrBar = document.getElementById("ocrBar");
-
-ocrFile.addEventListener("change", (e)=>{
-  const file = e.target.files && e.target.files[0];
-  if(!file){ ocrImage=null; return; }
-  if(!file.type.startsWith("image/")){
-    alert("Carica un'immagine.");
-    e.target.value = "";
-    return;
-  }
-  ocrImage = file;
-  ocrPreview.src = URL.createObjectURL(file);
-  ocrPreview.style.display = "block";
-  ocrNoPreview.style.display = "none";
-  ocrStatus.textContent = "Immagine caricata";
-  ocrBar.style.width = "0%";
-});
-
-document.getElementById("ocrBtn").addEventListener("click", async ()=>{
-  if(!ocrImage){ alert("Carica prima un'immagine."); return; }
-  const lang = document.getElementById("ocrLang").value;
-
-  ocrStatus.textContent = "OCR in corso…";
-  ocrBar.style.width = "0%";
-
-  try{
-    const { data } = await Tesseract.recognize(ocrImage, lang, {
-      logger: (m)=>{
-        if(m && m.status) ocrStatus.textContent = m.status;
-        if(m && typeof m.progress === "number") ocrBar.style.width = Math.round(m.progress*100) + "%";
-      }
-    });
-    const text = (data && data.text) ? data.text.trim() : "";
-    ocrText.value = text;
-    ocrStatus.textContent = text ? "✅ OCR completato" : "✅ OCR completato (nessun testo trovato)";
-    ocrBar.style.width = "100%";
-  }catch(err){
-    console.error(err);
-    ocrStatus.textContent = "❌ Errore OCR";
-    alert("Errore OCR: riprova con foto più nitida o controlla connessione.");
-  }
-});
-
-document.getElementById("ocrCopyBtn").addEventListener("click", async ()=>{
-  const txt = (ocrText.value||"").trim();
-  if(!txt){ alert("Nessun testo da copiare."); return; }
-  try{
-    await navigator.clipboard.writeText(txt);
-    ocrStatus.textContent = "📋 Copiato";
-  }catch(e){
-    ocrText.select();
-    document.execCommand("copy");
-    ocrStatus.textContent = "📋 Copiato (fallback)";
-  }
-});
-
-document.getElementById("ocrSpeakBtn").addEventListener("click", ()=>{
-  const txt = (ocrText.value||"").trim();
-  if(!txt){ alert("Nessun testo da leggere."); return; }
-  const lang = document.getElementById("ocrLang").value;
-  const map = { ita:"it-IT", eng:"en-US", ukr:"uk-UA", deu:"de-DE", spa:"es-ES", fra:"fr-FR" };
-  speak(txt, map[lang] || "it-IT");
-});
-
-document.getElementById("ocrClearBtn").addEventListener("click", ()=>{
-  ocrFile.value = "";
-  ocrImage = null;
-  ocrPreview.src = "";
-  ocrPreview.style.display = "none";
-  ocrNoPreview.style.display = "block";
-  ocrText.value = "";
-  ocrStatus.textContent = "Pronto";
-  ocrBar.style.width = "0%";
-});
 
 main().catch(err=>{
   console.error(err);
