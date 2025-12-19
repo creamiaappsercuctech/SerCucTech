@@ -8,7 +8,9 @@
   },
   "tags": ["casa", "documenti", "video"],
   "media": [],
-  "files": [],
+  "files": [
+    { "label": "Manuale", "url": "files/manuale.pdf" }
+  ],
   "createdAt": "2025-12-10T00:00:00+01:00",
   "updatedAt": "2025-12-18T00:00:00+01:00"
 }
