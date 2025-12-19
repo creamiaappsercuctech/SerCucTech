@@ -46,7 +46,7 @@
     </div>
 
     <div class="mut" style="margin-top:8px;">
-      La guida è interattiva: quando fai click, lei ti dice cosa fare dopo.
+      La guida è interattiva: quando tocchi una casella vuota, ti spiega cosa scrivere e qual è il prossimo passo.
     </div>
   </div>
 
@@ -72,7 +72,7 @@
       <input id="dupTo" placeholder="scalvini11">
 
       <label>Titolo nuovo (opzionale)</label>
-      <input id="dupTitle" placeholder="Lascia vuoto = titolo originale + (Copia)">
+      <input id="dupTitle" placeholder="Lascia vuoto = titolo originale con numero aggiornato">
 
       <div class="row" style="margin-top:10px;">
         <button class="btn a" id="dupMake">✅ Crea duplicato (copia negli appunti)</button>
@@ -84,9 +84,11 @@
       <div class="mut" style="margin-top:10px;">
         Ordine giusto:
         <ol>
-          <li>Premi “Crea duplicato” → copia testo</li>
-          <li>Premi “Crea file su GitHub” → incolla dentro data/&lt;nuovoID&gt;.json</li>
-          <li>Premi “Apri index.json” → aggiungi la riga nuova dentro vetrine</li>
+          <li>Scrivi nuovo ID</li>
+          <li>Premi “Crea duplicato”</li>
+          <li>Premi “Crea file su GitHub” → incolla → salva</li>
+          <li>Premi “Apri index.json” → aggiungi riga → salva</li>
+          <li>Apri subito i link pronti</li>
         </ol>
       </div>
 
@@ -107,13 +109,13 @@
     <input id="id" disabled>
 
     <label>Titolo</label>
-    <input id="title">
+    <input id="title" placeholder="Es: Scalvini 10">
 
     <label>Descrizione</label>
-    <textarea id="description"></textarea>
+    <textarea id="description" placeholder="Es: Qui trovi manuale, foto e documenti."></textarea>
 
     <label>Voce (testo)</label>
-    <textarea id="voiceText"></textarea>
+    <textarea id="voiceText" placeholder="Es: Benvenuto nella vetrina Scalvini 10. Qui trovi i file disponibili."></textarea>
 
     <label>Mostra pulsante “Guida” al pubblico (showGuide)</label>
     <select id="showGuide">
@@ -133,14 +135,14 @@
     </div>
 
     <div class="mut" style="margin-top:8px;">
-      Dopo aver copiato il JSON, incollalo su GitHub in <b>data/&lt;id&gt;.json</b>.
+      Dopo “Copia JSON pronto” devi incollare su GitHub in <b>data/&lt;id&gt;.json</b> e salvare.
     </div>
   </div>
 
   <div class="card" style="margin-top:14px;">
-    <div style="font-weight:1000;">📌 Mini guida (Admin)</div>
+    <div style="font-weight:1000;">📌 Guida istruttiva (Admin)</div>
     <div class="mut" id="guideText">
-      Se vuoi creare una nuova vetrina: premi “Duplica vetrina” e segui l’ordine 1-2-3.
+      Tocca una casella vuota per sentire cosa scrivere e qual è il prossimo passo.
     </div>
   </div>
 </div>
@@ -182,15 +184,85 @@
     if(SCTGuide.getBool(SCTGuide.LS.guideAdmin,true)) SCTGuide.speak(t);
   }
 
+  // ====================== GUIDA PER CAMPI (FOCUS) ======================
+  let __lastFocusKey = "";
+
+  function speakIfAdminGuide(text){
+    if (!SCTGuide.getBool(SCTGuide.LS.guideAdmin, true)) return;
+    if (__lastFocusKey === text) return;
+    __lastFocusKey = text;
+    guideSay(text);
+  }
+
+  function onFocusEmpty(el, messageBuilder){
+    if (!el) return;
+    el.addEventListener("focus", () => {
+      const v = (el.value || "").trim();
+      if (v.length === 0) speakIfAdminGuide(messageBuilder());
+    });
+    el.addEventListener("click", () => {
+      const v = (el.value || "").trim();
+      if (v.length === 0) speakIfAdminGuide(messageBuilder());
+    });
+  }
+
+  function attachFileRowGuide(rowEl){
+    if (!rowEl) return;
+    const ins = rowEl.querySelectorAll("input");
+    const labelInput = ins[0];
+    const urlInput = ins[1];
+
+    onFocusEmpty(labelInput, () =>
+      "Campo etichetta. Qui scrivi il nome che vede l'utente. Esempio: Manuale, Prezzi, Catalogo. Poi passa al campo URL."
+    );
+
+    onFocusEmpty(urlInput, () =>
+      "Campo URL del file. Qui metti il percorso del file. Esempio: files manuale punto pdf. Se il file è online, incolla il link completo. Poi premi Copia JSON pronto."
+    );
+  }
+
+  function attachSelectGuide(sel, msg){
+    if (!sel) return;
+    sel.addEventListener("focus", () => speakIfAdminGuide(msg));
+    sel.addEventListener("click", () => speakIfAdminGuide(msg));
+  }
+
+  function msgTitolo(){
+    return "Campo Titolo. Scrivi il nome della vetrina, per esempio: Scalvini 10. Poi vai su Descrizione.";
+  }
+  function msgDescrizione(){
+    return "Campo Descrizione. Scrivi una o due frasi su cosa contiene la vetrina. Esempio: Qui trovi manuale, foto e documenti. Poi vai su Voce.";
+  }
+  function msgVoce(){
+    return "Campo Voce. Scrivi la frase che il telefono leggerà quando l'utente apre la vetrina. Esempio: Benvenuto nella vetrina Scalvini 10. Ora vai su Mostra guida al pubblico.";
+  }
+  function msgShowGuide(){
+    return "Opzione Mostra guida al pubblico. Se scegli Sì, in vetrina appare il pulsante Guida e l'utente può aprire la checklist. Se scegli No, la checklist resta solo per te. Poi vai su Files.";
+  }
+  function msgDuplica(){
+    return "Duplica vetrina. Serve per creare una nuova vetrina uguale. Passi: scrivi nuovo ID, premi Crea duplicato, poi Crea file su GitHub, incolla e salva, poi apri index.json e aggiungi la riga. Infine apri il link pronto.";
+  }
+
+  // ====== GUIDA AUTOMATICA SUI CAMPI (quando sono vuoti) ======
+  onFocusEmpty(titleEl, msgTitolo);
+  onFocusEmpty(descEl, msgDescrizione);
+  onFocusEmpty(voiceEl, msgVoce);
+  attachSelectGuide(showGuideEl, msgShowGuide());
+
+  // ====================== FILE ROWS ======================
   function fileRow(label="", url=""){
     const wrap = document.createElement("div");
     wrap.className = "filesRow";
     wrap.innerHTML = `
-      <input placeholder="Label (es: Manuale)" value="${label.replaceAll('"','&quot;')}">
-      <input placeholder="URL (es: files/manuale.pdf)" value="${url.replaceAll('"','&quot;')}">
+      <input placeholder="Label (es: Manuale)" value="${String(label).replaceAll('"','&quot;')}">
+      <input placeholder="URL (es: files/manuale.pdf)" value="${String(url).replaceAll('"','&quot;')}">
       <button class="btn b">✖</button>
     `;
     wrap.querySelector("button").onclick = () => wrap.remove();
+
+    // guida su label/url (quando vuoti)
+    attachFileRowGuide(wrap);
+
     return wrap;
   }
 
@@ -198,6 +270,7 @@
     const r = await fetch("./data/index.json", {cache:"no-store"});
     const idx = r.ok ? await r.json() : {vetrine:{}};
     const list = idx.vetrine ? Object.values(idx.vetrine) : [];
+
     select.innerHTML = "";
     list.forEach(v=>{
       const opt = document.createElement("option");
@@ -228,13 +301,8 @@
     (data.files || []).forEach(f => filesBox.appendChild(fileRow(f.label||"", f.url||"")));
 
     editJson.href = baseRepo + "/edit/main/data/" + id + ".json";
-    guideSay("Vetrina caricata. Se vuoi crearne una nuova: premi Duplica vetrina.");
+    guideSay("Vetrina caricata. Tocca un campo vuoto per sapere cosa scrivere. Se vuoi creare una nuova vetrina, premi Duplica vetrina.");
   }
-
-  document.getElementById("addFile").onclick = () => {
-    filesBox.appendChild(fileRow("Manuale", "files/manuale.pdf"));
-    guideSay("Aggiunto Manuale. Ora carica manuale.pdf in files/ e poi copia il JSON.");
-  };
 
   function makeJson(id, title, description, voiceText, showGuide, files){
     return {
@@ -251,21 +319,45 @@
     };
   }
 
-  document.getElementById("copyJson").onclick = async () => {
+  // ===== Buttons guide
+  document.getElementById("addFile").addEventListener("click", () => {
+    filesBox.appendChild(fileRow("Manuale", "files/manuale.pdf"));
+    if (SCTGuide.getBool(SCTGuide.LS.guideAdmin,true)) {
+      guideSay("Hai aggiunto una riga file. Ora compila Etichetta e URL. Esempio: Manuale e files manuale punto pdf. Poi premi Copia JSON pronto.");
+    }
+  });
+
+  document.getElementById("copyJson").addEventListener("click", async () => {
     const id = idEl.value.trim();
     const files = [...filesBox.querySelectorAll(".filesRow")].map(r=>{
       const ins = r.querySelectorAll("input");
       return { label: ins[0].value.trim(), url: ins[1].value.trim() };
     }).filter(x=>x.label && x.url);
 
-    const out = makeJson(id, titleEl.value.trim(), descEl.value.trim(), voiceEl.value.trim(), showGuideEl.value==="true", files);
+    const out = makeJson(
+      id,
+      titleEl.value.trim(),
+      descEl.value.trim(),
+      voiceEl.value.trim(),
+      showGuideEl.value==="true",
+      files
+    );
+
     await navigator.clipboard.writeText(JSON.stringify(out, null, 2));
     SCTGuide.toast("JSON copiato ✅");
-    guideSay("JSON copiato. Apri GitHub e incollalo in data/"+id+".json poi salva.");
+
+    if (SCTGuide.getBool(SCTGuide.LS.guideAdmin,true)) {
+      guideSay("JSON copiato. Ora apri GitHub con ‘Apri JSON su GitHub’, incolla dentro data slash " + id + " punto json, e salva.");
+    }
+  });
+
+  document.getElementById("openVetrina").onclick = () => {
+    location.href = "./vetrina.html?id=" + encodeURIComponent(idEl.value);
   };
 
-  document.getElementById("openVetrina").onclick = () => location.href = "./vetrina.html?id=" + encodeURIComponent(idEl.value);
-  document.getElementById("openChecklist").onclick = () => location.href = "./checklist.html?id=" + encodeURIComponent(idEl.value);
+  document.getElementById("openChecklist").onclick = () => {
+    location.href = "./checklist.html?id=" + encodeURIComponent(idEl.value);
+  };
 
   // ================= DUPLICA =================
   const dupBtn = document.getElementById("dupBtn");
@@ -280,17 +372,16 @@
   const dupOpenNewFile = document.getElementById("dupOpenNewFile");
   const dupOpenIndex = document.getElementById("dupOpenIndex");
 
-  dupBtn.onclick = () => {
+  dupBtn.addEventListener("click", () => {
     dupBox.style.display = "block";
     dupFrom.textContent = idEl.value || select.value || "";
     dupTo.value = "";
     dupTitle.value = "";
     dupPreview.textContent = "";
-    guideSay("Scrivi il nuovo ID. Poi premi: Crea duplicato, poi Crea file su GitHub, poi Apri index.json.");
-  };
+    if (SCTGuide.getBool(SCTGuide.LS.guideAdmin,true)) guideSay("Ora stai duplicando una vetrina. Passo uno: scrivi il nuovo ID. Passo due: premi Crea duplicato. Poi creerai il file su GitHub e aggiornerai index.json.");
+  });
 
   dupClose.onclick = () => dupBox.style.display = "none";
-
   dupOpenIndex.onclick = () => window.open(baseRepo + "/edit/main/data/index.json", "_blank");
 
   dupOpenNewFile.onclick = () => {
@@ -298,71 +389,65 @@
     if(!toId){ SCTGuide.toast("Inserisci nuovo ID"); return; }
     const url = baseRepo + "/new/main/data?filename=" + encodeURIComponent(toId + ".json");
     window.open(url, "_blank");
-    guideSay("Si è aperta la pagina GitHub per creare data/"+toId+".json. Incolla il JSON e salva.");
+    if (SCTGuide.getBool(SCTGuide.LS.guideAdmin,true)) guideSay("Si è aperta la pagina GitHub per creare data/" + toId + ".json. Incolla il JSON che hai copiato e salva.");
   };
 
+  // Duplica: cambia id ovunque + cambia numero nel titolo + aggiunge link pronti
   dupMake.onclick = async () => {
-  const fromId = (idEl.value || select.value || "").trim();
-  const toId = dupTo.value.trim();
-  if(!fromId || !toId){ SCTGuide.toast("Inserisci nuovo ID"); return; }
+    const fromId = (idEl.value || select.value || "").trim();
+    const toId = dupTo.value.trim();
+    if(!fromId || !toId){ SCTGuide.toast("Inserisci nuovo ID"); return; }
 
-  const r = await fetch("./data/"+fromId+".json", {cache:"no-store"});
-  const src = r.ok ? await r.json() : null;
-  if(!src){ SCTGuide.toast("Sorgente non trovata"); return; }
+    const r = await fetch("./data/"+fromId+".json", {cache:"no-store"});
+    const src = r.ok ? await r.json() : null;
+    if(!src){ SCTGuide.toast("Sorgente non trovata"); return; }
 
-  const toTitleInput = dupTitle.value.trim();
+    const toTitleInput = dupTitle.value.trim();
 
-// prova a cambiare numero nel titolo (es. "Scalvini 10" -> "Scalvini 11")
-let autoTitle = (src.title || fromId);
+    // prova a cambiare numero nel titolo (es. "Scalvini 10" -> "Scalvini 11")
+    let autoTitle = (src.title || fromId);
+    const mFrom = fromId.match(/(\d+)\s*$/);
+    const mTo = toId.match(/(\d+)\s*$/);
+    if (mFrom && mTo) {
+      const fromNum = mFrom[1];
+      const toNum = mTo[1];
+      autoTitle = autoTitle
+        .replace(new RegExp(`\\b${fromNum}\\b`, "g"), toNum)
+        .replace(new RegExp(`\\b${fromNum}$`), toNum);
+    }
+    const newTitle = toTitleInput || autoTitle;
 
-// Se fromId e toId finiscono con numeri (10 -> 11), sostituisci nel titolo
-const mFrom = fromId.match(/(\d+)\s*$/);
-const mTo = toId.match(/(\d+)\s*$/);
-if (mFrom && mTo) {
-  const fromNum = mFrom[1];
-  const toNum = mTo[1];
+    // 1) JSON base duplicato
+    let out = {
+      ...src,
+      id: toId,
+      title: newTitle,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
 
-  // sostituzione “pulita” del numero nel titolo (10 -> 11)
-  autoTitle = autoTitle
-    .replace(new RegExp(`\\b${fromNum}\\b`, "g"), toNum)
-    .replace(new RegExp(`\\b${fromNum}$`), toNum);
-}
+    // 2) SOSTITUZIONE ID OVUNQUE (testi/link)
+    try {
+      const txt = JSON.stringify(out);
+      const replaced = txt.split(fromId).join(toId);
+      out = JSON.parse(replaced);
+    } catch(e) {
+      // fallback: almeno id/title sono corretti
+    }
 
-// se non hai scritto un titolo manuale, usa quello automatico
-const newTitle = toTitleInput || autoTitle;
+    const outJson = JSON.stringify(out, null, 2);
 
-  // 1) JSON base duplicato
-  let out = {
-    ...src,
-    id: toId,
-    title: newTitle,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
+    // Riga per index.json (schema minimo)
+    const indexLine = `"${toId}": { "id": "${toId}", "title": "${newTitle}" }`;
 
-  // 2) SOSTITUZIONE ID OVUNQUE:
-  // Trasformo tutto in testo JSON -> sostituisco fromId con toId -> rileggo come oggetto
-  try {
-    const txt = JSON.stringify(out);
-    const replaced = txt.split(fromId).join(toId);
-    out = JSON.parse(replaced);
-  } catch(e) {
-    // se per qualche motivo fallisce, almeno id/title sono già corretti
-  }
+    // Link pronti
+    const basePages = "https://creamiaappsercuctech.github.io/SerCucTech";
+    const linkApp = `${basePages}/app.html?id=${encodeURIComponent(toId)}`;
+    const linkVetrina = `${basePages}/vetrina.html?id=${encodeURIComponent(toId)}`;
+    const linkChecklist = `${basePages}/checklist.html?id=${encodeURIComponent(toId)}`;
+    const linkAdmin = `${basePages}/admin.html?id=${encodeURIComponent(toId)}`;
 
-  const outJson = JSON.stringify(out, null, 2);
-
-  // Riga per index.json
-  const indexLine = `"${toId}": { "id": "${toId}", "title": "${newTitle}" }`;
-
-  const basePages = "https://creamiaappsercuctech.github.io/SerCucTech";
-
-const linkApp = `${basePages}/app.html?id=${encodeURIComponent(toId)}`;
-const linkVetrina = `${basePages}/vetrina.html?id=${encodeURIComponent(toId)}`;
-const linkChecklist = `${basePages}/checklist.html?id=${encodeURIComponent(toId)}`;
-const linkAdmin = `${basePages}/admin.html?id=${encodeURIComponent(toId)}`;
-
-const all =
+    const all =
 `=== INCOLLA QUESTO IN data/${toId}.json ===
 ${outJson}
 
@@ -375,45 +460,24 @@ Vetrina: ${linkVetrina}
 Checklist: ${linkChecklist}
 Admin: ${linkAdmin}
 `;
-=== AGGIUNGI QUESTA RIGA IN data/index.json (dentro vetrine) ===
-${indexLine}
-`;
-
-  await navigator.clipboard.writeText(all);
-  dupPreview.textContent = all;
-
-  SCTGuide.toast("Duplicato copiato ✅");
-  guideSay("Duplicato perfetto. Ho sostituito l'ID ovunque e ho aggiunto i link pronti. Ora: 1) premi ‘Crea file su GitHub’ e incolla. 2) salva. 3) premi ‘Apri index.json’ e aggiungi la riga. Poi puoi aprire subito la nuova vetrina col link.");
-    const fromId = (idEl.value || select.value || "").trim();
-    const toId = dupTo.value.trim();
-    if(!fromId || !toId){ SCTGuide.toast("Inserisci nuovo ID"); return; }
-
-    const r = await fetch("./data/"+fromId+".json", {cache:"no-store"});
-    const src = r.ok ? await r.json() : null;
-    if(!src){ SCTGuide.toast("Sorgente non trovata"); return; }
-
-    const newTitle = dupTitle.value.trim() || ((src.title || fromId) + " (Copia)");
-    const out = { ...src, id: toId, title: newTitle, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-
-    const outJson = JSON.stringify(out, null, 2);
-    const indexLine = `"${toId}": { "id": "${toId}", "title": "${newTitle}" }`;
-
-    const all =
-`=== INCOLLA QUESTO IN data/${toId}.json ===
-${outJson}
-
-=== AGGIUNGI QUESTA RIGA IN data/index.json (dentro vetrine) ===
-${indexLine}
-`;
 
     await navigator.clipboard.writeText(all);
     dupPreview.textContent = all;
 
     SCTGuide.toast("Duplicato copiato ✅");
-    guideSay("Ok. Ora premi ‘Crea file su GitHub’, incolla il JSON, salva. Poi premi ‘Apri index.json’ e aggiungi la riga.");
+    guideSay("Perfetto. Ho creato la nuova vetrina, sostituito l'ID ovunque, aggiornato il titolo e aggiunto i link pronti. Ora premi Crea file su GitHub, incolla e salva. Poi premi Apri index.json e aggiungi la riga. Infine apri il link della nuova vetrina.");
   };
 
+  // ===== Open JSON edit link updated on load
+  // (set inside loadVetrina)
+
+  // ====== Extra: guida su duplicazione campi vuoti nel box
+  onFocusEmpty(dupTo, () => "Campo nuovo ID. Scrivi per esempio scalvini undici. Poi premi Crea duplicato.");
+  onFocusEmpty(dupTitle, () => "Campo titolo nuovo. Se vuoi, scrivi il titolo. Se lo lasci vuoto, io aggiorno automaticamente il numero nel titolo.");
+
+  // init
   loadIndex();
 </script>
 </body>
 </html>
+```0
