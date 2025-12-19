@@ -1,485 +1,155 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SerCucTech – Percorso Guida Vetrine (per ID)</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>SerCucTech — Guida</title>
+  <script src="./guide.js"></script>
   <style>
-    :root{ --bg:#0b1220; --card:#111b2e; --txt:#e8eefc; --mut:#a9b8dd; --acc:#5ee1a2; --b:#22345f; --warn:#ffcc66; --danger:#ff6b6b; }
-    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:linear-gradient(180deg,#081024,#0b1220); color:var(--txt); }
-    .wrap{ max-width:980px; margin:0 auto; padding:18px; }
-    .card{ background:rgba(17,27,46,.92); border:1px solid #1b2a4f; border-radius:18px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,.22); }
-    h1{ margin:0 0 8px 0; font-size:20px; }
-    .mut{ color:var(--mut); }
-    .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
-    button{ cursor:pointer; border:0; padding:10px 14px; border-radius:12px; font-weight:900; background:var(--acc); color:#052014; }
-    .sec{ background:#22345f; color:var(--txt); }
-    .warn{ background:var(--warn); color:#231a06; }
-    .danger{ background:var(--danger); color:#2b0909; }
-    a{ color:#9fe9ff; }
-    .list{ margin-top:12px; display:grid; gap:10px; }
-    .item{ border:1px solid var(--b); background:#0c1530; border-radius:14px; padding:12px; }
-    .toprow{ display:flex; gap:10px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
-    .check{ display:flex; gap:10px; align-items:center; }
-    input[type="checkbox"]{ transform:scale(1.3); }
-    .pill{ display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; background:#0f1a31; border:1px solid #1b2a4f; color:var(--mut); font-size:12px; }
-    .cur{ outline:2px dashed var(--acc); outline-offset:4px; }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas; }
-    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    .small{ padding:8px 10px; border-radius:10px; }
-    .toast{
-      position:fixed; left:50%; bottom:16px; transform:translateX(-50%);
-      background:#0f1a31; border:1px solid #22345f; color:var(--txt);
-      padding:10px 14px; border-radius:999px; display:none; z-index:9999;
-      box-shadow:0 10px 30px rgba(0,0,0,.35);
-    }
-    .box{
-      margin-top:10px; border:1px solid var(--b); background:#0c1530; border-radius:14px; padding:10px;
-    }
-    code{ display:block; white-space:pre-wrap; word-break:break-word; color:#d7e3ff; }
+    :root{--bg:#0b1220;--card:rgba(27,46,92,.55);--txt:#e8eefc;--mut:#a9b8dd;--ok:#5ee1a2;}
+    body{margin:0;font-family:system-ui;background:var(--bg);color:var(--txt);}
+    .wrap{max-width:980px;margin:0 auto;padding:18px;}
+    .hero{background:linear-gradient(180deg,rgba(94,225,162,.18),rgba(0,0,0,0));border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:16px;}
+    h1{margin:0 0 6px 0;font-size:26px;}
+    .mut{color:var(--mut);line-height:1.35;}
+    .grid{display:grid;gap:12px;margin-top:14px;}
+    @media(min-width:900px){.grid{grid-template-columns:1fr 1fr;}}
+    .card{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:16px;}
+    .card h2{margin:0 0 10px 0;font-size:18px;}
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+    button{cursor:pointer;border:0;padding:10px 14px;border-radius:12px;font-weight:900;}
+    .a{background:var(--ok);color:#082016;}
+    .b{background:#22345f;color:#fff;}
+    .pill{display:inline-block;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:4px 10px;font-size:12px;opacity:.9}
+    ul{margin:8px 0 0 18px}
+    li{margin:6px 0}
+    code{background:rgba(0,0,0,.25);padding:2px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.08)}
   </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="card">
-    <h1>Percorso guida – Vetrine SerCucTech (Audio + Testo)</h1>
-    <div class="mut" id="sub">Spunta gli step che vuoi usare. Premi “Voce” per ascoltare lo step corrente.</div>
-
-    <div class="row" style="margin-top:10px;">
-      <span class="pill">Vetrina ID: <b id="vId">—</b></span>
-      <span class="pill">Stato ID: <b id="idStatus">controllo…</b></span>
-    </div>
-
+  <div class="hero">
+    <div class="pill" id="langPill">…</div>
+    <h1 id="title">SerCucTech — Guida</h1>
+    <div class="mut" id="intro">…</div>
     <div class="btns">
-      <button class="sec" id="prevBtn">⬅️ Indietro</button>
-      <button id="speakBtn">🔊 Voce</button>
-      <button class="sec" id="stopBtn">⏹ Stop</button>
-      <button class="sec" id="nextBtn">Avanti ➡️</button>
-      <button class="warn" id="resetBtn">Reset spunte</button>
+      <button class="a" id="speak">🔊 Leggi questa pagina</button>
+      <button class="b" id="stop">⏹ Stop</button>
+      <button class="b" id="openAdmin">🧰 Admin</button>
+      <button class="b" id="openVetrina">🌍 Vetrina</button>
     </div>
-
-    <div class="btns" id="quickLinks"></div>
-
-    <div class="box">
-      <div class="pill">Copia rapida JSON</div>
-      <div class="mut" style="margin-top:8px;">PDF manuale (metti il nome file che hai caricato):</div>
-      <div class="row" style="margin-top:8px;">
-        <input id="pdfName" placeholder="manuale.pdf" style="flex:1; min-width:160px;">
-        <button class="sec small" id="copyPdfBtn">📋 Copia riga PDF</button>
-      </div>
-      <code id="pdfCode"></code>
-
-      <div class="mut" style="margin-top:12px;">Media (metti il nome file dentro /media/):</div>
-      <div class="row" style="margin-top:8px;">
-        <select id="mediaType" style="flex:1; min-width:140px;">
-          <option value="image">image</option>
-          <option value="video">video</option>
-        </select>
-        <input id="mediaName" placeholder="foto1.jpg oppure video1.mp4" style="flex:2; min-width:200px;">
-        <button class="sec small" id="copyMediaBtn">📋 Copia riga Media</button>
-      </div>
-      <code id="mediaCode"></code>
-
-      <div class="mut" style="margin-top:12px;">OCR TXT (nome file dentro /files/):</div>
-      <div class="row" style="margin-top:8px;">
-        <input id="ocrTxtName" placeholder="ocr-...txt" style="flex:1; min-width:160px;">
-        <button class="sec small" id="copyOcrBtn">📋 Copia riga OCR</button>
-      </div>
-      <code id="ocrCode"></code>
-    </div>
-
-    <div class="pill" style="margin-top:10px;">
-      Step corrente: <b id="curLabel">—</b>
-    </div>
-
-    <div class="mut" style="margin-top:10px;" id="tips"></div>
   </div>
 
-  <div class="list" id="steps"></div>
+  <div class="grid">
+    <div class="card">
+      <h2 id="h1">Cos’è una vetrina</h2>
+      <div class="mut" id="t1"></div>
+    </div>
+    <div class="card">
+      <h2 id="h2">Cosa fa l’Admin</h2>
+      <div class="mut" id="t2"></div>
+    </div>
+    <div class="card">
+      <h2 id="h3">Come evitare il 404</h2>
+      <div class="mut" id="t3"></div>
+    </div>
+    <div class="card">
+      <h2 id="h4">Duplica vetrina</h2>
+      <div class="mut" id="t4"></div>
+    </div>
+    <div class="card">
+      <h2 id="h5">Guida vocale</h2>
+      <div class="mut" id="t5"></div>
+    </div>
+    <div class="card">
+      <h2 id="h6">Checklist</h2>
+      <div class="mut" id="t6"></div>
+    </div>
+  </div>
 </div>
 
-<div class="toast" id="toast">Copiato ✅</div>
-
 <script>
-/* =================== CONFIG =================== */
-const INDEX_PATH = "data/index.json";
+  const id = new URL(location.href).searchParams.get("id") || "scalvini10";
+  document.getElementById("openAdmin").onclick = () => location.href = "./admin.html?id="+encodeURIComponent(id);
+  document.getElementById("openVetrina").onclick = () => location.href = "./vetrina.html?id="+encodeURIComponent(id);
+  document.getElementById("stop").onclick = () => SCTGuide.stopSpeak();
 
-/* =================== PARAMS =================== */
-function getParam(name){
-  const u = new URL(location.href);
-  return (u.searchParams.get(name) || "").trim();
-}
-function sanitizeId(s){
-  return (s||"").trim().toLowerCase().replace(/\s+/g,"").replace(/[^a-z0-9_-]/g,"");
-}
-const requestedIdRaw = getParam("id");
-const VETRINA_ID = sanitizeId(requestedIdRaw) || "scalvini10";
+  const L = SCTGuide.LANG;
+  document.getElementById("langPill").textContent = "Lingua: " + (L==="it"?"Italiano":L==="en"?"English":"Українська");
 
-/* =================== repo upload link ===================
-   NON posso sapere con certezza il tuo repo da qui (GitHub Pages non espone owner/repo),
-   quindi uso il TUO valore fisso (quello che stai usando già).
-*/
-const GH_OWNER = "creamiaappsercuctech";
-const GH_REPO  = "SerCucTech";
-const GH_UPLOAD = `https://github.com/${GH_OWNER}/${GH_REPO}/upload/main`;
-
-/* LocalStorage key separata per ogni vetrina */
-const KEY = "sercuctech_guida_vetrine_v3_" + VETRINA_ID;
-
-/* =================== TTS =================== */
-function stopTTS(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }
-function speak(text){
-  stopTTS();
-  if(!('speechSynthesis' in window)) return;
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "it-IT";
-  window.speechSynthesis.speak(u);
-}
-
-/* =================== LINKS (dinamici) =================== */
-function L_admin(){ return "admin.html"; }
-function L_vetrina(){ return `vetrina.html?id=${encodeURIComponent(VETRINA_ID)}`; }
-function L_json(){ return `data/${encodeURIComponent(VETRINA_ID)}.json`; }
-function L_index(){ return INDEX_PATH; }
-function L_mediaFolder(){ return "media/"; }
-function L_filesFolder(){ return "files/"; }
-function L_jsonNew(newId){ return `data/${encodeURIComponent(newId)}.json`; }
-function L_vetrinaNew(newId){ return `vetrina.html?id=${encodeURIComponent(newId)}`; }
-
-/* =================== Helpers ID next =================== */
-function suggestNextId(id){
-  const m = String(id).match(/^(.*?)(\d+)$/);
-  if(!m) return id + "2";
-  const base = m[1];
-  const num = parseInt(m[2], 10);
-  const next = isNaN(num) ? (m[2] + "2") : String(num + 1);
-  return base + next;
-}
-
-/* =================== STEPS TEMPLATE =================== */
-function buildSteps(){
-  const nextIdSuggestion = suggestNextId(VETRINA_ID);
-  return [
-    {
-      id:"S1",
-      title:"Apri Admin e sblocca",
-      speak:`Apri l’admin. Poi sblocca toccando la parola LUCE e poi la parola PORTA.`,
-      links:[ {label:"Apri Admin", url:L_admin()} ],
-      detail:[
-        "Apri admin.html",
-        "Sblocca: tocca LUCE poi PORTA nella frase"
-      ]
+  const TXT = {
+    it: {
+      intro: "Questa pagina spiega cosa fa SerCucTech e come usarlo. La lingua è automatica (come il telefono).",
+      h1:"Cos’è una vetrina",
+      t1:"Una vetrina è una pagina con titolo, descrizione e file (es. PDF). L’utente può aprire i file. Se abiliti showGuide, appare anche il pulsante Guida (Checklist).",
+      h2:"Cosa fa l’Admin",
+      t2:"In Admin scegli la vetrina, compili i campi (Titolo, Descrizione, Voce), aggiungi Files (Label + URL) e poi premi Copia JSON. Infine incolli su GitHub in data/<id>.json e salvi.",
+      h3:"Come evitare il 404",
+      t3:"Se un file dà 404, significa che non esiste nel repo o il nome è diverso. Esempio corretto: carica files/manuale.pdf e nel JSON usa url: files/manuale.pdf (stesso identico nome).",
+      h4:"Duplica vetrina",
+      t4:"Duplica crea una nuova vetrina uguale: scrivi nuovo ID, premi Crea duplicato, poi Crea file su GitHub (incolla e salva), poi Apri index.json (aggiungi riga e salva). Alla fine hai anche i link pronti.",
+      h5:"Guida vocale",
+      t5:"La guida usa la voce del telefono. Puoi accenderla o spegnerla con le spunte. In Admin, quando tocchi una casella vuota, ti dice cosa scrivere e il prossimo passo.",
+      h6:"Checklist",
+      t6:"La Checklist è un percorso con spunte Fatto. Spunti un passo e la guida ti dice il prossimo. Utile quando lavori dal telefono."
     },
-    {
-      id:"S2",
-      title:"Carica index dal repo (data/index.json)",
-      speak:"In admin, carica l’index dal repo. Controlla che vedi la lista vetrine e gruppi.",
-      links:[
-        {label:"Apri index.json", url:L_index()},
-        {label:"GitHub Upload (carica file)", url:GH_UPLOAD}
-      ],
-      detail:[
-        "Admin → 'Carica index dal repo'",
-        "Se manca qualcosa: carica file su GitHub (Upload)"
-      ]
+    en: {
+      intro:"This page explains what SerCucTech does and how to use it. Language is automatic (device language).",
+      h1:"What is a showcase",
+      t1:"A showcase is a page with title, description and files (PDF etc.). Users can open files. If showGuide is enabled, the Guide button (Checklist) appears.",
+      h2:"What Admin does",
+      t2:"In Admin you select a showcase, fill fields (Title, Description, Voice), add Files (Label + URL), then Copy JSON. Finally paste into GitHub data/<id>.json and save.",
+      h3:"How to avoid 404",
+      t3:"If a file shows 404, it doesn’t exist in the repo or the name is different. Example: upload files/manuale.pdf and in JSON use url: files/manuale.pdf (same exact name).",
+      h4:"Duplicate showcase",
+      t4:"Duplicate creates a new showcase: type new ID, press Create duplicate, then Create file on GitHub (paste & save), then open index.json (add line & save). Links are generated too.",
+      h5:"Voice guide",
+      t5:"The guide uses phone TTS. You can enable/disable with toggles. In Admin, tapping an empty field explains what to type and the next step.",
+      h6:"Checklist",
+      t6:"Checklist is a step-by-step path. Check a step and it tells you the next one. Great on mobile."
     },
-    {
-      id:"S3",
-      title:`Carica la vetrina: ${VETRINA_ID}`,
-      speak:`Seleziona la vetrina ${VETRINA_ID} e carica il file vetrina. Controlla titolo, descrizione, voce e tags.`,
-      links:[
-        {label:`Pubblico: ${VETRINA_ID}`, url:L_vetrina()},
-        {label:`JSON: ${VETRINA_ID}.json`, url:L_json()}
-      ],
-      detail:[
-        `Admin → scegli ${VETRINA_ID}`,
-        "Clic 'Carica file vetrina'",
-        "Verifica editor: titolo/descrizione/voce/tags"
-      ]
-    },
-    {
-      id:"S4",
-      title:"Aggiungi un PDF in files[]",
-      speak:"Se vuoi un PDF, caricalo in files e aggiungi la riga dentro files nel JSON della vetrina.",
-      links:[
-        {label:"Cartella /files/", url:L_filesFolder()},
-        {label:"GitHub Upload (carica il PDF)", url:GH_UPLOAD}
-      ],
-      detail:[
-        "Carica manuale.pdf su GitHub dentro /files/",
-        "Nella guida: usa 'Copia riga PDF' e incollala dentro files[]",
-        `Poi scarica ${VETRINA_ID}.json e ricaricalo in /data/`
-      ]
-    },
-    {
-      id:"S5",
-      title:"Upload multiplo Media + ZIP",
-      speak:"Se vuoi foto o video, seleziona più file. Aggiungili al JSON. Scarica lo ZIP e carica i file dentro media.",
-      links:[
-        {label:"Cartella /media/", url:L_mediaFolder()},
-        {label:"GitHub Upload (carica media)", url:GH_UPLOAD}
-      ],
-      detail:[
-        "Admin → Media → seleziona più file",
-        "Clic 'Aggiungi al JSON'",
-        "Clic 'Scarica ZIP media'",
-        "Estrai e carica su GitHub in /media/"
-      ]
-    },
-    {
-      id:"S6",
-      title:"Riordino Media e Files (DnD oppure ↑ ↓)",
-      speak:"Riordina media e files con trascinamento o con frecce. Poi scarica il JSON e ricaricalo nel repo.",
-      links:[ {label:`JSON: ${VETRINA_ID}.json`, url:L_json()} ],
-      detail:[
-        "Admin → Media presenti: trascina o usa ↑ ↓",
-        "Admin → Files presenti: trascina o usa ↑ ↓",
-        `Poi: Scarica ${VETRINA_ID}.json e caricalo in /data/`
-      ]
-    },
-    {
-      id:"S7",
-      title:"OCR (solo Admin) + TXT in /files/",
-      speak:"Usa OCR in admin. Scarica il testo TXT e caricalo in files. Poi aggiungi il link in files della vetrina.",
-      links:[
-        {label:"Cartella /files/", url:L_filesFolder()},
-        {label:"GitHub Upload (carica TXT)", url:GH_UPLOAD}
-      ],
-      detail:[
-        "Admin → OCR → carica immagine",
-        "Avvia OCR → Scarica TXT",
-        "Carica TXT in /files/",
-        "Nella guida: usa 'Copia riga OCR' e incollala dentro files[]",
-        "Poi scarica JSON e ricaricalo in /data/"
-      ]
-    },
-    {
-      id:"S8",
-      title:`Duplica vetrina (esempio: ${VETRINA_ID} → ${nextIdSuggestion})`,
-      speak:`Per duplicare, premi Duplica vetrina. Inserisci ${nextIdSuggestion} e crea clone. Poi scarica index.json e ${nextIdSuggestion}.json e caricali in data.`,
-      links:[
-        {label:`Pubblico: ${nextIdSuggestion}`, url:L_vetrinaNew(nextIdSuggestion)},
-        {label:`JSON: ${nextIdSuggestion}.json`, url:L_jsonNew(nextIdSuggestion)}
-      ],
-      detail:[
-        `Admin → carica ${VETRINA_ID}`,
-        "Clic 'Duplica vetrina' → scrivi nuovo ID → 'Crea clone'",
-        "Scarica index.json + nuovoId.json",
-        "Caricali in /data/"
-      ]
-    },
-    {
-      id:"S9",
-      title:"Controllo finale pubblico",
-      speak:"Apri la vetrina pubblica e controlla media, file e PDF. Se qualcosa non si vede, controlla i percorsi e le maiuscole.",
-      links:[
-        {label:`Apri pubblico: ${VETRINA_ID}`, url:L_vetrina()},
-        {label:`Apri JSON: ${VETRINA_ID}.json`, url:L_json()}
-      ],
-      detail:[
-        "Percorsi corretti: media/nomefile e files/nomefile",
-        "Maiuscole/minuscole devono combaciare",
-        "Se PDF non si vede: verifica che è in /files/"
-      ]
+    uk: {
+      intro:"Ця сторінка пояснює, що робить SerCucTech і як ним користуватись. Мова автоматична (як у телефоні).",
+      h1:"Що таке вітрина",
+      t1:"Вітрина — це сторінка з назвою, описом і файлами (PDF тощо). Користувач відкриває файли. Якщо showGuide увімкнено, з’являється кнопка Гід (Checklist).",
+      h2:"Що робить Admin",
+      t2:"В Admin ти обираєш вітрину, заповнюєш поля (Title, Description, Voice), додаєш Files (Label + URL), потім Copy JSON. Далі вставляєш у GitHub data/<id>.json і зберігаєш.",
+      h3:"Як уникнути 404",
+      t3:"Якщо файл дає 404 — його нема в репо або інша назва. Приклад: завантаж files/manuale.pdf і в JSON використай url: files/manuale.pdf (точно така сама назва).",
+      h4:"Дублювати вітрину",
+      t4:"Дублювання створює нову вітрину: введи новий ID, натисни Create duplicate, потім Create file on GitHub (встав і збережи), потім відкрий index.json (додай рядок і збережи). Посилання теж будуть.",
+      h5:"Голосовий гід",
+      t5:"Гід використовує голос телефону. Можна вмикати/вимикати. В Admin натискання на порожнє поле пояснює, що ввести і який наступний крок.",
+      h6:"Checklist",
+      t6:"Checklist — це шлях крок за кроком. Відмічаєш крок — гід каже наступний. Зручно на телефоні."
     }
-  ];
-}
+  }[L];
 
-/* =================== STATE =================== */
-function loadState(){
-  try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ return {}; }
-}
-function saveState(st){ localStorage.setItem(KEY, JSON.stringify(st)); }
+  document.getElementById("intro").textContent = TXT.intro;
+  document.getElementById("h1").textContent = TXT.h1;
+  document.getElementById("t1").textContent = TXT.t1;
+  document.getElementById("h2").textContent = TXT.h2;
+  document.getElementById("t2").textContent = TXT.t2;
+  document.getElementById("h3").textContent = TXT.h3;
+  document.getElementById("t3").textContent = TXT.t3;
+  document.getElementById("h4").textContent = TXT.h4;
+  document.getElementById("t4").textContent = TXT.t4;
+  document.getElementById("h5").textContent = TXT.h5;
+  document.getElementById("t5").textContent = TXT.t5;
+  document.getElementById("h6").textContent = TXT.h6;
+  document.getElementById("t6").textContent = TXT.t6;
 
-let steps = buildSteps();
-let state = loadState();
-if(!state.enabled) state.enabled = {};
-if(typeof state.currentIndex !== "number") state.currentIndex = 0;
-
-// default: prima volta -> abilito tutto
-if(!state._init){
-  steps.forEach(s => state.enabled[s.id] = true);
-  state.currentIndex = 0;
-  state._init = true;
-  saveState(state);
-}
-
-/* =================== UI helpers =================== */
-function showToast(msg){
-  const t = document.getElementById("toast");
-  t.textContent = msg || "Copiato ✅";
-  t.style.display = "block";
-  clearTimeout(showToast._timer);
-  showToast._timer = setTimeout(()=>{ t.style.display="none"; }, 1400);
-}
-async function copyText(text){
-  try{
-    await navigator.clipboard.writeText(text);
-    showToast("Copiato ✅");
-  }catch(e){
-    // fallback
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    document.body.removeChild(ta);
-    showToast("Copiato ✅");
-  }
-}
-
-/* =================== QUICK LINKS =================== */
-function renderQuickLinks(){
-  const box = document.getElementById("quickLinks");
-  box.innerHTML = `
-    <a class="pill" href="${L_admin()}" target="_blank" rel="noopener">Apri Admin</a>
-    <a class="pill" href="${L_vetrina()}" target="_blank" rel="noopener">Apri Pubblico</a>
-    <a class="pill mono" href="${L_json()}" target="_blank" rel="noopener">JSON vetrina</a>
-    <a class="pill mono" href="${L_index()}" target="_blank" rel="noopener">index.json</a>
-    <a class="pill" href="${L_mediaFolder()}" target="_blank" rel="noopener">/media/</a>
-    <a class="pill" href="${L_filesFolder()}" target="_blank" rel="noopener">/files/</a>
-    <a class="pill" href="${GH_UPLOAD}" target="_blank" rel="noopener">GitHub Upload</a>
-  `;
-}
-
-/* =================== RENDER STEPS =================== */
-function render(){
-  document.getElementById("vId").textContent = VETRINA_ID;
-  renderQuickLinks();
-
-  const box = document.getElementById("steps");
-  box.innerHTML = "";
-
-  steps.forEach((s, idx)=>{
-    const div = document.createElement("div");
-    div.className = "item" + (idx === state.currentIndex ? " cur" : "");
-    const checked = !!state.enabled[s.id];
-
-    const linksHTML = (s.links||[]).map(l => `<a href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join(" • ");
-    const detailsHTML = (s.detail||[]).map(x => `<li>${x}</li>`).join("");
-
-    div.innerHTML = `
-      <div class="toprow">
-        <div>
-          <div class="pill"><b>${s.id}</b> • ${s.title}</div>
-          <div class="mut" style="margin-top:8px;">${linksHTML || ""}</div>
-        </div>
-        <label class="check">
-          <input type="checkbox" ${checked ? "checked" : ""} data-id="${s.id}" />
-          <span class="mut">Usa questo step</span>
-        </label>
-      </div>
-      <ul class="mut" style="margin:10px 0 0 18px;">${detailsHTML}</ul>
-    `;
-    box.appendChild(div);
-  });
-
-  const cur = steps[state.currentIndex];
-  document.getElementById("curLabel").textContent = cur ? `${cur.id} – ${cur.title}` : "—";
-
-  box.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
-    cb.addEventListener("change", (e)=>{
-      const id = e.target.getAttribute("data-id");
-      state.enabled[id] = e.target.checked;
-      saveState(state);
-    });
-  });
-}
-
-/* =================== NAV (skip disabled) =================== */
-function next(){
-  let i = state.currentIndex;
-  for(let t=i+1; t<steps.length; t++){
-    if(state.enabled[steps[t].id]) { state.currentIndex = t; saveState(state); render(); return; }
-  }
-  if(i < steps.length-1){ state.currentIndex++; saveState(state); render(); }
-}
-function prev(){
-  let i = state.currentIndex;
-  for(let t=i-1; t>=0; t--){
-    if(state.enabled[steps[t].id]) { state.currentIndex = t; saveState(state); render(); return; }
-  }
-  if(i > 0){ state.currentIndex--; saveState(state); render(); }
-}
-
-/* =================== JSON COPY BOX =================== */
-function updateJsonPreview(){
-  const pdfName = (document.getElementById("pdfName").value || "manuale.pdf").trim();
-  const mediaType = document.getElementById("mediaType").value;
-  const mediaName = (document.getElementById("mediaName").value || "foto1.jpg").trim();
-  const ocrName = (document.getElementById("ocrTxtName").value || "ocr-file.txt").trim();
-
-  const pdfRow = `{ "label": "Manuale", "url": "files/${pdfName}" }`;
-  const mediaRow = `{ "type": "${mediaType}", "url": "media/${mediaName}", "title": "${mediaName}", "note": "" }`;
-  const ocrRow = `{ "label": "Testo OCR", "url": "files/${ocrName}" }`;
-
-  document.getElementById("pdfCode").textContent = pdfRow;
-  document.getElementById("mediaCode").textContent = mediaRow;
-  document.getElementById("ocrCode").textContent = ocrRow;
-
-  return { pdfRow, mediaRow, ocrRow };
-}
-
-document.getElementById("pdfName").addEventListener("input", updateJsonPreview);
-document.getElementById("mediaType").addEventListener("change", updateJsonPreview);
-document.getElementById("mediaName").addEventListener("input", updateJsonPreview);
-document.getElementById("ocrTxtName").addEventListener("input", updateJsonPreview);
-
-document.getElementById("copyPdfBtn").onclick = ()=>{
-  const {pdfRow} = updateJsonPreview();
-  copyText(pdfRow);
-};
-document.getElementById("copyMediaBtn").onclick = ()=>{
-  const {mediaRow} = updateJsonPreview();
-  copyText(mediaRow);
-};
-document.getElementById("copyOcrBtn").onclick = ()=>{
-  const {ocrRow} = updateJsonPreview();
-  copyText(ocrRow);
-};
-
-/* =================== BUTTONS =================== */
-document.getElementById("speakBtn").onclick = ()=>{
-  const cur = steps[state.currentIndex];
-  if(!cur) return;
-  const on = !!state.enabled[cur.id];
-  const prefix = on ? "Step attivo. " : "Step disattivato. ";
-  speak(prefix + cur.speak);
-};
-document.getElementById("stopBtn").onclick = stopTTS;
-document.getElementById("nextBtn").onclick = next;
-document.getElementById("prevBtn").onclick = prev;
-document.getElementById("resetBtn").onclick = ()=>{
-  if(!confirm("Reset spunte e progressi per questa vetrina?")) return;
-  state = { enabled:{}, currentIndex:0, _init:true };
-  steps.forEach(s => state.enabled[s.id] = true);
-  saveState(state);
-  render();
-};
-
-/* =================== CHECK ID EXISTENCE =================== */
-async function checkId(){
-  const statusEl = document.getElementById("idStatus");
-  const tipsEl = document.getElementById("tips");
-  try{
-    const res = await fetch(INDEX_PATH + "?t=" + Date.now(), {cache:"no-store"});
-    if(!res.ok) throw new Error("index non trovato");
-    const indexDB = await res.json();
-    const exists = !!(indexDB && indexDB.vetrine && indexDB.vetrine[VETRINA_ID]);
-    statusEl.textContent = exists ? "✅ presente in index" : "⚠️ NON presente in index";
-    tipsEl.innerHTML = exists
-      ? `Suggerimento: lavora in admin su <span class="mono">${VETRINA_ID}</span>, poi controlla il pubblico.`
-      : `Suggerimento: se non esiste, crea la vetrina in admin oppure correggi l’ID nella barra: <span class="mono">?id=...</span>`;
-  }catch(e){
-    statusEl.textContent = "⚠️ non riesco a leggere index";
-    tipsEl.innerHTML = `Controlla che esista <span class="mono">data/index.json</span> nel repo.`;
-  }
-}
-
-/* =================== INIT =================== */
-updateJsonPreview();
-render();
-checkId();
+  document.getElementById("speak").onclick = () => {
+    SCTGuide.setBool(SCTGuide.LS.voiceEnabled, true);
+    SCTGuide.speak(
+      TXT.intro + " " + TXT.h1 + ". " + TXT.t1 + " " +
+      TXT.h2 + ". " + TXT.t2 + " " +
+      TXT.h3 + ". " + TXT.t3 + " " +
+      TXT.h4 + ". " + TXT.t4 + " " +
+      TXT.h5 + ". " + TXT.t5 + " " +
+      TXT.h6 + ". " + TXT.t6
+    );
+  };
 </script>
 </body>
 </html>
