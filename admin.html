@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SerCucTech Admin – Vetrine (Media DnD + Backup ZIP + OCR)</title>
+  <title>SerCucTech Admin – Vetrine (DnD Media+Files + Duplica + Backup + OCR)</title>
 
   <style>
     :root { --bg:#0b1220; --card:#111b2e; --txt:#e8eefc; --mut:#a9b8dd; --acc:#5ee1a2; --warn:#ffcc66; --danger:#ff6b6b; --b:#22345f; }
@@ -35,7 +35,8 @@
     .list{ display:grid; gap:8px; margin-top:10px; }
     .item{ display:flex; gap:10px; align-items:flex-start; justify-content:space-between; padding:10px; border-radius:14px; border:1px solid var(--b); background:#0c1530; }
     .item .meta{ flex:1; }
-    img.preview, video.preview{ width:100%; border-radius:14px; border:1px solid var(--b); background:#0f1830; }
+    img.preview, video.preview, iframe.preview{ width:100%; border-radius:14px; border:1px solid var(--b); background:#0f1830; }
+    iframe.preview{ height:420px; border:0; }
     .bar{ height:10px; border:1px solid var(--b); border-radius:999px; overflow:hidden; background:#0f1830; }
     .bar > div{ height:100%; width:0%; background:var(--acc); }
     .drag { cursor:grab; user-select:none; padding:2px 8px; border-radius:10px; border:1px dashed #34508a; color:var(--mut); }
@@ -44,9 +45,7 @@
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas; }
   </style>
 
-  <!-- ZIP -->
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <!-- OCR -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 
@@ -78,7 +77,7 @@
     <div class="card">
       <h2>Index (data/index.json)</h2>
       <div class="mini">
-        File indice: <span class="kbd">data/index.json</span> → punta alle vetrine <span class="kbd">data/&lt;id&gt;.json</span>
+        File indice: <span class="kbd">data/index.json</span> → vetrine <span class="kbd">data/&lt;id&gt;.json</span>
       </div>
 
       <div class="btns">
@@ -108,11 +107,29 @@
         <button class="sec" onclick="loadSelectedVetrinaFile()">📥 Carica file vetrina</button>
         <button class="ok" onclick="downloadVetrina()">⬇️ Scarica &lt;id&gt;.json</button>
         <button class="warn" onclick="downloadBackupZip()">🧳 Backup ZIP (JSON+media+files)</button>
+        <button class="sec" onclick="openDuplicatePanel()">🧬 Duplica vetrina</button>
         <button class="danger" onclick="deleteVetrina()">🗑️ Elimina vetrina</button>
       </div>
 
-      <div class="mini" style="margin-top:8px;">
-        Backup ZIP scarica: <span class="kbd">data/&lt;id&gt;.json</span> + tutti i file referenziati in <span class="kbd">media[]</span> e <span class="kbd">files[]</span> (se esistono nel repo).
+      <div id="dupPanel" class="hidden" style="margin-top:12px; padding:10px; border:1px solid var(--b); border-radius:14px; background:#0c1530;">
+        <div class="mini"><b>Duplica</b> clona la vetrina corrente (JSON) su un nuovo ID e aggiorna anche <span class="kbd">data/index.json</span>.</div>
+        <div class="row" style="margin-top:10px;">
+          <div>
+            <label>Nuovo ID</label>
+            <input id="dupNewId" placeholder="es: scalvini11" />
+          </div>
+          <div>
+            <label>Nuovo Titolo (opzionale)</label>
+            <input id="dupNewTitle" placeholder="es: Vetrina Scalvini 11" />
+          </div>
+        </div>
+        <div class="btns">
+          <button class="ok" onclick="duplicateCurrentVetrina()">✅ Crea clone</button>
+          <button class="sec" onclick="closeDuplicatePanel()">Chiudi</button>
+        </div>
+        <div class="mini" style="margin-top:8px;">
+          Dopo il clone: scarica <b>index.json</b> e <b>&lt;nuovoId&gt;.json</b>, poi caricali su GitHub in <span class="kbd">/data/</span>.
+        </div>
       </div>
 
       <div class="hr"></div>
@@ -162,8 +179,7 @@
     <div class="card">
       <h2>Media (foto/video) — URL + Upload multiplo + Riordino</h2>
       <div class="mini">
-        🟩 Puoi riordinare i media: trascina (Drag&Drop) oppure usa ↑ ↓.  
-        <br>📌 Dopo il riordino: <b>Scarica &lt;id&gt;.json</b> e ricarica su GitHub.
+        Riordino: trascina (DnD) oppure ↑ ↓. Poi scarica <span class="kbd">&lt;id&gt;.json</span>.
       </div>
 
       <h3>A) Aggiungi tramite URL</h3>
@@ -203,10 +219,6 @@
         <button class="sec" onclick="clearMediaQueue()">🧹 Svuota selezione</button>
       </div>
 
-      <div class="mini">
-        Flusso: scegli file → aggiungi al JSON → scarica ZIP → estrai e carica su GitHub in <span class="kbd">/media/</span> → scarica <span class="kbd">data/&lt;id&gt;.json</span> aggiornato e carica in <span class="kbd">/data/</span>.
-      </div>
-
       <div class="list" id="mediaQueue"></div>
 
       <div class="hr"></div>
@@ -215,11 +227,37 @@
       <div class="list" id="mediaList"></div>
     </div>
 
+    <!-- FILES MANAGER -->
+    <div class="card">
+      <h2>Files (PDF/TXT/ZIP/altro) — URL + Riordino</h2>
+      <div class="mini">
+        Qui gestisci <span class="kbd">files[]</span> della vetrina.  
+        Riordino: DnD oppure ↑ ↓.  
+        PDF: puoi vedere l’anteprima (iframe).
+      </div>
+
+      <h3>A) Aggiungi file tramite URL</h3>
+      <label>Label</label>
+      <input id="fLabel" placeholder="Manuale / Documento / Contratto..." />
+      <label>URL</label>
+      <input id="fUrl" placeholder="files/manuale.pdf oppure https://..." />
+
+      <div class="btns">
+        <button class="ok" onclick="addFileByUrl()">➕ Aggiungi file</button>
+        <button class="sec" onclick="renderFilesList()">🔄 Aggiorna lista</button>
+      </div>
+
+      <div class="hr"></div>
+
+      <h3>Files presenti nella vetrina</h3>
+      <div class="list" id="filesList"></div>
+    </div>
+
     <!-- OCR -->
     <div class="card">
       <h2>OCR (solo Admin)</h2>
       <div class="mini">
-        Estrai testo da immagine. Puoi scaricare un TXT e (opzionale) aggiungere il link in <span class="kbd">files[]</span>.
+        Estrai testo da immagine. Puoi scaricare un TXT e aggiungere il link in <span class="kbd">files[]</span>.
       </div>
 
       <div class="row">
@@ -359,6 +397,9 @@ function isRelativeRepoPath(p){
   if(s.startsWith("http://") || s.startsWith("https://")) return false;
   if(s.startsWith("data/") || s.startsWith("media/") || s.startsWith("files/")) return true;
   return false;
+}
+function isPdf(url){
+  return String(url||"").toLowerCase().split("?")[0].endsWith(".pdf");
 }
 
 /* ================= LOCK ================= */
@@ -506,6 +547,7 @@ async function loadSelectedVetrinaFile(){
     activeVetrina = normalizeVetrina(await res.json(), id);
     fillEditor();
     renderMediaList();
+    renderFilesList();
     clearMediaQueue();
     alert("✅ Vetrina caricata");
   }catch(e){
@@ -556,6 +598,7 @@ function createVetrina(){
   activeVetrina = normalizeVetrina({ id, title, tags, media:[], files:[] }, id);
   fillEditor();
   renderMediaList();
+  renderFilesList();
   clearMediaQueue();
 
   alert("✅ Creata. Ora scarica: index.json e " + id + ".json e caricali su GitHub in /data/");
@@ -581,10 +624,62 @@ function deleteVetrina(){
     activeVetrina = null;
     fillEditor();
     document.getElementById("mediaList").innerHTML = "";
+    document.getElementById("filesList").innerHTML = "";
     clearMediaQueue();
   }
 
   alert("🗑️ Rimossa da index. Scarica index.json e caricalo su GitHub. Poi cancella data/"+id+".json manualmente.");
+}
+
+/* ================= DUPLICA VETRINA ================= */
+function openDuplicatePanel(){
+  if(!activeVetrina || !activeId){ alert("Carica una vetrina prima."); return; }
+  document.getElementById("dupNewId").value = "";
+  document.getElementById("dupNewTitle").value = "";
+  document.getElementById("dupPanel").classList.remove("hidden");
+}
+function closeDuplicatePanel(){
+  document.getElementById("dupPanel").classList.add("hidden");
+}
+function deepClone(obj){
+  return JSON.parse(JSON.stringify(obj));
+}
+function duplicateCurrentVetrina(){
+  if(!activeVetrina || !activeId){ alert("Carica una vetrina prima."); return; }
+  const newId = sanitizeId(document.getElementById("dupNewId").value);
+  if(!newId){ alert("Nuovo ID non valido"); return; }
+  if(indexDB.vetrine[newId]){ alert("ID già esistente in index"); return; }
+
+  const newTitle = (document.getElementById("dupNewTitle").value||"").trim();
+
+  const cloned = deepClone(activeVetrina);
+  cloned.id = newId;
+  if(newTitle) cloned.title = newTitle;
+  cloned.createdAt = nowISO();
+  cloned.updatedAt = nowISO();
+
+  // aggiorna index
+  indexDB.vetrine[newId] = {
+    id: newId,
+    title: cloned.title || newId,
+    file: `data/${newId}.json`,
+    tags: cloned.tags || [],
+    updatedAt: nowISO()
+  };
+  indexDB.meta.updatedAt = nowISO();
+
+  // set active to clone
+  activeId = newId;
+  activeVetrina = cloned;
+
+  refreshIndexUI();
+  refreshSelects();
+  fillEditor();
+  renderMediaList();
+  renderFilesList();
+  closeDuplicatePanel();
+
+  alert("✅ Clone creato IN MEMORIA. Ora scarica: index.json e " + newId + ".json e caricali su GitHub in /data/");
 }
 
 /* ================= MEDIA (URL) ================= */
@@ -701,7 +796,7 @@ function addMediaFromFiles(){
   activeVetrina.updatedAt = nowISO();
   renderMediaList();
 
-  alert("✅ Aggiunti al JSON. Ora: Scarica ZIP e carica i file in /media/, poi scarica " + activeId + ".json e caricalo in /data/.");
+  alert("✅ Aggiunti al JSON. Ora: scarica ZIP e carica i file in /media/, poi scarica " + activeId + ".json e caricalo in /data/.");
 }
 
 async function downloadMediaZip(){
@@ -721,30 +816,55 @@ async function downloadMediaZip(){
   a.click();
 }
 
-/* ================= MEDIA LIST + DRAG&DROP ================= */
-function moveMedia(from, to){
-  const arr = activeVetrina.media;
+/* ================= MEDIA LIST + DND ================= */
+function moveInArray(arr, from, to){
   if(from === to) return;
   const item = arr.splice(from, 1)[0];
   arr.splice(to, 0, item);
-  activeVetrina.updatedAt = nowISO();
 }
-
-function swapMedia(i, j){
-  const arr = activeVetrina.media;
+function swapInArray(arr, i, j){
   const tmp = arr[i];
   arr[i] = arr[j];
   arr[j] = tmp;
-  activeVetrina.updatedAt = nowISO();
 }
-
 function removeMedia(idx){
   if(!activeVetrina) return;
   activeVetrina.media.splice(idx,1);
   activeVetrina.updatedAt = nowISO();
   renderMediaList();
 }
-
+function applyMediaEdits(idx){
+  const t = document.getElementById(`mt_${idx}`)?.value ?? "";
+  const n = document.getElementById(`mn_${idx}`)?.value ?? "";
+  activeVetrina.media[idx].title = String(t).trim();
+  activeVetrina.media[idx].note = String(n).trim();
+  activeVetrina.updatedAt = nowISO();
+  alert("✅ Modifiche media applicate (scarica poi il JSON).");
+}
+function previewMedia(idx){
+  const m = activeVetrina.media[idx];
+  const box = document.getElementById(`prevM_${idx}`);
+  if(!box) return;
+  if(!m || !m.url){ box.textContent = "Nessun URL"; return; }
+  if(m.type === "video"){
+    box.innerHTML = `<video class="preview" controls src="${escapeAttr(m.url)}"></video>`;
+  } else {
+    box.innerHTML = `<img class="preview" src="${escapeAttr(m.url)}" alt="preview">`;
+  }
+}
+function moveMediaUp(idx){
+  if(idx <= 0) return;
+  swapInArray(activeVetrina.media, idx, idx-1);
+  activeVetrina.updatedAt = nowISO();
+  renderMediaList();
+}
+function moveMediaDown(idx){
+  const arr = activeVetrina.media || [];
+  if(idx >= arr.length-1) return;
+  swapInArray(activeVetrina.media, idx, idx+1);
+  activeVetrina.updatedAt = nowISO();
+  renderMediaList();
+}
 function renderMediaList(){
   const list = document.getElementById("mediaList");
   list.innerHTML = "";
@@ -773,26 +893,21 @@ function renderMediaList(){
       row.classList.add("dropHint");
       ev.dataTransfer.dropEffect = "move";
     });
-    row.addEventListener("dragleave", ()=>{
-      row.classList.remove("dropHint");
-    });
+    row.addEventListener("dragleave", ()=> row.classList.remove("dropHint"));
     row.addEventListener("drop", (ev)=>{
       ev.preventDefault();
       row.classList.remove("dropHint");
       const from = Number(ev.dataTransfer.getData("text/plain"));
       const to = Number(row.dataset.index);
       if(Number.isFinite(from) && Number.isFinite(to)){
-        moveMedia(from, to);
+        moveInArray(activeVetrina.media, from, to);
+        activeVetrina.updatedAt = nowISO();
         renderMediaList();
       }
-    });
-    row.addEventListener("dragend", ()=>{
-      row.classList.remove("dropHint");
     });
 
     const left = document.createElement("div");
     left.className = "meta";
-
     const typeIcon = m.type==="video" ? "🎬" : "🖼️";
     left.innerHTML = `
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
@@ -816,14 +931,14 @@ function renderMediaList(){
         <button class="sec smallbtn" onclick="applyMediaEdits(${idx})">Applica</button>
         <button class="sec smallbtn" onclick="previewMedia(${idx})">Anteprima</button>
       </div>
-      <div id="prev_${idx}" class="mini" style="margin-top:8px;"></div>
+      <div id="prevM_${idx}" class="mini" style="margin-top:8px;"></div>
     `;
 
     const right = document.createElement("div");
     right.innerHTML = `
       <div class="btns" style="justify-content:flex-end;">
-        <button class="sec smallbtn" onclick="moveUp(${idx})">↑</button>
-        <button class="sec smallbtn" onclick="moveDown(${idx})">↓</button>
+        <button class="sec smallbtn" onclick="moveMediaUp(${idx})">↑</button>
+        <button class="sec smallbtn" onclick="moveMediaDown(${idx})">↓</button>
         <button class="danger smallbtn" onclick="removeMedia(${idx})">Rimuovi</button>
       </div>
     `;
@@ -834,41 +949,139 @@ function renderMediaList(){
   });
 }
 
-function applyMediaEdits(idx){
-  if(!activeVetrina) return;
-  const t = document.getElementById(`mt_${idx}`)?.value ?? "";
-  const n = document.getElementById(`mn_${idx}`)?.value ?? "";
-  activeVetrina.media[idx].title = String(t).trim();
-  activeVetrina.media[idx].note = String(n).trim();
+/* ================= FILES LIST + DND ================= */
+function addFileByUrl(){
+  if(!activeVetrina){ alert("Carica una vetrina"); return; }
+  const label = (document.getElementById("fLabel").value||"").trim();
+  const url = (document.getElementById("fUrl").value||"").trim();
+  if(!label || !url){ alert("Inserisci Label e URL"); return; }
+  activeVetrina.files.push({label, url});
   activeVetrina.updatedAt = nowISO();
-  alert("✅ Modifiche applicate (scarica poi il JSON).");
+  renderFilesList();
+  document.getElementById("fLabel").value = "";
+  document.getElementById("fUrl").value = "";
 }
 
-function previewMedia(idx){
-  if(!activeVetrina) return;
-  const m = activeVetrina.media[idx];
-  const box = document.getElementById(`prev_${idx}`);
+function removeFile(idx){
+  activeVetrina.files.splice(idx,1);
+  activeVetrina.updatedAt = nowISO();
+  renderFilesList();
+}
+function applyFileEdits(idx){
+  const l = document.getElementById(`fl_${idx}`)?.value ?? "";
+  const u = document.getElementById(`fu_${idx}`)?.value ?? "";
+  activeVetrina.files[idx].label = String(l).trim();
+  activeVetrina.files[idx].url = String(u).trim();
+  activeVetrina.updatedAt = nowISO();
+  alert("✅ Modifiche file applicate (scarica poi il JSON).");
+}
+function previewFile(idx){
+  const f = activeVetrina.files[idx];
+  const box = document.getElementById(`prevF_${idx}`);
   if(!box) return;
-  if(!m || !m.url) { box.textContent = "Nessun URL"; return; }
-  if(m.type === "video"){
-    box.innerHTML = `<video class="preview" controls src="${escapeAttr(m.url)}"></video>`;
-  } else {
-    box.innerHTML = `<img class="preview" src="${escapeAttr(m.url)}" alt="preview">`;
+  if(!f || !f.url){ box.textContent = "Nessun URL"; return; }
+  if(isPdf(f.url)){
+    box.innerHTML = `<iframe class="preview" src="${escapeAttr(f.url)}"></iframe>`;
+  }else{
+    box.innerHTML = `<div class="mini">Anteprima disponibile solo per PDF. Link: <span class="kbd">${escapeHTML(f.url)}</span></div>`;
   }
 }
-
-function moveUp(idx){
-  if(!activeVetrina) return;
+function moveFileUp(idx){
   if(idx <= 0) return;
-  swapMedia(idx, idx-1);
-  renderMediaList();
+  swapInArray(activeVetrina.files, idx, idx-1);
+  activeVetrina.updatedAt = nowISO();
+  renderFilesList();
 }
-function moveDown(idx){
-  if(!activeVetrina) return;
-  const arr = activeVetrina.media || [];
+function moveFileDown(idx){
+  const arr = activeVetrina.files || [];
   if(idx >= arr.length-1) return;
-  swapMedia(idx, idx+1);
-  renderMediaList();
+  swapInArray(activeVetrina.files, idx, idx+1);
+  activeVetrina.updatedAt = nowISO();
+  renderFilesList();
+}
+
+function renderFilesList(){
+  const list = document.getElementById("filesList");
+  list.innerHTML = "";
+  if(!activeVetrina){
+    list.innerHTML = `<div class="mini">Carica una vetrina.</div>`;
+    return;
+  }
+  const files = activeVetrina.files || [];
+  if(files.length === 0){
+    list.innerHTML = `<div class="mini">Nessun file.</div>`;
+    return;
+  }
+
+  files.forEach((f, idx)=>{
+    const row = document.createElement("div");
+    row.className = "item";
+    row.draggable = true;
+    row.dataset.index = String(idx);
+
+    row.addEventListener("dragstart", (ev)=>{
+      ev.dataTransfer.setData("text/plain", String(idx));
+      ev.dataTransfer.effectAllowed = "move";
+    });
+    row.addEventListener("dragover", (ev)=>{
+      ev.preventDefault();
+      row.classList.add("dropHint");
+      ev.dataTransfer.dropEffect = "move";
+    });
+    row.addEventListener("dragleave", ()=> row.classList.remove("dropHint"));
+    row.addEventListener("drop", (ev)=>{
+      ev.preventDefault();
+      row.classList.remove("dropHint");
+      const from = Number(ev.dataTransfer.getData("text/plain"));
+      const to = Number(row.dataset.index);
+      if(Number.isFinite(from) && Number.isFinite(to)){
+        moveInArray(activeVetrina.files, from, to);
+        activeVetrina.updatedAt = nowISO();
+        renderFilesList();
+      }
+    });
+
+    const left = document.createElement("div");
+    left.className = "meta";
+    const ico = isPdf(f.url) ? "📄" : "📎";
+    left.innerHTML = `
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <span class="drag">⇅</span>
+        <b>${ico} ${f.label ? escapeHTML(f.label) : "(senza label)"}</b>
+      </div>
+      <div class="mini mono">${escapeHTML(f.url||"")}</div>
+
+      <div class="mini" style="margin-top:8px;">Modifica rapido:</div>
+      <div class="row">
+        <div>
+          <label style="margin-top:6px;">Label</label>
+          <input id="fl_${idx}" value="${escapeAttr(f.label||"")}" />
+        </div>
+        <div>
+          <label style="margin-top:6px;">URL</label>
+          <input id="fu_${idx}" value="${escapeAttr(f.url||"")}" />
+        </div>
+      </div>
+      <div class="btns">
+        <button class="sec smallbtn" onclick="applyFileEdits(${idx})">Applica</button>
+        <button class="sec smallbtn" onclick="previewFile(${idx})">Anteprima</button>
+      </div>
+      <div id="prevF_${idx}" class="mini" style="margin-top:8px;"></div>
+    `;
+
+    const right = document.createElement("div");
+    right.innerHTML = `
+      <div class="btns" style="justify-content:flex-end;">
+        <button class="sec smallbtn" onclick="moveFileUp(${idx})">↑</button>
+        <button class="sec smallbtn" onclick="moveFileDown(${idx})">↓</button>
+        <button class="danger smallbtn" onclick="removeFile(${idx})">Rimuovi</button>
+      </div>
+    `;
+
+    row.appendChild(left);
+    row.appendChild(right);
+    list.appendChild(row);
+  });
 }
 
 /* ================= BACKUP ZIP ================= */
@@ -877,7 +1090,6 @@ async function fetchAsBlob(path){
   if(!res.ok) throw new Error("Fetch failed: " + path);
   return await res.blob();
 }
-
 async function downloadBackupZip(){
   if(!activeVetrina || !activeId){
     alert("Carica una vetrina prima.");
@@ -885,33 +1097,24 @@ async function downloadBackupZip(){
   }
 
   const zip = new JSZip();
-
-  // data/<id>.json
   zip.folder("data").file(`${activeId}.json`, JSON.stringify(activeVetrina, null, 2));
 
-  // media files referenced (only relative paths)
   const mediaFolder = zip.folder("media");
   const filesFolder = zip.folder("files");
-
   let okCount = 0;
   let failCount = 0;
 
-  // media[]
   for(const m of (activeVetrina.media || [])){
     if(!m || !m.url) continue;
-    if(!isRelativeRepoPath(m.url)) continue; // skip external
+    if(!isRelativeRepoPath(m.url)) continue;
     const name = m.url.replace(/^media\//, "");
     try{
       const blob = await fetchAsBlob(m.url);
       mediaFolder.file(name, blob);
       okCount++;
-    }catch(e){
-      console.warn(e);
-      failCount++;
-    }
+    }catch(e){ failCount++; }
   }
 
-  // files[]
   for(const f of (activeVetrina.files || [])){
     if(!f || !f.url) continue;
     if(!isRelativeRepoPath(f.url)) continue;
@@ -920,10 +1123,7 @@ async function downloadBackupZip(){
       const blob = await fetchAsBlob(f.url);
       filesFolder.file(name, blob);
       okCount++;
-    }catch(e){
-      console.warn(e);
-      failCount++;
-    }
+    }catch(e){ failCount++; }
   }
 
   const blob = await zip.generateAsync({type:"blob"});
@@ -1024,9 +1224,9 @@ function addOCRtoFiles(){
   if(!txt){ alert("Nessun testo"); return; }
 
   const name = ocrLastTxtFilename || `ocr-${activeId || "vetrina"}.txt`;
-  activeVetrina.files = activeVetrina.files || [];
   activeVetrina.files.push({ label: "Testo OCR", url: `files/${name}` });
   activeVetrina.updatedAt = nowISO();
+  renderFilesList();
   ocrStatus.textContent = "➕ Aggiunto in files[] (carica il TXT in /files/)";
   alert("✅ Aggiunto. Ora: scarica il TXT e caricalo su GitHub in /files/. Poi scarica " + activeId + ".json e ricaricalo in /data/.");
 }
