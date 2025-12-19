@@ -3,422 +3,319 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SerCucTech | Vetrina</title>
+  <title>SerCucTech – Vetrina</title>
   <style>
-    :root{
-      --bg:#0b1220;
-      --fg:#e5e7eb;
-      --muted:#94a3b8;
-      --card:#0f172a;
-      --border:#1f2a44;
-      --btn:#2563eb;
-      --btn2:#0b1220;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      background:var(--bg);
-      color:var(--fg);
-      min-height:100vh;
-    }
-    header{
-      padding:16px;
-      border-bottom:1px solid var(--border);
-      background:rgba(0,0,0,.18);
-      position:sticky; top:0;
-      backdrop-filter: blur(8px);
-    }
-    .wrap{max-width:1050px;margin:0 auto;padding:18px}
-    h1{margin:0;font-size:26px;line-height:1.1}
-    .desc{margin-top:8px;color:var(--muted)}
-    .topRow{
-      display:flex; gap:10px; flex-wrap:wrap;
-      margin-top:12px; align-items:center;
-    }
-    .pill{
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.03);
-      padding:8px 10px;
-      border-radius:999px;
-      font-size:13px;
-      color:var(--muted);
-    }
-    .btn{
-      border:0; cursor:pointer;
-      padding:10px 14px;
-      border-radius:10px;
-      background:var(--btn);
-      color:white;
-      font-weight:600;
-    }
-    .btn.secondary{
-      background:transparent;
-      border:1px solid var(--border);
-      color:var(--fg);
-    }
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-      gap:12px;
-      margin-top:16px;
-    }
-    .card{
-      background:rgba(0,0,0,.18);
-      border:1px solid var(--border);
-      border-radius:14px;
-      overflow:hidden;
-      min-height:140px;
-      display:flex;
-      flex-direction:column;
-    }
-    .thumb{
-      width:100%;
-      aspect-ratio:1/1;
-      background:rgba(255,255,255,.06);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      overflow:hidden;
-    }
-    .thumb img, .thumb video{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
-    .meta{
-      padding:10px;
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-    .name{font-weight:700;font-size:14px;word-break:break-word}
-    .type{font-size:12px;color:var(--muted)}
-    .empty{
-      margin-top:18px;
-      padding:16px;
-      border-radius:14px;
-      border:1px dashed var(--border);
-      color:var(--muted);
-      background:rgba(255,255,255,.03);
-    }
-
-    /* Fullscreen viewer */
-    .viewer{
-      position:fixed; inset:0;
-      background:rgba(0,0,0,.92);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:14px;
-      z-index:9999;
-    }
-    .viewer.active{display:flex}
-    .viewerContent{
-      max-width:100%;
-      max-height:100%;
-    }
-    .viewerContent img, .viewerContent video{
-      max-width:100%;
-      max-height:100%;
-      border-radius:12px;
-      display:block;
-    }
-    .viewerHint{
-      position:fixed; bottom:18px; left:50%;
-      transform:translateX(-50%);
-      color:#cbd5e1;
-      font-size:13px;
-      opacity:.9;
-      background:rgba(0,0,0,.35);
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-    }
-
-    /* Tap-to-audio overlay */
-    .audioGate{
-      position:fixed; inset:0;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      background:rgba(0,0,0,.45);
-      z-index:9998;
-    }
-    .audioGate.active{display:flex}
-    .audioBox{
-      width:min(560px,100%);
-      background:rgba(15,23,42,.96);
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:16px;
-    }
-    .audioBox h2{margin:0 0 8px 0;font-size:18px}
-    .audioBox p{margin:0 0 12px 0;color:var(--muted);font-size:14px;line-height:1.4}
-    .audioBox .row{display:flex;gap:10px;flex-wrap:wrap}
+    :root { --card:#111b2e; --txt:#e8eefc; --mut:#a9b8dd; --acc:#5ee1a2; --b:#22345f; }
+    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:linear-gradient(180deg,#081024,#0b1220); color:var(--txt); }
+    .wrap{ max-width:980px; margin:0 auto; padding:18px; }
+    .card{ background:rgba(17,27,46,.92); border:1px solid #1b2a4f; border-radius:18px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,.22); }
+    h1{ margin:0 0 8px 0; font-size:22px; }
+    h2{ margin:0 0 10px 0; font-size:18px; }
+    .mut{ color:var(--mut); }
+    .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    button{ cursor:pointer; border:0; padding:10px 14px; border-radius:12px; font-weight:900; background:var(--acc); color:#052014; }
+    .sec{ background:#22345f; color:var(--txt); }
+    .danger{ background:#ff6b6b; color:#2b0909; }
+    .grid{ display:grid; gap:12px; grid-template-columns:1fr; margin-top:14px; }
+    @media(min-width:900px){ .grid{ grid-template-columns:1fr 1fr; } }
+    .media{ display:grid; gap:10px; }
+    img, video{ width:100%; border-radius:14px; border:1px solid var(--b); background:#0f1830; }
+    a{ color:#9fe9ff; }
+    .item{ padding:10px; border-radius:14px; border:1px solid var(--b); background:#0c1530; }
+    input, select, textarea { width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px; border:1px solid var(--b); background:#0f1830; color:var(--txt); outline:none; }
+    textarea { min-height:120px; resize:vertical; }
+    .row { display:grid; gap:10px; grid-template-columns:1fr; }
+    @media(min-width:700px){ .row{ grid-template-columns: 1fr 1fr; } }
+    .pill { display:inline-flex; gap:8px; align-items:center; padding:8px 12px; border-radius:999px; background:#0f1a31; border:1px solid #1b2a4f; color:var(--mut); font-size:13px; }
+    .bar { height:10px; border:1px solid var(--b); border-radius:999px; overflow:hidden; background:#0f1830; }
+    .bar > div { height:100%; width:0%; background:var(--acc); }
+    .mini { font-size:12px; line-height:1.35; }
   </style>
+
+  <!-- OCR -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
-<header>
   <div class="wrap">
-    <h1 id="title">Vetrina</h1>
-    <div class="desc" id="desc"></div>
-    <div class="topRow">
-      <span class="pill" id="pillId">ID: -</span>
-      <button class="btn" id="btnSpeak">▶ Ascolta presentazione</button>
-      <button class="btn secondary" id="btnStop">■ Stop</button>
+    <div class="card">
+      <h1 id="title">Caricamento…</h1>
+      <div class="mut" id="desc"></div>
+      <div class="btns">
+        <button id="speakBtn" class="sec">🔊 Voce</button>
+        <button id="stopBtn" class="sec">⏹ Stop</button>
+      </div>
+      <div class="mut" style="margin-top:10px;" id="hint"></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Media</h2>
+        <div class="media" id="media"></div>
+      </div>
+
+      <div class="card">
+        <h2>File</h2>
+        <div id="files"></div>
+      </div>
+    </div>
+
+    <!-- OCR -->
+    <div class="card" style="margin-top:12px;">
+      <h2>OCR – Estrai testo da immagine</h2>
+      <div class="mut mini">
+        Carica una foto (cartello, ricevuta, documento) e ottieni il testo. Foto nitida = OCR migliore.
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label class="mut mini">Lingua OCR</label>
+          <select id="ocrLang">
+            <option value="ita">Italiano (ita)</option>
+            <option value="eng">Inglese (eng)</option>
+            <option value="ukr">Ucraino (ukr)</option>
+            <option value="deu">Tedesco (deu)</option>
+            <option value="spa">Spagnolo (spa)</option>
+            <option value="fra">Francese (fra)</option>
+          </select>
+        </div>
+        <div>
+          <label class="mut mini">Carica immagine</label>
+          <input id="ocrFile" type="file" accept="image/*" />
+        </div>
+      </div>
+
+      <div class="btns">
+        <button id="ocrBtn">🧠 Avvia OCR</button>
+        <button id="ocrCopyBtn" class="sec">📋 Copia testo</button>
+        <button id="ocrSpeakBtn" class="sec">🔊 Leggi testo</button>
+        <button id="ocrClearBtn" class="danger">🧹 Pulisci</button>
+      </div>
+
+      <div style="margin-top:10px;">
+        <div class="pill">Stato: <b id="ocrStatus">Pronto</b></div>
+        <div style="margin-top:10px;" class="bar"><div id="ocrBar"></div></div>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <div>
+          <div class="mut mini" style="margin-bottom:6px;">Anteprima</div>
+          <img id="ocrPreview" alt="Anteprima OCR" style="display:none;" />
+          <div id="ocrNoPreview" class="mut mini">Nessuna immagine caricata.</div>
+        </div>
+        <div>
+          <div class="mut mini" style="margin-bottom:6px;">Testo estratto</div>
+          <textarea id="ocrText" placeholder="Qui comparirà il testo..." spellcheck="false"></textarea>
+        </div>
+      </div>
     </div>
   </div>
-</header>
-
-<main class="wrap">
-  <div id="files"></div>
-</main>
-
-<!-- Fullscreen viewer -->
-<div class="viewer" id="viewer" aria-hidden="true">
-  <div class="viewerContent" id="viewerContent"></div>
-  <div class="viewerHint">Tocca per chiudere</div>
-</div>
-
-<!-- Tap-to-audio overlay (when autoplay is blocked) -->
-<div class="audioGate" id="audioGate">
-  <div class="audioBox">
-    <h2>Audio bloccato dal browser</h2>
-    <p>Su Android l’audio può partire solo dopo un tocco. Premi qui per ascoltare la presentazione.</p>
-    <div class="row">
-      <button class="btn" id="gatePlay">▶ Tocca per ascoltare</button>
-      <button class="btn secondary" id="gateClose">Chiudi</button>
-    </div>
-  </div>
-</div>
 
 <script>
-(function(){
-  const qs = new URLSearchParams(location.search);
-  const idRaw = (qs.get('id') || '').trim();
-  const id = idRaw || 'demo';
+const INDEX_PATH = "data/index.json";
 
-  const elTitle = document.getElementById('title');
-  const elDesc  = document.getElementById('desc');
-  const elFiles = document.getElementById('files');
-  const pillId  = document.getElementById('pillId');
+/* params */
+function getParam(name){
+  const url = new URL(location.href);
+  return url.searchParams.get(name);
+}
 
-  const btnSpeak = document.getElementById('btnSpeak');
-  const btnStop  = document.getElementById('btnStop');
+/* tts */
+function stopTTS(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }
+function speak(text, lang){
+  stopTTS();
+  if(!('speechSynthesis' in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang || "it-IT";
+  window.speechSynthesis.speak(u);
+}
+document.getElementById("stopBtn").onclick = stopTTS;
 
-  const viewer = document.getElementById('viewer');
-  const viewerContent = document.getElementById('viewerContent');
+/* escape */
+function escapeHTML(s){
+  return String(s||"")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+function escapeAttr(s){ return escapeHTML(s).replaceAll("`","&#096;"); }
 
-  const audioGate = document.getElementById('audioGate');
-  const gatePlay = document.getElementById('gatePlay');
-  const gateClose = document.getElementById('gateClose');
+/* load */
+async function main(){
+  const id = (getParam("id") || "").trim();
+  const group = (getParam("group") || "").trim();
 
-  pillId.textContent = 'ID: ' + id;
+  const idxRes = await fetch(INDEX_PATH + "?t=" + Date.now(), {cache:"no-store"});
+  const indexDB = await idxRes.json();
+  const vIndex = indexDB.vetrine || {};
+  const groups = indexDB.groups || {};
 
-  // URL pubblico del JSON
-  const dataUrl = `data/${encodeURIComponent(id)}.json`;
-
-  // --- Speech helpers ---
-  function stopSpeech(){
-    try { window.speechSynthesis.cancel(); } catch(e){}
-  }
-
-  function speak(text, lang){
-    stopSpeech();
-    if(!text || !('speechSynthesis' in window)) return false;
-
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang || navigator.language || 'it-IT';
-
-    // Prova voce disponibile nella lingua (se esiste)
-    try {
-      const voices = speechSynthesis.getVoices();
-      const pick = voices.find(v => (v.lang||'').toLowerCase() === (u.lang||'').toLowerCase())
-              || voices.find(v => (v.lang||'').toLowerCase().startsWith((u.lang||'').slice(0,2).toLowerCase()));
-      if(pick) u.voice = pick;
-    } catch(e){}
-
-    try {
-      speechSynthesis.speak(u);
-      return true;
-    } catch(e){
-      return false;
-    }
-  }
-
-  // Autoplay “best effort”
-  function tryAutoSpeak(voiceText, voiceLang){
-    if(!voiceText) return;
-    // Alcuni browser caricano le voci dopo: riproviamo 2 volte
-    let tries = 0;
-    const attempt = () => {
-      tries++;
-      const ok = speak(voiceText, voiceLang);
-      // Se non parte, mostro il gate (Android spesso blocca finché non tocchi)
-      setTimeout(() => {
-        const stillSpeaking = speechSynthesis.speaking;
-        if(!stillSpeaking && tries >= 2){
-          audioGate.classList.add('active');
-        } else if(!stillSpeaking && tries < 2){
-          attempt();
-        }
-      }, 350);
-    };
-    attempt();
-  }
-
-  btnSpeak.addEventListener('click', () => {
-    if(window.__voiceText){
-      const ok = speak(window.__voiceText, window.__voiceLang);
-      if(!ok) audioGate.classList.add('active');
-    }
-  });
-  btnStop.addEventListener('click', stopSpeech);
-
-  gatePlay.addEventListener('click', () => {
-    audioGate.classList.remove('active');
-    if(window.__voiceText) speak(window.__voiceText, window.__voiceLang);
-  });
-  gateClose.addEventListener('click', () => audioGate.classList.remove('active'));
-
-  // Fullscreen viewer close on tap
-  viewer.addEventListener('click', () => {
-    viewer.classList.remove('active');
-    viewerContent.innerHTML = '';
-    // stop video if any
-    stopSpeech(); // opzionale
-  });
-
-  function openViewerFor(item){
-    viewerContent.innerHTML = '';
-    if(item.kind === 'video'){
-      const v = document.createElement('video');
-      v.src = item.url;
-      v.controls = true;
-      v.playsInline = true;
-      v.autoplay = true;
-      viewerContent.appendChild(v);
-    } else {
-      const img = document.createElement('img');
-      img.src = item.url;
-      img.alt = item.name || 'media';
-      viewerContent.appendChild(img);
-    }
-    viewer.classList.add('active');
-  }
-
-  function renderFiles(files){
-    if(!Array.isArray(files) || files.length === 0){
-      elFiles.innerHTML = `
-        <div class="empty">
-          <b>Nessun file in questa vetrina.</b><br>
-          Quando aggiungi immagini o video in admin, compariranno qui.
-        </div>`;
+  // group mode
+  if(group){
+    const g = groups[group];
+    if(!g){
+      document.getElementById("title").textContent = "Gruppo non trovato";
+      document.getElementById("desc").textContent = "Controlla ?group=";
       return;
     }
+    document.getElementById("title").textContent = g.title || ("Gruppo: " + group);
+    document.getElementById("desc").textContent = g.description || "";
+    document.getElementById("hint").innerHTML = "Vetrine nel gruppo:";
 
-    const grid = document.createElement('div');
-    grid.className = 'grid';
+    document.getElementById("speakBtn").onclick = ()=> speak((g.title||"") + ". " + (g.description||""), "it-IT");
 
-    files.forEach(f => {
-      const kind = (f.kind || f.type || '').toLowerCase();
-      const isVideo = kind.includes('video') || (f.url||'').match(/\.(mp4|webm|ogg)$/i);
-
-      const card = document.createElement('div');
-      card.className = 'card';
-
-      const thumb = document.createElement('div');
-      thumb.className = 'thumb';
-
-      if(isVideo){
-        const v = document.createElement('video');
-        v.src = f.url;
-        v.muted = true;
-        v.playsInline = true;
-        v.preload = 'metadata';
-        thumb.appendChild(v);
-      } else {
-        const img = document.createElement('img');
-        img.src = f.url;
-        img.alt = f.name || 'immagine';
-        thumb.appendChild(img);
-      }
-
-      thumb.addEventListener('click', () => {
-        openViewerFor({kind: isVideo ? 'video' : 'image', url: f.url, name: f.name});
-      });
-
-      const meta = document.createElement('div');
-      meta.className = 'meta';
-      meta.innerHTML = `
-        <div class="name">${(f.name || 'Senza nome')}</div>
-        <div class="type">${isVideo ? 'Video' : 'Immagine'}</div>
+    const mediaEl = document.getElementById("media");
+    mediaEl.innerHTML = "";
+    (g.items||[]).forEach(vid=>{
+      const rec = vIndex[vid];
+      if(!rec) return;
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <b>${escapeHTML(rec.title || vid)}</b><br>
+        <span class="mut">ID: ${escapeHTML(vid)}</span><br>
+        <a href="vetrina.html?id=${encodeURIComponent(vid)}">Apri vetrina</a>
       `;
-
-      card.appendChild(thumb);
-      card.appendChild(meta);
-      grid.appendChild(card);
+      mediaEl.appendChild(div);
     });
-
-    elFiles.innerHTML = '';
-    elFiles.appendChild(grid);
+    document.getElementById("files").innerHTML = `<div class="mut">Apri una vetrina per vedere i file.</div>`;
+    return;
   }
 
-  async function load(){
-    // default UI
-    elTitle.textContent = 'Vetrina ' + id;
-    elDesc.textContent  = '';
+  // single vetrina mode
+  if(!id || !vIndex[id] || !vIndex[id].file){
+    document.getElementById("title").textContent = "Vetrina non trovata";
+    document.getElementById("desc").textContent = "Usa: vetrina.html?id=scalvini10 (e crea data/index.json)";
+    return;
+  }
 
-    try{
-      const res = await fetch(dataUrl, {cache:'no-store'});
-      if(!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
+  const filePath = vIndex[id].file;
+  const vRes = await fetch(filePath + "?t=" + Date.now(), {cache:"no-store"});
+  const v = await vRes.json();
 
-      // Styling
-      if(data.bgColor) document.body.style.background = data.bgColor;
-      if(data.bgImage){
-        document.body.style.backgroundImage = `url(${data.bgImage})`;
-        document.body.style.backgroundSize = 'cover';
-        document.body.style.backgroundPosition = 'center';
-      }
+  document.getElementById("title").textContent = v.title || id;
+  document.getElementById("desc").textContent = v.description || "";
+  document.getElementById("hint").textContent = "ID: " + id;
 
-      // Title / desc
-      elTitle.textContent = data.title || ('Vetrina ' + id);
-      elDesc.textContent  = data.desc || '';
+  const voiceText = (v.voice && v.voice.text) ? v.voice.text : ((v.title||"") + ". " + (v.description||""));
+  const voiceLang = (v.voice && v.voice.lang) ? v.voice.lang : "it-IT";
+  document.getElementById("speakBtn").onclick = ()=> speak(voiceText, voiceLang);
 
-      // Title style
-      if(data.titleColor) elTitle.style.color = data.titleColor;
-      if(data.titleSize) elTitle.style.fontSize = (Number(data.titleSize) || 26) + 'px';
-      if(data.fontFamily) elTitle.style.fontFamily = data.fontFamily + ', system-ui, Arial';
-
-      // Save voice in globals for buttons
-      window.__voiceLang = data.voiceLang || (navigator.language || 'it-IT');
-      window.__voiceText = data.voiceText || '';
-
-      // Render files
-      renderFiles(data.files || []);
-
-      // Autoplay voice (best effort)
-      if(window.__voiceText){
-        tryAutoSpeak(window.__voiceText, window.__voiceLang);
-      }
-
-    }catch(err){
-      document.body.style.background = '#0b1220';
-      elFiles.innerHTML = `
-        <div class="empty">
-          <b>Vetrina non trovata.</b><br>
-          Pubblica: <code>${dataUrl}</code><br>
-          Errore: ${String(err)}
-        </div>`;
+  // media
+  const mediaEl = document.getElementById("media");
+  mediaEl.innerHTML = "";
+  (v.media||[]).forEach(m=>{
+    if(m.type === "video"){
+      const vid = document.createElement("video");
+      vid.controls = true;
+      vid.src = m.url;
+      mediaEl.appendChild(vid);
+    } else {
+      const img = document.createElement("img");
+      img.src = m.url;
+      img.alt = m.title || "";
+      mediaEl.appendChild(img);
     }
-  }
+  });
+  if((v.media||[]).length === 0) mediaEl.innerHTML = `<div class="mut">Nessun media.</div>`;
 
-  load();
-})();
+  // files
+  const filesEl = document.getElementById("files");
+  filesEl.innerHTML = "";
+  (v.files||[]).forEach(f=>{
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `<a href="${escapeAttr(f.url)}" target="_blank" rel="noopener">${escapeHTML(f.label||"Apri file")}</a>`;
+    filesEl.appendChild(div);
+  });
+  if((v.files||[]).length === 0) filesEl.innerHTML = `<div class="mut">Nessun file.</div>`;
+}
+
+/* OCR */
+let ocrImage = null;
+const ocrFile = document.getElementById("ocrFile");
+const ocrPreview = document.getElementById("ocrPreview");
+const ocrNoPreview = document.getElementById("ocrNoPreview");
+const ocrText = document.getElementById("ocrText");
+const ocrStatus = document.getElementById("ocrStatus");
+const ocrBar = document.getElementById("ocrBar");
+
+ocrFile.addEventListener("change", (e)=>{
+  const file = e.target.files && e.target.files[0];
+  if(!file){ ocrImage=null; return; }
+  if(!file.type.startsWith("image/")){
+    alert("Carica un'immagine.");
+    e.target.value = "";
+    return;
+  }
+  ocrImage = file;
+  ocrPreview.src = URL.createObjectURL(file);
+  ocrPreview.style.display = "block";
+  ocrNoPreview.style.display = "none";
+  ocrStatus.textContent = "Immagine caricata";
+  ocrBar.style.width = "0%";
+});
+
+document.getElementById("ocrBtn").addEventListener("click", async ()=>{
+  if(!ocrImage){ alert("Carica prima un'immagine."); return; }
+  const lang = document.getElementById("ocrLang").value;
+
+  ocrStatus.textContent = "OCR in corso…";
+  ocrBar.style.width = "0%";
+
+  try{
+    const { data } = await Tesseract.recognize(ocrImage, lang, {
+      logger: (m)=>{
+        if(m && m.status) ocrStatus.textContent = m.status;
+        if(m && typeof m.progress === "number") ocrBar.style.width = Math.round(m.progress*100) + "%";
+      }
+    });
+    const text = (data && data.text) ? data.text.trim() : "";
+    ocrText.value = text;
+    ocrStatus.textContent = text ? "✅ OCR completato" : "✅ OCR completato (nessun testo trovato)";
+    ocrBar.style.width = "100%";
+  }catch(err){
+    console.error(err);
+    ocrStatus.textContent = "❌ Errore OCR";
+    alert("Errore OCR: riprova con foto più nitida o controlla connessione.");
+  }
+});
+
+document.getElementById("ocrCopyBtn").addEventListener("click", async ()=>{
+  const txt = (ocrText.value||"").trim();
+  if(!txt){ alert("Nessun testo da copiare."); return; }
+  try{
+    await navigator.clipboard.writeText(txt);
+    ocrStatus.textContent = "📋 Copiato";
+  }catch(e){
+    ocrText.select();
+    document.execCommand("copy");
+    ocrStatus.textContent = "📋 Copiato (fallback)";
+  }
+});
+
+document.getElementById("ocrSpeakBtn").addEventListener("click", ()=>{
+  const txt = (ocrText.value||"").trim();
+  if(!txt){ alert("Nessun testo da leggere."); return; }
+  const lang = document.getElementById("ocrLang").value;
+  const map = { ita:"it-IT", eng:"en-US", ukr:"uk-UA", deu:"de-DE", spa:"es-ES", fra:"fr-FR" };
+  speak(txt, map[lang] || "it-IT");
+});
+
+document.getElementById("ocrClearBtn").addEventListener("click", ()=>{
+  ocrFile.value = "";
+  ocrImage = null;
+  ocrPreview.src = "";
+  ocrPreview.style.display = "none";
+  ocrNoPreview.style.display = "block";
+  ocrText.value = "";
+  ocrStatus.textContent = "Pronto";
+  ocrBar.style.width = "0%";
+});
+
+main().catch(err=>{
+  console.error(err);
+  document.getElementById("title").textContent = "Errore caricamento";
+  document.getElementById("desc").textContent = "Controlla che data/index.json esista e sia valido.";
+});
 </script>
 </body>
 </html>
