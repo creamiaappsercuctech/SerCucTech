@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SerCucTech – Percorso Guida Vetrine</title>
+  <title>SerCucTech – Percorso Guida Vetrine (per ID)</title>
   <style>
-    :root{ --bg:#0b1220; --card:#111b2e; --txt:#e8eefc; --mut:#a9b8dd; --acc:#5ee1a2; --b:#22345f; --warn:#ffcc66; }
+    :root{ --bg:#0b1220; --card:#111b2e; --txt:#e8eefc; --mut:#a9b8dd; --acc:#5ee1a2; --b:#22345f; --warn:#ffcc66; --danger:#ff6b6b; }
     body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:linear-gradient(180deg,#081024,#0b1220); color:var(--txt); }
     .wrap{ max-width:980px; margin:0 auto; padding:18px; }
     .card{ background:rgba(17,27,46,.92); border:1px solid #1b2a4f; border-radius:18px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,.22); }
@@ -15,6 +15,7 @@
     button{ cursor:pointer; border:0; padding:10px 14px; border-radius:12px; font-weight:900; background:var(--acc); color:#052014; }
     .sec{ background:#22345f; color:var(--txt); }
     .warn{ background:var(--warn); color:#231a06; }
+    .danger{ background:var(--danger); color:#2b0909; }
     a{ color:#9fe9ff; }
     .list{ margin-top:12px; display:grid; gap:10px; }
     .item{ border:1px solid var(--b); background:#0c1530; border-radius:14px; padding:12px; }
@@ -24,13 +25,21 @@
     .pill{ display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; background:#0f1a31; border:1px solid #1b2a4f; color:var(--mut); font-size:12px; }
     .cur{ outline:2px dashed var(--acc); outline-offset:4px; }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas; }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
   </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card">
     <h1>Percorso guida – Vetrine SerCucTech (Audio + Testo)</h1>
-    <div class="mut">Spunta gli step che vuoi usare. Premi “Voce” per ascoltare lo step corrente.</div>
+    <div class="mut" id="sub">
+      Spunta gli step che vuoi usare. Premi “Voce” per ascoltare lo step corrente.
+    </div>
+
+    <div class="row" style="margin-top:10px;">
+      <span class="pill">Vetrina ID: <b id="vId">—</b></span>
+      <span class="pill">Stato ID: <b id="idStatus">controllo…</b></span>
+    </div>
 
     <div class="btns">
       <button class="sec" id="prevBtn">⬅️ Indietro</button>
@@ -40,150 +49,37 @@
       <button class="warn" id="resetBtn">Reset spunte</button>
     </div>
 
-    <div class="btns">
-      <a class="pill" href="admin.html" target="_blank" rel="noopener">Apri Admin</a>
-      <a class="pill" href="vetrina.html?id=scalvini10" target="_blank" rel="noopener">Apri Vetrina scalvini10</a>
-      <a class="pill mono" href="data/index.json" target="_blank" rel="noopener">data/index.json</a>
-    </div>
+    <div class="btns" id="quickLinks"></div>
 
     <div class="pill" style="margin-top:10px;">
       Step corrente: <b id="curLabel">—</b>
     </div>
+
+    <div class="mut" style="margin-top:10px;" id="tips"></div>
   </div>
 
   <div class="list" id="steps"></div>
 </div>
 
 <script>
-const KEY = "sercuctech_guida_vetrine_v1";
+/* =================== CONFIG =================== */
+const INDEX_PATH = "data/index.json";
 
-const steps = [
-  {
-    id:"S1",
-    title:"Apri Admin e sblocca",
-    speak:"Apri l’admin. Poi sblocca toccando la parola LUCE e poi la parola PORTA.",
-    links:[
-      {label:"Apri Admin", url:"admin.html"}
-    ],
-    detail:[
-      "Vai su admin.html",
-      "Sblocca: tocca LUCE poi PORTA nella frase"
-    ]
-  },
-  {
-    id:"S2",
-    title:"Carica index dal repo",
-    speak:"In admin, carica l’index dal repo. Controlla che vedi la lista vetrine e gruppi.",
-    links:[
-      {label:"Controlla index.json", url:"data/index.json"}
-    ],
-    detail:[
-      "Admin → 'Carica index dal repo'",
-      "Devi vedere le vetrine nel menu a tendina"
-    ]
-  },
-  {
-    id:"S3",
-    title:"Carica vetrina scalvini10",
-    speak:"Seleziona scalvini10 e carica il file vetrina. Controlla titolo, descrizione, voce e tags.",
-    links:[
-      {label:"Vetrina pubblica scalvini10", url:"vetrina.html?id=scalvini10"},
-      {label:"JSON scalvini10", url:"data/scalvini10.json"}
-    ],
-    detail:[
-      "Admin → scegli scalvini10",
-      "Clic 'Carica file vetrina'"
-    ]
-  },
-  {
-    id:"S4",
-    title:"Aggiungi un PDF in files[]",
-    speak:"Se vuoi un PDF, caricalo in files e aggiungi la riga dentro files nel JSON della vetrina.",
-    links:[
-      {label:"Esempio PDF", url:"files/manuale.pdf"}
-    ],
-    detail:[
-      "Carica il file su GitHub dentro /files/",
-      "Nel JSON vetrina: files: [{label:'Manuale', url:'files/manuale.pdf'}]",
-      "Poi scarica il JSON e ricaricalo in /data/"
-    ]
-  },
-  {
-    id:"S5",
-    title:"Upload multiplo media e ZIP",
-    speak:"Se vuoi foto o video, seleziona più file. Aggiungili al JSON. Scarica lo ZIP e carica i file dentro media.",
-    links:[
-      {label:"Cartella media (repo)", url:"media/"}
-    ],
-    detail:[
-      "Admin → Media → seleziona più file",
-      "Clic 'Aggiungi al JSON'",
-      "Clic 'Scarica ZIP media'",
-      "Estrai e carica in /media/ su GitHub"
-    ]
-  },
-  {
-    id:"S6",
-    title:"Riordino Media e Files",
-    speak:"Riordina media e files con trascinamento o con frecce. Poi scarica il JSON e ricaricalo nel repo.",
-    links:[],
-    detail:[
-      "Admin → Media presenti: trascina o usa ↑ ↓",
-      "Admin → Files presenti: trascina o usa ↑ ↓",
-      "Poi: Scarica <id>.json e carica in /data/"
-    ]
-  },
-  {
-    id:"S7",
-    title:"OCR (solo Admin) e TXT in /files/",
-    speak:"Usa OCR in admin. Scarica il testo TXT e caricalo in files. Poi aggiungi il link in files della vetrina.",
-    links:[],
-    detail:[
-      "Admin → OCR → carica immagine",
-      "Avvia OCR → Scarica TXT",
-      "Carica TXT in /files/",
-      "Clic 'Aggiungi TXT in files[]' e poi ricarica il JSON in /data/"
-    ]
-  },
-  {
-    id:"S8",
-    title:"Duplica vetrina scalvini10 → scalvini11",
-    speak:"Per duplicare, premi Duplica vetrina. Inserisci scalvini11 e crea clone. Poi scarica index.json e scalvini11.json e caricali in data.",
-    links:[
-      {label:"Vetrina pubblica scalvini11", url:"vetrina.html?id=scalvini11"},
-      {label:"JSON scalvini11", url:"data/scalvini11.json"}
-    ],
-    detail:[
-      "Admin → carica scalvini10",
-      "Clic 'Duplica vetrina' → nuovo ID scalvini11 → crea clone",
-      "Scarica index.json + scalvini11.json",
-      "Caricali in /data/"
-    ]
-  },
-  {
-    id:"S9",
-    title:"Controllo finale pubblico",
-    speak:"Apri la vetrina pubblica e controlla media, file e PDF. Se qualcosa non si vede, controlla i percorsi: media slash nome file, files slash nome file.",
-    links:[
-      {label:"Apri scalvini10", url:"vetrina.html?id=scalvini10"},
-      {label:"Apri scalvini11", url:"vetrina.html?id=scalvini11"}
-    ],
-    detail:[
-      "I percorsi corretti sono: media/nome.jpg e files/nome.pdf",
-      "Se non si vede: controlla maiuscole/minuscole e nome identico"
-    ]
-  }
-];
-
-function loadState(){
-  try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ return {}; }
+/* =================== PARAMS =================== */
+function getParam(name){
+  const u = new URL(location.href);
+  return (u.searchParams.get(name) || "").trim();
 }
-function saveState(st){ localStorage.setItem(KEY, JSON.stringify(st)); }
+function sanitizeId(s){
+  return (s||"").trim().toLowerCase().replace(/\s+/g,"").replace(/[^a-z0-9_-]/g,"");
+}
+const requestedIdRaw = getParam("id");
+const VETRINA_ID = sanitizeId(requestedIdRaw) || "scalvini10";
 
-let state = loadState();
-if(!state.enabled) state.enabled = {};
-if(typeof state.currentIndex !== "number") state.currentIndex = 0;
+/* LocalStorage key separata per ogni vetrina */
+const KEY = "sercuctech_guida_vetrine_v2_" + VETRINA_ID;
 
+/* =================== TTS =================== */
 function stopTTS(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }
 function speak(text){
   stopTTS();
@@ -193,7 +89,179 @@ function speak(text){
   window.speechSynthesis.speak(u);
 }
 
+/* =================== LINKS (dinamici) =================== */
+function L_admin(){ return "admin.html"; }
+function L_vetrina(){ return `vetrina.html?id=${encodeURIComponent(VETRINA_ID)}`; }
+function L_json(){ return `data/${encodeURIComponent(VETRINA_ID)}.json`; }
+function L_index(){ return INDEX_PATH; }
+function L_mediaFolder(){ return "media/"; }
+function L_filesFolder(){ return "files/"; }
+function L_jsonNew(newId){ return `data/${encodeURIComponent(newId)}.json`; }
+function L_vetrinaNew(newId){ return `vetrina.html?id=${encodeURIComponent(newId)}`; }
+
+/* =================== STEPS TEMPLATE =================== */
+function buildSteps(){
+  const nextIdSuggestion = suggestNextId(VETRINA_ID); // es: scalvini10 -> scalvini11
+  return [
+    {
+      id:"S1",
+      title:"Apri Admin e sblocca",
+      speak:`Apri l’admin. Poi sblocca toccando la parola LUCE e poi la parola PORTA.`,
+      links:[ {label:"Apri Admin", url:L_admin()} ],
+      detail:[
+        "Apri admin.html",
+        "Sblocca: tocca LUCE poi PORTA nella frase"
+      ]
+    },
+    {
+      id:"S2",
+      title:"Carica index dal repo (data/index.json)",
+      speak:"In admin, carica l’index dal repo. Controlla che vedi la lista vetrine e gruppi.",
+      links:[ {label:"Apri index.json", url:L_index()} ],
+      detail:[
+        "Admin → 'Carica index dal repo'",
+        "Devi vedere le vetrine nel menu a tendina"
+      ]
+    },
+    {
+      id:"S3",
+      title:`Carica la vetrina: ${VETRINA_ID}`,
+      speak:`Seleziona la vetrina ${VETRINA_ID} e carica il file vetrina. Controlla titolo, descrizione, voce e tags.`,
+      links:[
+        {label:`Pubblico: ${VETRINA_ID}`, url:L_vetrina()},
+        {label:`JSON: ${VETRINA_ID}.json`, url:L_json()}
+      ],
+      detail:[
+        `Admin → scegli ${VETRINA_ID}`,
+        "Clic 'Carica file vetrina'",
+        "Verifica editor: titolo/descrizione/voce/tags"
+      ]
+    },
+    {
+      id:"S4",
+      title:"Aggiungi un PDF in files[]",
+      speak:"Se vuoi un PDF, caricalo in files e aggiungi la riga dentro files nel JSON della vetrina.",
+      links:[ {label:"Cartella /files/", url:L_filesFolder()} ],
+      detail:[
+        "Carica manuale.pdf su GitHub dentro /files/",
+        `Nel JSON:  { "label":"Manuale", "url":"files/manuale.pdf" }`,
+        `Poi scarica ${VETRINA_ID}.json e ricaricalo in /data/`
+      ]
+    },
+    {
+      id:"S5",
+      title:"Upload multiplo Media + ZIP",
+      speak:"Se vuoi foto o video, seleziona più file. Aggiungili al JSON. Scarica lo ZIP e carica i file dentro media.",
+      links:[ {label:"Cartella /media/", url:L_mediaFolder()} ],
+      detail:[
+        "Admin → Media → seleziona più file",
+        "Clic 'Aggiungi al JSON'",
+        "Clic 'Scarica ZIP media'",
+        "Estrai e carica i file su GitHub in /media/"
+      ]
+    },
+    {
+      id:"S6",
+      title:"Riordino Media e Files (DnD oppure ↑ ↓)",
+      speak:"Riordina media e files con trascinamento o con frecce. Poi scarica il JSON e ricaricalo nel repo.",
+      links:[ {label:`Scarica poi: ${VETRINA_ID}.json`, url:"#"} ],
+      detail:[
+        "Admin → Media presenti: trascina o usa ↑ ↓",
+        "Admin → Files presenti: trascina o usa ↑ ↓",
+        `Poi: Scarica ${VETRINA_ID}.json e caricalo in /data/`
+      ]
+    },
+    {
+      id:"S7",
+      title:"OCR (solo Admin) + TXT in /files/",
+      speak:"Usa OCR in admin. Scarica il testo TXT e caricalo in files. Poi aggiungi il link in files della vetrina.",
+      links:[ {label:"Cartella /files/", url:L_filesFolder()} ],
+      detail:[
+        "Admin → OCR → carica immagine",
+        "Avvia OCR → Scarica TXT",
+        "Carica TXT in /files/",
+        "In Admin: 'Aggiungi TXT in files[]' → poi scarica JSON e ricaricalo in /data/"
+      ]
+    },
+    {
+      id:"S8",
+      title:`Duplica vetrina (esempio: ${VETRINA_ID} → ${nextIdSuggestion})`,
+      speak:`Per duplicare, premi Duplica vetrina. Inserisci ${nextIdSuggestion} e crea clone. Poi scarica index.json e ${nextIdSuggestion}.json e caricali in data.`,
+      links:[
+        {label:`Pubblico: ${nextIdSuggestion}`, url:L_vetrinaNew(nextIdSuggestion)},
+        {label:`JSON: ${nextIdSuggestion}.json`, url:L_jsonNew(nextIdSuggestion)}
+      ],
+      detail:[
+        `Admin → carica ${VETRINA_ID}`,
+        "Clic 'Duplica vetrina' → scrivi nuovo ID → 'Crea clone'",
+        "Scarica index.json + nuovoId.json",
+        "Caricali in /data/"
+      ]
+    },
+    {
+      id:"S9",
+      title:"Controllo finale pubblico",
+      speak:"Apri la vetrina pubblica e controlla media, file e PDF. Se qualcosa non si vede, controlla i percorsi e le maiuscole.",
+      links:[
+        {label:`Apri pubblico: ${VETRINA_ID}`, url:L_vetrina()},
+        {label:`Apri JSON: ${VETRINA_ID}.json`, url:L_json()}
+      ],
+      detail:[
+        "Percorsi corretti: media/nomefile e files/nomefile",
+        "Attenzione: maiuscole/minuscole devono combaciare",
+        "Se PDF non si vede: verifica che il file è davvero in /files/"
+      ]
+    }
+  ];
+}
+
+/* =================== Helpers ID next =================== */
+function suggestNextId(id){
+  // se finisce con numero, incrementa (scalvini10 -> scalvini11)
+  const m = String(id).match(/^(.*?)(\d+)$/);
+  if(!m) return id + "2";
+  const base = m[1];
+  const num = parseInt(m[2], 10);
+  const next = isNaN(num) ? (m[2] + "2") : String(num + 1);
+  return base + next;
+}
+
+/* =================== STATE =================== */
+function loadState(){
+  try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ return {}; }
+}
+function saveState(st){ localStorage.setItem(KEY, JSON.stringify(st)); }
+
+let steps = buildSteps();
+let state = loadState();
+if(!state.enabled) state.enabled = {};
+if(typeof state.currentIndex !== "number") state.currentIndex = 0;
+
+// default: se è la prima volta, abilito tutti gli step
+if(!state._init){
+  steps.forEach(s => state.enabled[s.id] = true);
+  state.currentIndex = 0;
+  state._init = true;
+  saveState(state);
+}
+
+/* =================== RENDER =================== */
+function renderQuickLinks(){
+  const box = document.getElementById("quickLinks");
+  box.innerHTML = `
+    <a class="pill" href="${L_admin()}" target="_blank" rel="noopener">Apri Admin</a>
+    <a class="pill" href="${L_vetrina()}" target="_blank" rel="noopener">Apri Pubblico</a>
+    <a class="pill mono" href="${L_json()}" target="_blank" rel="noopener">JSON vetrina</a>
+    <a class="pill mono" href="${L_index()}" target="_blank" rel="noopener">index.json</a>
+    <a class="pill" href="${L_mediaFolder()}" target="_blank" rel="noopener">/media/</a>
+    <a class="pill" href="${L_filesFolder()}" target="_blank" rel="noopener">/files/</a>
+  `;
+}
+
 function render(){
+  document.getElementById("vId").textContent = VETRINA_ID;
+  renderQuickLinks();
+
   const box = document.getElementById("steps");
   box.innerHTML = "";
 
@@ -201,8 +269,10 @@ function render(){
     const div = document.createElement("div");
     div.className = "item" + (idx === state.currentIndex ? " cur" : "");
     const checked = !!state.enabled[s.id];
-
-    const linksHTML = (s.links||[]).map(l => `<a href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join(" • ");
+    const linksHTML = (s.links||[]).map(l => {
+      if(l.url === "#") return `<span class="mut">${l.label}</span>`;
+      return `<a href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`;
+    }).join(" • ");
     const detailsHTML = (s.detail||[]).map(x => `<li>${x}</li>`).join("");
 
     div.innerHTML = `
@@ -233,12 +303,12 @@ function render(){
   });
 }
 
+/* =================== NAV (skip disabled) =================== */
 function next(){
   let i = state.currentIndex;
   for(let t=i+1; t<steps.length; t++){
     if(state.enabled[steps[t].id]) { state.currentIndex = t; saveState(state); render(); return; }
   }
-  // se non trova successivi abilitati, va avanti normale
   if(i < steps.length-1){ state.currentIndex++; saveState(state); render(); }
 }
 function prev(){
@@ -249,6 +319,7 @@ function prev(){
   if(i > 0){ state.currentIndex--; saveState(state); render(); }
 }
 
+/* =================== BUTTONS =================== */
 document.getElementById("speakBtn").onclick = ()=>{
   const cur = steps[state.currentIndex];
   if(!cur) return;
@@ -260,13 +331,36 @@ document.getElementById("stopBtn").onclick = stopTTS;
 document.getElementById("nextBtn").onclick = next;
 document.getElementById("prevBtn").onclick = prev;
 document.getElementById("resetBtn").onclick = ()=>{
-  if(!confirm("Reset spunte e progressi?")) return;
-  state = { enabled:{}, currentIndex:0 };
+  if(!confirm("Reset spunte e progressi per questa vetrina?")) return;
+  state = { enabled:{}, currentIndex:0, _init:true };
+  steps.forEach(s => state.enabled[s.id] = true);
   saveState(state);
   render();
 };
 
+/* =================== CHECK ID EXISTENCE =================== */
+async function checkId(){
+  const statusEl = document.getElementById("idStatus");
+  const tipsEl = document.getElementById("tips");
+  try{
+    const res = await fetch(INDEX_PATH + "?t=" + Date.now(), {cache:"no-store"});
+    if(!res.ok) throw new Error("index non trovato");
+    const indexDB = await res.json();
+    const exists = !!(indexDB && indexDB.vetrine && indexDB.vetrine[VETRINA_ID]);
+    statusEl.textContent = exists ? "✅ presente in index" : "⚠️ NON presente in index";
+    tipsEl.innerHTML = exists
+      ? `Suggerimento: lavora in admin su <span class="mono">${VETRINA_ID}</span>, poi controlla il pubblico.`
+      : `Suggerimento: se non esiste, crea la vetrina in admin oppure correggi l’ID nella barra: <span class="mono">?id=...</span>`;
+  }catch(e){
+    statusEl.textContent = "⚠️ non riesco a leggere index";
+    tipsEl.innerHTML = `Controlla che esista <span class="mono">data/index.json</span> nel repo.`;
+  }
+}
+
+/* =================== INIT =================== */
+document.getElementById("vId").textContent = VETRINA_ID;
 render();
+checkId();
 </script>
 </body>
 </html>
