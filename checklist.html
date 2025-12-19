@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SerCucTech – Checklist + Guida vocale</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#111b2e; --txt:#e8eefc; --mut:#a9b8dd;
+      --acc:#5ee1a2; --b:#22345f; --warn:#ffcc66; --danger:#ff6b6b;
+    }
+    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:linear-gradient(180deg,#081024,#0b1220); color:var(--txt); }
+    .wrap{ max-width:980px; margin:0 auto; padding:16px; }
+    .card{ background:rgba(17,27,46,.92); border:1px solid #1b2a4f; border-radius:18px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,.22); }
+    h1{ margin:0 0 6px 0; font-size:20px; }
+    .mut{ color:var(--mut); }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .pill{ display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; background:#0f1a31; border:1px solid #1b2a4f; color:var(--mut); font-size:12px; }
+    .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    button{ cursor:pointer; border:0; padding:10px 14px; border-radius:12px; font-weight:900; background:var(--acc); color:#052014; }
+    .sec{ background:#22345f; color:var(--txt); }
+    .warn{ background:var(--warn); color:#231a06; }
+    .danger{ background:var(--danger); color:#2b0909; }
+    a{ color:#9fe9ff; text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    .list{ margin-top:12px; display:grid; gap:10px; }
+    .item{ border:1px solid var(--b); background:#0c1530; border-radius:14px; padding:12px; }
+    .item.cur{ outline:2px dashed var(--acc); outline-offset:4px; }
+    .topline{ display:flex; gap:10px; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; }
+    .title{ font-weight:900; }
+    .checks{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    label.chk{ display:flex; gap:8px; align-items:center; color:var(--mut); user-select:none; }
+    input[type="checkbox"]{ transform:scale(1.25); }
+    ul{ margin:8px 0 0 18px; padding:0; color:var(--mut); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas; }
+    .toast{
+      position:fixed; left:50%; bottom:16px; transform:translateX(-50%);
+      background:#0f1a31; border:1px solid #22345f; color:var(--txt);
+      padding:10px 14px; border-radius:999px; display:none; z-index:9999;
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    .hint{
+      margin-top:10px;
+      padding:10px;
+      border:1px solid var(--b);
+      border-radius:14px;
+      background:#0c1530;
+      color:var(--mut);
+      line-height:1.35;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Checklist + Guida vocale (livello 10 anni)</h1>
+    <div class="mut">Metti le spunte. Premi “Ascolta” per sentire la voce. Premi “Avanti” per passare al prossimo step.</div>
+
+    <div class="row" style="margin-top:10px;">
+      <span class="pill">Vetrina ID: <b id="vId">—</b></span>
+      <span class="pill">Step corrente: <b id="curLabel">—</b></span>
+    </div>
+
+    <div class="btns">
+      <button class="sec" id="prevBtn">⬅️ Indietro</button>
+      <button id="speakBtn">🔊 Ascolta</button>
+      <button class="sec" id="stopBtn">⏹ Stop</button>
+      <button class="sec" id="nextBtn">Avanti ➡️</button>
+      <button class="warn" id="resetBtn">Reset spunte</button>
+    </div>
+
+    <div class="hint">
+      <div class="row" style="justify-content:space-between;">
+        <span class="pill">Opzioni guida</span>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <label class="chk">
+          <input type="checkbox" id="optVoiceOn">
+          <span><b>Guida vocale ON</b> (se OFF, non parla)</span>
+        </label>
+      </div>
+      <div class="row" style="margin-top:6px;">
+        <label class="chk">
+          <input type="checkbox" id="optOnlyGuideSteps">
+          <span>Quando premi Avanti/Indietro: vai <b>solo</b> sugli step con “Usa guida” ✅</span>
+        </label>
+      </div>
+      <div class="row" style="margin-top:6px;">
+        <label class="chk">
+          <input type="checkbox" id="optAutoSpeakOnMove">
+          <span>Quando premi Avanti/Indietro: <b>parla da solo</b> lo step</span>
+        </label>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <a class="pill" id="linkAdmin" target="_blank" rel="noopener">Apri Admin</a>
+        <a class="pill" id="linkPublic" target="_blank" rel="noopener">Apri Pubblico</a>
+        <a class="pill mono" id="linkJson" target="_blank" rel="noopener">JSON vetrina</a>
+        <a class="pill mono" id="linkIndex" target="_blank" rel="noopener">index.json</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="list" id="steps"></div>
+</div>
+
+<div class="toast" id="toast">Salvato ✅</div>
+
+<script>
+/* ================= PARAMS ================= */
+function getParam(name){
+  const u = new URL(location.href);
+  return (u.searchParams.get(name) || "").trim();
+}
+function sanitizeId(s){
+  return (s||"").trim().toLowerCase().replace(/\s+/g,"").replace(/[^a-z0-9_-]/g,"");
+}
+const VETRINA_ID = sanitizeId(getParam("id")) || "scalvini10";
+document.getElementById("vId").textContent = VETRINA_ID;
+
+/* ================= LINKS ================= */
+const INDEX_PATH = "data/index.json";
+function L_admin(){ return "admin.html"; }
+function L_public(){ return `vetrina.html?id=${encodeURIComponent(VETRINA_ID)}`; }
+function L_json(){ return `data/${encodeURIComponent(VETRINA_ID)}.json`; }
+
+document.getElementById("linkAdmin").href = L_admin();
+document.getElementById("linkAdmin").textContent = "Apri Admin";
+document.getElementById("linkPublic").href = L_public();
+document.getElementById("linkPublic").textContent = "Apri Pubblico";
+document.getElementById("linkJson").href = L_json();
+document.getElementById("linkJson").textContent = `data/${VETRINA_ID}.json`;
+document.getElementById("linkIndex").href = INDEX_PATH;
+document.getElementById("linkIndex").textContent = "data/index.json";
+
+/* ================= STORAGE ================= */
+const KEY = "sercuctech_checklist_v1_" + VETRINA_ID;
+function loadState(){
+  try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ return {}; }
+}
+function saveState(){
+  localStorage.setItem(KEY, JSON.stringify(state));
+  showToast("Salvato ✅");
+}
+let state = loadState();
+if(!state.done) state.done = {};
+if(!state.useGuide) state.useGuide = {};
+if(typeof state.currentIndex !== "number") state.currentIndex = 0;
+if(!state.opts) state.opts = {};
+if(typeof state.opts.voiceOn !== "boolean") state.opts.voiceOn = true;
+if(typeof state.opts.onlyGuideSteps !== "boolean") state.opts.onlyGuideSteps = true;
+if(typeof state.opts.autoSpeakOnMove !== "boolean") state.opts.autoSpeakOnMove = true;
+
+/* ================= TOAST ================= */
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg || "Ok";
+  t.style.display = "block";
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=> t.style.display="none", 900);
+}
+
+/* ================= TTS (voce telefono) ================= */
+function stopTTS(){
+  if("speechSynthesis" in window) window.speechSynthesis.cancel();
+}
+function speak(text){
+  if(!state.opts.voiceOn) return;
+  stopTTS();
+  if(!("speechSynthesis" in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "it-IT";
+  window.speechSynthesis.speak(u);
+}
+
+/* ================= STEPS (ultra semplice) ================= */
+const steps = [
+  {
+    id:"S1",
+    title:"Entra nell’Admin",
+    speak:`Step 1. Apri admin. Poi tocca LUCE e poi PORTA. Se vedi i pulsanti, sei dentro.`,
+    bullets:[
+      "Apri admin.html",
+      "Tocca: LUCE poi PORTA"
+    ]
+  },
+  {
+    id:"S2",
+    title:"Carica la lista (index)",
+    speak:`Step 2. In admin premi: Carica index dal repo. Ora puoi scegliere le vetrine nel menu.`,
+    bullets:[
+      "Admin → Carica index dal repo",
+      "Vedi la lista vetrine nel menu"
+    ]
+  },
+  {
+    id:"S3",
+    title:`Apri la vetrina: ${VETRINA_ID}`,
+    speak:`Step 3. Scegli ${VETRINA_ID}. Premi: Carica file vetrina. Controlla titolo e descrizione.`,
+    bullets:[
+      `Seleziona ${VETRINA_ID}`,
+      "Premi: Carica file vetrina",
+      "Controlla titolo / descrizione"
+    ]
+  },
+  {
+    id:"S4",
+    title:"Aggiungi un PDF nei Files",
+    speak:`Step 4. Carica il PDF nella cartella files su GitHub. Poi in admin aggiungi: label e url files slash nome pdf. Poi scarica il JSON e ricaricalo in data.`,
+    bullets:[
+      "Carica manuale.pdf in /files/",
+      "Admin → Files: aggiungi Label + URL files/manuale.pdf",
+      "Scarica JSON vetrina",
+      "Carica JSON in /data/"
+    ]
+  },
+  {
+    id:"S5",
+    title:"Aggiungi foto o video nei Media",
+    speak:`Step 5. In admin scegli più foto o video. Premi aggiungi al JSON. Scarica lo zip media. Carica i file in media su GitHub. Poi ricarica il JSON in data.`,
+    bullets:[
+      "Admin → Media: scegli più file",
+      "Premi: Aggiungi al JSON",
+      "Scarica ZIP media",
+      "Carica file in /media/",
+      "Scarica JSON e carica in /data/"
+    ]
+  },
+  {
+    id:"S6",
+    title:"Metti in ordine",
+    speak:`Step 6. Metti in ordine media e files. Trascina oppure usa le frecce. Poi scarica il JSON e ricaricalo in data.`,
+    bullets:[
+      "Riordina Media",
+      "Riordina Files",
+      "Scarica JSON e carica in /data/"
+    ]
+  },
+  {
+    id:"S7",
+    title:"OCR (legge testo da foto)",
+    speak:`Step 7. In admin vai su OCR. Carica una foto. Premi avvia OCR. Scarica TXT. Carica TXT in files su GitHub. Aggiungilo nei files della vetrina. Poi ricarica il JSON.`,
+    bullets:[
+      "Admin → OCR: carica foto",
+      "Avvia OCR → Scarica TXT",
+      "Carica TXT in /files/",
+      "Aggiungi TXT in files[]",
+      "Scarica JSON e carica in /data/"
+    ]
+  },
+  {
+    id:"S8",
+    title:"Duplica vetrina",
+    speak:`Step 8. Per fare una copia, premi duplica vetrina. Scrivi un nuovo id, tipo scalvini undici. Poi scarica index e il nuovo json e caricali in data.`,
+    bullets:[
+      "Admin → Duplica vetrina",
+      "Nuovo ID (es: scalvini11)",
+      "Scarica index.json + nuovoId.json",
+      "Carica entrambi in /data/"
+    ]
+  },
+  {
+    id:"S9",
+    title:"Controllo finale",
+    speak:`Step 9. Apri la vetrina pubblica e controlla. Se non vedi qualcosa, di solito il file è nella cartella sbagliata o il nome è diverso.`,
+    bullets:[
+      "Apri pubblico: controlla foto/video",
+      "Controlla PDF/TXT",
+      "Se manca: verifica cartelle /media /files /data",
+      "Verifica maiuscole/minuscole"
+    ]
+  }
+];
+
+/* Default: se prima volta -> usa guida su tutti */
+if(!state._init){
+  steps.forEach(s=>{
+    state.done[s.id] = false;
+    state.useGuide[s.id] = true;
+  });
+  state.currentIndex = 0;
+  state._init = true;
+  saveState();
+}
+
+/* ================= OPTIONS UI ================= */
+const optVoiceOn = document.getElementById("optVoiceOn");
+const optOnlyGuideSteps = document.getElementById("optOnlyGuideSteps");
+const optAutoSpeakOnMove = document.getElementById("optAutoSpeakOnMove");
+
+function syncOptsToUI(){
+  optVoiceOn.checked = !!state.opts.voiceOn;
+  optOnlyGuideSteps.checked = !!state.opts.onlyGuideSteps;
+  optAutoSpeakOnMove.checked = !!state.opts.autoSpeakOnMove;
+}
+syncOptsToUI();
+
+optVoiceOn.addEventListener("change", ()=>{
+  state.opts.voiceOn = optVoiceOn.checked;
+  saveState();
+});
+optOnlyGuideSteps.addEventListener("change", ()=>{
+  state.opts.onlyGuideSteps = optOnlyGuideSteps.checked;
+  saveState();
+});
+optAutoSpeakOnMove.addEventListener("change", ()=>{
+  state.opts.autoSpeakOnMove = optAutoSpeakOnMove.checked;
+  saveState();
+});
+
+/* ================= RENDER ================= */
+function render(){
+  const box = document.getElementById("steps");
+  box.innerHTML = "";
+
+  steps.forEach((s, idx)=>{
+    const div = document.createElement("div");
+    div.className = "item" + (idx === state.currentIndex ? " cur" : "");
+
+    const done = !!state.done[s.id];
+    const useGuide = !!state.useGuide[s.id];
+
+    const bulletsHTML = (s.bullets||[]).map(b=>`<li>${b}</li>`).join("");
+
+    div.innerHTML = `
+      <div class="topline">
+        <div>
+          <div class="pill"><b>${s.id}</b></div>
+          <div class="title" style="margin-top:6px;">${s.title}</div>
+          <div class="mut" style="margin-top:6px;">
+            ${idx === 2 ? `Link: <a href="${L_public()}" target="_blank" rel="noopener">pubblico</a> • <a class="mono" href="${L_json()}" target="_blank" rel="noopener">json</a>` : ""}
+            ${idx === 1 ? `Link: <a class="mono" href="${INDEX_PATH}" target="_blank" rel="noopener">index.json</a>` : ""}
+            ${idx === 0 ? `Link: <a href="${L_admin()}" target="_blank" rel="noopener">admin</a>` : ""}
+          </div>
+        </div>
+
+        <div class="checks">
+          <label class="chk">
+            <input type="checkbox" data-kind="guide" data-id="${s.id}" ${useGuide ? "checked" : ""}>
+            <span>🎧 Usa guida</span>
+          </label>
+          <label class="chk">
+            <input type="checkbox" data-kind="done" data-id="${s.id}" ${done ? "checked" : ""}>
+            <span>✅ Fatto</span>
+          </label>
+        </div>
+      </div>
+
+      <ul>${bulletsHTML}</ul>
+    `;
+
+    box.appendChild(div);
+  });
+
+  const cur = steps[state.currentIndex];
+  document.getElementById("curLabel").textContent = cur ? `${cur.id} – ${cur.title}` : "—";
+
+  box.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener("change", (e)=>{
+      const id = e.target.getAttribute("data-id");
+      const kind = e.target.getAttribute("data-kind");
+      const val = e.target.checked;
+
+      if(kind === "done") state.done[id] = val;
+      if(kind === "guide") state.useGuide[id] = val;
+
+      saveState();
+      render(); // aggiorna subito (utile per vedere)
+    });
+  });
+}
+render();
+
+/* ================= NAV (skip per guida) ================= */
+function nextIndex(start){
+  const onlyGuide = !!state.opts.onlyGuideSteps;
+  for(let i = start+1; i < steps.length; i++){
+    const id = steps[i].id;
+    if(!onlyGuide) return i;
+    if(state.useGuide[id]) return i;
+  }
+  return start; // resta
+}
+function prevIndex(start){
+  const onlyGuide = !!state.opts.onlyGuideSteps;
+  for(let i = start-1; i >= 0; i--){
+    const id = steps[i].id;
+    if(!onlyGuide) return i;
+    if(state.useGuide[id]) return i;
+  }
+  return start;
+}
+
+function moveTo(idx){
+  state.currentIndex = idx;
+  saveState();
+  render();
+  if(state.opts.autoSpeakOnMove){
+    const cur = steps[state.currentIndex];
+    if(cur){
+      const prefix = state.useGuide[cur.id] ? "Step. " : "Step disattivato. ";
+      speak(prefix + cur.speak);
+    }
+  }
+}
+
+/* ================= BUTTONS ================= */
+document.getElementById("speakBtn").onclick = ()=>{
+  const cur = steps[state.currentIndex];
+  if(!cur) return;
+  const prefix = state.useGuide[cur.id] ? "Step. " : "Step disattivato. ";
+  speak(prefix + cur.speak);
+};
+document.getElementById("stopBtn").onclick = stopTTS;
+document.getElementById("nextBtn").onclick = ()=>{
+  const ni = nextIndex(state.currentIndex);
+  moveTo(ni);
+};
+document.getElementById("prevBtn").onclick = ()=>{
+  const pi = prevIndex(state.currentIndex);
+  moveTo(pi);
+};
+document.getElementById("resetBtn").onclick = ()=>{
+  if(!confirm("Reset: azzero tutte le spunte per questa vetrina?")) return;
+  steps.forEach(s=>{
+    state.done[s.id] = false;
+    state.useGuide[s.id] = true; // torna ON per tutti
+  });
+  state.currentIndex = 0;
+  saveState();
+  render();
+  showToast("Reset fatto ✅");
+};
+
+/* Se all'avvio "solo step guida" è ON e lo step corrente è OFF, sposto al primo ON */
+(function ensureValidStart(){
+  if(state.opts.onlyGuideSteps){
+    const cur = steps[state.currentIndex];
+    if(cur && !state.useGuide[cur.id]){
+      // trova primo step con guida ON
+      let found = 0;
+      for(let i=0;i<steps.length;i++){
+        if(state.useGuide[steps[i].id]){ found = i; break; }
+      }
+      state.currentIndex = found;
+      saveState();
+      render();
+    }
+  }
+})();
+</script>
+</body>
+</html>
