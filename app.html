@@ -118,6 +118,10 @@
 
   // --- Buttons main nav
   btnAdmin.onclick = () => {
+  openPage("admin");
+  if(SCTGuide.getBool(SCTGuide.LS.guideAdmin,true))
+    setNext("Sei in Admin. Se vuoi creare una nuova vetrina: premi ‘Duplica vetrina’, scrivi nuovo ID, poi ‘Crea duplicato’, poi ‘Crea file su GitHub’, poi ‘Apri index.json’.");
+};
     openPage("admin");
     if(SCTGuide.getBool(SCTGuide.LS.guideAdmin,true)) setNext("Sei in Admin. Prima cosa: scegli la vetrina e poi modifica titoli, media e files.");
   };
