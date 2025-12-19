@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SerCucTech Admin – Vetrine (Index + File + Media + OCR)</title>
+  <title>SerCucTech Admin – Vetrine (Media DnD + Backup ZIP + OCR)</title>
 
   <style>
     :root { --bg:#0b1220; --card:#111b2e; --txt:#e8eefc; --mut:#a9b8dd; --acc:#5ee1a2; --warn:#ffcc66; --danger:#ff6b6b; --b:#22345f; }
@@ -38,11 +38,14 @@
     img.preview, video.preview{ width:100%; border-radius:14px; border:1px solid var(--b); background:#0f1830; }
     .bar{ height:10px; border:1px solid var(--b); border-radius:999px; overflow:hidden; background:#0f1830; }
     .bar > div{ height:100%; width:0%; background:var(--acc); }
+    .drag { cursor:grab; user-select:none; padding:2px 8px; border-radius:10px; border:1px dashed #34508a; color:var(--mut); }
+    .dropHint { outline: 2px dashed var(--acc); outline-offset: 6px; }
+    .smallbtn { padding:8px 10px; border-radius:10px; font-weight:900; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas; }
   </style>
 
-  <!-- ZIP (per scaricare media pronti da caricare su GitHub) -->
+  <!-- ZIP -->
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-
   <!-- OCR -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
@@ -75,8 +78,7 @@
     <div class="card">
       <h2>Index (data/index.json)</h2>
       <div class="mini">
-        GitHub Pages non può elencare file nella cartella: serve un indice.
-        <br>File: <span class="kbd">data/index.json</span> + <span class="kbd">data/&lt;id&gt;.json</span>
+        File indice: <span class="kbd">data/index.json</span> → punta alle vetrine <span class="kbd">data/&lt;id&gt;.json</span>
       </div>
 
       <div class="btns">
@@ -93,7 +95,7 @@
       </div>
     </div>
 
-    <!-- VETRINA EDIT -->
+    <!-- VETRINA -->
     <div class="card">
       <h2>Vetrina (data/&lt;id&gt;.json)</h2>
 
@@ -105,7 +107,12 @@
       <div class="btns">
         <button class="sec" onclick="loadSelectedVetrinaFile()">📥 Carica file vetrina</button>
         <button class="ok" onclick="downloadVetrina()">⬇️ Scarica &lt;id&gt;.json</button>
+        <button class="warn" onclick="downloadBackupZip()">🧳 Backup ZIP (JSON+media+files)</button>
         <button class="danger" onclick="deleteVetrina()">🗑️ Elimina vetrina</button>
+      </div>
+
+      <div class="mini" style="margin-top:8px;">
+        Backup ZIP scarica: <span class="kbd">data/&lt;id&gt;.json</span> + tutti i file referenziati in <span class="kbd">media[]</span> e <span class="kbd">files[]</span> (se esistono nel repo).
       </div>
 
       <div class="hr"></div>
@@ -149,18 +156,14 @@
         <button class="ok" onclick="saveEdits()">💾 Salva modifiche (in memoria)</button>
         <button class="warn" onclick="syncIndexFromVetrina()">🔁 Aggiorna index (titolo/tags)</button>
       </div>
-
-      <div class="mini" style="margin-top:10px;">
-        Poi fai download di <b>index.json</b> e <b>&lt;id&gt;.json</b> e ricarica su GitHub.
-      </div>
     </div>
 
-    <!-- MEDIA: URL + MULTI UPLOAD -->
+    <!-- MEDIA -->
     <div class="card">
-      <h2>Media (foto/video) — URL + Upload multiplo</h2>
+      <h2>Media (foto/video) — URL + Upload multiplo + Riordino</h2>
       <div class="mini">
-        ✅ Se inserisci URL: aggiorno subito il JSON.<br>
-        ✅ Se carichi file: creo <b>ZIP media/…</b> da scaricare + aggiorno il JSON con URL <span class="kbd">media/nomefile</span>.
+        🟩 Puoi riordinare i media: trascina (Drag&Drop) oppure usa ↑ ↓.  
+        <br>📌 Dopo il riordino: <b>Scarica &lt;id&gt;.json</b> e ricarica su GitHub.
       </div>
 
       <h3>A) Aggiungi tramite URL</h3>
@@ -201,7 +204,7 @@
       </div>
 
       <div class="mini">
-        Flusso corretto: 1) scegli file → 2) “Aggiungi al JSON” → 3) “Scarica ZIP” → 4) estrai ZIP e carica su GitHub in <span class="kbd">/media/</span>
+        Flusso: scegli file → aggiungi al JSON → scarica ZIP → estrai e carica su GitHub in <span class="kbd">/media/</span> → scarica <span class="kbd">data/&lt;id&gt;.json</span> aggiornato e carica in <span class="kbd">/data/</span>.
       </div>
 
       <div class="list" id="mediaQueue"></div>
@@ -212,11 +215,11 @@
       <div class="list" id="mediaList"></div>
     </div>
 
-    <!-- OCR (SOLO ADMIN) -->
+    <!-- OCR -->
     <div class="card">
       <h2>OCR (solo Admin)</h2>
       <div class="mini">
-        Estrai testo da immagine. Puoi anche scaricare un TXT e (opzionale) aggiungere il link in <span class="kbd">files[]</span>.
+        Estrai testo da immagine. Puoi scaricare un TXT e (opzionale) aggiungere il link in <span class="kbd">files[]</span>.
       </div>
 
       <div class="row">
@@ -308,7 +311,7 @@ let indexDB = { meta:{version:1, updatedAt:null}, groups:{}, vetrine:{} };
 let activeId = "";
 let activeVetrina = null;
 
-let mediaQueue = []; // [{file, type, url, title, note, objectUrl}]
+let mediaQueue = []; // files selected before zipping
 let ocrImage = null;
 let ocrLastTxtFilename = "";
 
@@ -343,6 +346,19 @@ function speak(text, lang){
   const u = new SpeechSynthesisUtterance(text);
   u.lang = lang || "it-IT";
   window.speechSynthesis.speak(u);
+}
+function escapeHTML(s){
+  return String(s||"")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+function escapeAttr(s){ return escapeHTML(s).replaceAll("`","&#096;"); }
+function isRelativeRepoPath(p){
+  if(!p) return false;
+  const s = String(p).trim();
+  if(s.startsWith("http://") || s.startsWith("https://")) return false;
+  if(s.startsWith("data/") || s.startsWith("media/") || s.startsWith("files/")) return true;
+  return false;
 }
 
 /* ================= LOCK ================= */
@@ -425,14 +441,13 @@ async function loadIndexFromRepo(){
   try{
     const res = await fetch(INDEX_PATH + "?t=" + Date.now(), {cache:"no-store"});
     if(!res.ok) throw new Error(res.status);
-    const data = await res.json();
-    normalizeIndex(data);
+    normalizeIndex(await res.json());
     refreshIndexUI();
     refreshSelects();
     alert("✅ Index caricato");
   }catch(e){
     console.error(e);
-    alert("❌ Non trovo data/index.json. Crealo nella cartella /data/ (ti ho dato il file).");
+    alert("❌ Non trovo data/index.json.");
   }
 }
 function downloadIndex(){
@@ -444,8 +459,7 @@ document.getElementById("importIndex").addEventListener("change", async (ev)=>{
   const f = ev.target.files && ev.target.files[0];
   if(!f) return;
   try{
-    const txt = await f.text();
-    normalizeIndex(JSON.parse(txt));
+    normalizeIndex(JSON.parse(await f.text()));
     refreshIndexUI();
     refreshSelects();
     alert("✅ Index importato");
@@ -602,7 +616,7 @@ document.getElementById("mFiles").addEventListener("change", ()=>{
     return {
       file: f,
       type,
-      url: `media/${f.name}`,   // URL che userai su GitHub (dopo upload)
+      url: `media/${f.name}`,
       title: f.name,
       note: "",
       objectUrl
@@ -626,8 +640,8 @@ function renderMediaQueue(){
     const left = document.createElement("div");
     left.className = "meta";
     left.innerHTML = `
-      <b>${m.type==="video" ? "🎬 Video" : "🖼️ Immagine"} — ${m.file.name}</b>
-      <div class="mini">Userò URL: <span class="kbd">${m.url}</span></div>
+      <b>${m.type==="video" ? "🎬 Video" : "🖼️ Immagine"} — ${escapeHTML(m.file.name)}</b>
+      <div class="mini">URL nel JSON: <span class="kbd">${escapeHTML(m.url)}</span></div>
       <div class="mini">Dimensione: ${(m.file.size/1024/1024).toFixed(2)} MB</div>
       <label style="margin-top:8px;">Titolo</label>
       <input id="qTitle_${idx}" value="${escapeAttr(m.title)}" />
@@ -636,12 +650,11 @@ function renderMediaQueue(){
     `;
 
     const right = document.createElement("div");
-    right.innerHTML = `<button class="danger" onclick="removeQueued(${idx})">Rimuovi</button>`;
+    right.innerHTML = `<button class="danger smallbtn" onclick="removeQueued(${idx})">Rimuovi</button>`;
 
     row.appendChild(left);
     row.appendChild(right);
 
-    // preview sotto (semplice)
     const previewWrap = document.createElement("div");
     previewWrap.style.marginTop = "10px";
     previewWrap.style.width = "100%";
@@ -679,7 +692,7 @@ function addMediaFromFiles(){
     const note = (document.getElementById(`qNote_${idx}`)?.value || m.note || "").trim();
     activeVetrina.media.push({
       type: m.type,
-      url: m.url,     // media/nomefile.ext
+      url: m.url,
       title,
       note
     });
@@ -688,7 +701,7 @@ function addMediaFromFiles(){
   activeVetrina.updatedAt = nowISO();
   renderMediaList();
 
-  alert("✅ Aggiunti al JSON. Ora scarica ZIP e carica i file nella cartella /media/ del repo.");
+  alert("✅ Aggiunti al JSON. Ora: Scarica ZIP e carica i file in /media/, poi scarica " + activeId + ".json e caricalo in /data/.");
 }
 
 async function downloadMediaZip(){
@@ -708,14 +721,28 @@ async function downloadMediaZip(){
   a.click();
 }
 
-/* ================= MEDIA LIST ================= */
-function escapeHTML(s){
-  return String(s||"")
-    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+/* ================= MEDIA LIST + DRAG&DROP ================= */
+function moveMedia(from, to){
+  const arr = activeVetrina.media;
+  if(from === to) return;
+  const item = arr.splice(from, 1)[0];
+  arr.splice(to, 0, item);
+  activeVetrina.updatedAt = nowISO();
 }
-function escapeAttr(s){
-  return escapeHTML(s).replaceAll("`","&#096;");
+
+function swapMedia(i, j){
+  const arr = activeVetrina.media;
+  const tmp = arr[i];
+  arr[i] = arr[j];
+  arr[j] = tmp;
+  activeVetrina.updatedAt = nowISO();
+}
+
+function removeMedia(idx){
+  if(!activeVetrina) return;
+  activeVetrina.media.splice(idx,1);
+  activeVetrina.updatedAt = nowISO();
+  renderMediaList();
 }
 
 function renderMediaList(){
@@ -734,26 +761,181 @@ function renderMediaList(){
   media.forEach((m, idx)=>{
     const row = document.createElement("div");
     row.className = "item";
-    row.innerHTML = `
-      <div class="meta">
-        <b>${m.type==="video" ? "🎬 Video" : "🖼️ Immagine"} ${m.title ? "— "+escapeHTML(m.title) : ""}</b>
-        <div class="mini">${escapeHTML(m.url||"")}</div>
-        ${m.note ? `<div class="mini">📝 ${escapeHTML(m.note)}</div>` : ""}
+    row.draggable = true;
+    row.dataset.index = String(idx);
+
+    row.addEventListener("dragstart", (ev)=>{
+      ev.dataTransfer.setData("text/plain", String(idx));
+      ev.dataTransfer.effectAllowed = "move";
+    });
+    row.addEventListener("dragover", (ev)=>{
+      ev.preventDefault();
+      row.classList.add("dropHint");
+      ev.dataTransfer.dropEffect = "move";
+    });
+    row.addEventListener("dragleave", ()=>{
+      row.classList.remove("dropHint");
+    });
+    row.addEventListener("drop", (ev)=>{
+      ev.preventDefault();
+      row.classList.remove("dropHint");
+      const from = Number(ev.dataTransfer.getData("text/plain"));
+      const to = Number(row.dataset.index);
+      if(Number.isFinite(from) && Number.isFinite(to)){
+        moveMedia(from, to);
+        renderMediaList();
+      }
+    });
+    row.addEventListener("dragend", ()=>{
+      row.classList.remove("dropHint");
+    });
+
+    const left = document.createElement("div");
+    left.className = "meta";
+
+    const typeIcon = m.type==="video" ? "🎬" : "🖼️";
+    left.innerHTML = `
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <span class="drag">⇅</span>
+        <b>${typeIcon} ${m.title ? escapeHTML(m.title) : "(senza titolo)"}</b>
       </div>
-      <div><button class="danger" onclick="removeMedia(${idx})">Rimuovi</button></div>
+      <div class="mini mono">${escapeHTML(m.url||"")}</div>
+      ${m.note ? `<div class="mini">📝 ${escapeHTML(m.note)}</div>` : ``}
+      <div class="mini" style="margin-top:8px;">Modifica rapido:</div>
+      <div class="row">
+        <div>
+          <label style="margin-top:6px;">Titolo</label>
+          <input id="mt_${idx}" value="${escapeAttr(m.title||"")}" />
+        </div>
+        <div>
+          <label style="margin-top:6px;">Nota</label>
+          <input id="mn_${idx}" value="${escapeAttr(m.note||"")}" />
+        </div>
+      </div>
+      <div class="btns">
+        <button class="sec smallbtn" onclick="applyMediaEdits(${idx})">Applica</button>
+        <button class="sec smallbtn" onclick="previewMedia(${idx})">Anteprima</button>
+      </div>
+      <div id="prev_${idx}" class="mini" style="margin-top:8px;"></div>
     `;
+
+    const right = document.createElement("div");
+    right.innerHTML = `
+      <div class="btns" style="justify-content:flex-end;">
+        <button class="sec smallbtn" onclick="moveUp(${idx})">↑</button>
+        <button class="sec smallbtn" onclick="moveDown(${idx})">↓</button>
+        <button class="danger smallbtn" onclick="removeMedia(${idx})">Rimuovi</button>
+      </div>
+    `;
+
+    row.appendChild(left);
+    row.appendChild(right);
     list.appendChild(row);
   });
 }
 
-function removeMedia(idx){
+function applyMediaEdits(idx){
   if(!activeVetrina) return;
-  activeVetrina.media.splice(idx,1);
+  const t = document.getElementById(`mt_${idx}`)?.value ?? "";
+  const n = document.getElementById(`mn_${idx}`)?.value ?? "";
+  activeVetrina.media[idx].title = String(t).trim();
+  activeVetrina.media[idx].note = String(n).trim();
   activeVetrina.updatedAt = nowISO();
+  alert("✅ Modifiche applicate (scarica poi il JSON).");
+}
+
+function previewMedia(idx){
+  if(!activeVetrina) return;
+  const m = activeVetrina.media[idx];
+  const box = document.getElementById(`prev_${idx}`);
+  if(!box) return;
+  if(!m || !m.url) { box.textContent = "Nessun URL"; return; }
+  if(m.type === "video"){
+    box.innerHTML = `<video class="preview" controls src="${escapeAttr(m.url)}"></video>`;
+  } else {
+    box.innerHTML = `<img class="preview" src="${escapeAttr(m.url)}" alt="preview">`;
+  }
+}
+
+function moveUp(idx){
+  if(!activeVetrina) return;
+  if(idx <= 0) return;
+  swapMedia(idx, idx-1);
+  renderMediaList();
+}
+function moveDown(idx){
+  if(!activeVetrina) return;
+  const arr = activeVetrina.media || [];
+  if(idx >= arr.length-1) return;
+  swapMedia(idx, idx+1);
   renderMediaList();
 }
 
-/* ================= OCR (ADMIN) ================= */
+/* ================= BACKUP ZIP ================= */
+async function fetchAsBlob(path){
+  const res = await fetch(path + "?t=" + Date.now(), {cache:"no-store"});
+  if(!res.ok) throw new Error("Fetch failed: " + path);
+  return await res.blob();
+}
+
+async function downloadBackupZip(){
+  if(!activeVetrina || !activeId){
+    alert("Carica una vetrina prima.");
+    return;
+  }
+
+  const zip = new JSZip();
+
+  // data/<id>.json
+  zip.folder("data").file(`${activeId}.json`, JSON.stringify(activeVetrina, null, 2));
+
+  // media files referenced (only relative paths)
+  const mediaFolder = zip.folder("media");
+  const filesFolder = zip.folder("files");
+
+  let okCount = 0;
+  let failCount = 0;
+
+  // media[]
+  for(const m of (activeVetrina.media || [])){
+    if(!m || !m.url) continue;
+    if(!isRelativeRepoPath(m.url)) continue; // skip external
+    const name = m.url.replace(/^media\//, "");
+    try{
+      const blob = await fetchAsBlob(m.url);
+      mediaFolder.file(name, blob);
+      okCount++;
+    }catch(e){
+      console.warn(e);
+      failCount++;
+    }
+  }
+
+  // files[]
+  for(const f of (activeVetrina.files || [])){
+    if(!f || !f.url) continue;
+    if(!isRelativeRepoPath(f.url)) continue;
+    const name = f.url.replace(/^files\//, "");
+    try{
+      const blob = await fetchAsBlob(f.url);
+      filesFolder.file(name, blob);
+      okCount++;
+    }catch(e){
+      console.warn(e);
+      failCount++;
+    }
+  }
+
+  const blob = await zip.generateAsync({type:"blob"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `backup_${activeId}.zip`;
+  a.click();
+
+  alert(`✅ Backup creato. File inclusi: ${okCount} • Non trovati: ${failCount}`);
+}
+
+/* ================= OCR ================= */
 const ocrFile = document.getElementById("ocrFile");
 const ocrPreview = document.getElementById("ocrPreview");
 const ocrNoPreview = document.getElementById("ocrNoPreview");
@@ -793,10 +975,8 @@ async function runOCR(){
     });
     const text = (data && data.text) ? data.text.trim() : "";
     ocrText.value = text;
-    ocrStatus.textContent = text ? "✅ OCR completato" : "✅ OCR completato (nessun testo trovato)";
+    ocrStatus.textContent = text ? "✅ OCR completato" : "✅ OCR completato (nessun testo)";
     ocrBar.style.width = "100%";
-
-    // prepara filename txt
     const ts = new Date().toISOString().replaceAll(":","-");
     ocrLastTxtFilename = `ocr-${activeId || "vetrina"}-${ts}.txt`;
   }catch(err){
@@ -844,20 +1024,14 @@ function addOCRtoFiles(){
   if(!txt){ alert("Nessun testo"); return; }
 
   const name = ocrLastTxtFilename || `ocr-${activeId || "vetrina"}.txt`;
-
-  // aggiunge link fittizio in files[]: tu scarichi il txt e lo carichi in /files/
   activeVetrina.files = activeVetrina.files || [];
-  activeVetrina.files.push({
-    label: "Testo OCR",
-    url: `files/${name}`
-  });
+  activeVetrina.files.push({ label: "Testo OCR", url: `files/${name}` });
   activeVetrina.updatedAt = nowISO();
-  ocrStatus.textContent = "➕ Aggiunto in files[] (ricorda di caricare il TXT in /files/)";
-  alert("✅ Aggiunto in files[]. Ora: scarica il TXT e caricalo su GitHub in /files/ (poi scarica " + activeId + ".json).");
+  ocrStatus.textContent = "➕ Aggiunto in files[] (carica il TXT in /files/)";
+  alert("✅ Aggiunto. Ora: scarica il TXT e caricalo su GitHub in /files/. Poi scarica " + activeId + ".json e ricaricalo in /data/.");
 }
 
 function clearOCR(){
-  if(ocrPreview.src) URL.revokeObjectURL(ocrPreview.src);
   document.getElementById("ocrFile").value = "";
   ocrImage = null;
   ocrPreview.src = "";
