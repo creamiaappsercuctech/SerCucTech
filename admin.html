@@ -302,6 +302,54 @@
   };
 
   dupMake.onclick = async () => {
+  const fromId = (idEl.value || select.value || "").trim();
+  const toId = dupTo.value.trim();
+  if(!fromId || !toId){ SCTGuide.toast("Inserisci nuovo ID"); return; }
+
+  const r = await fetch("./data/"+fromId+".json", {cache:"no-store"});
+  const src = r.ok ? await r.json() : null;
+  if(!src){ SCTGuide.toast("Sorgente non trovata"); return; }
+
+  const newTitle = dupTitle.value.trim() || ((src.title || fromId) + " (Copia)");
+
+  // 1) JSON base duplicato
+  let out = {
+    ...src,
+    id: toId,
+    title: newTitle,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  // 2) SOSTITUZIONE ID OVUNQUE:
+  // Trasformo tutto in testo JSON -> sostituisco fromId con toId -> rileggo come oggetto
+  try {
+    const txt = JSON.stringify(out);
+    const replaced = txt.split(fromId).join(toId);
+    out = JSON.parse(replaced);
+  } catch(e) {
+    // se per qualche motivo fallisce, almeno id/title sono già corretti
+  }
+
+  const outJson = JSON.stringify(out, null, 2);
+
+  // Riga per index.json
+  const indexLine = `"${toId}": { "id": "${toId}", "title": "${newTitle}" }`;
+
+  const all =
+`=== INCOLLA QUESTO IN data/${toId}.json ===
+${outJson}
+
+=== AGGIUNGI QUESTA RIGA IN data/index.json (dentro vetrine) ===
+${indexLine}
+`;
+
+  await navigator.clipboard.writeText(all);
+  dupPreview.textContent = all;
+
+  SCTGuide.toast("Duplicato copiato ✅");
+  guideSay("Duplicato perfetto. Ho sostituito l'ID ovunque. Ora premi ‘Crea file su GitHub’, incolla e salva. Poi apri index.json e aggiungi la riga.");
+};
     const fromId = (idEl.value || select.value || "").trim();
     const toId = dupTo.value.trim();
     if(!fromId || !toId){ SCTGuide.toast("Inserisci nuovo ID"); return; }
