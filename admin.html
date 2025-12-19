@@ -355,10 +355,26 @@ const newTitle = toTitleInput || autoTitle;
   // Riga per index.json
   const indexLine = `"${toId}": { "id": "${toId}", "title": "${newTitle}" }`;
 
-  const all =
+  const basePages = "https://creamiaappsercuctech.github.io/SerCucTech";
+
+const linkApp = `${basePages}/app.html?id=${encodeURIComponent(toId)}`;
+const linkVetrina = `${basePages}/vetrina.html?id=${encodeURIComponent(toId)}`;
+const linkChecklist = `${basePages}/checklist.html?id=${encodeURIComponent(toId)}`;
+const linkAdmin = `${basePages}/admin.html?id=${encodeURIComponent(toId)}`;
+
+const all =
 `=== INCOLLA QUESTO IN data/${toId}.json ===
 ${outJson}
 
+=== AGGIUNGI QUESTA RIGA IN data/index.json (dentro vetrine) ===
+${indexLine}
+
+=== LINK PRONTI (NUOVA VETRINA) ===
+APP (unica): ${linkApp}
+Vetrina: ${linkVetrina}
+Checklist: ${linkChecklist}
+Admin: ${linkAdmin}
+`;
 === AGGIUNGI QUESTA RIGA IN data/index.json (dentro vetrine) ===
 ${indexLine}
 `;
@@ -367,8 +383,7 @@ ${indexLine}
   dupPreview.textContent = all;
 
   SCTGuide.toast("Duplicato copiato ✅");
-  guideSay("Duplicato perfetto. Ho sostituito l'ID ovunque. Ora premi ‘Crea file su GitHub’, incolla e salva. Poi apri index.json e aggiungi la riga.");
-};
+  guideSay("Duplicato perfetto. Ho sostituito l'ID ovunque e ho aggiunto i link pronti. Ora: 1) premi ‘Crea file su GitHub’ e incolla. 2) salva. 3) premi ‘Apri index.json’ e aggiungi la riga. Poi puoi aprire subito la nuova vetrina col link.");
     const fromId = (idEl.value || select.value || "").trim();
     const toId = dupTo.value.trim();
     if(!fromId || !toId){ SCTGuide.toast("Inserisci nuovo ID"); return; }
