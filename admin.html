@@ -1,215 +1,595 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>SerCucTech | Admin</title>
-
-<style>
-:root{
-  --bg:#0b1220; --fg:#e5e7eb; --muted:#94a3b8;
-  --card:#0f172a; --border:#1f2a44; --btn:#2563eb;
-  --danger:#ef4444; --ok:#22c55e;
-}
-*{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg)}
-header{position:sticky;top:0;z-index:5;background:rgba(0,0,0,.25);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
-.wrap{max-width:1100px;margin:0 auto;padding:14px 16px}
-h1{margin:0;font-size:20px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
-.btn{border:0;cursor:pointer;border-radius:10px;padding:10px 12px;background:var(--btn);color:white;font-weight:700}
-.btn.secondary{background:transparent;border:1px solid var(--border);color:var(--fg)}
-.btn.danger{background:var(--danger)}
-.btn.ok{background:var(--ok);color:#06210f}
-main{padding:16px}
-.grid{display:grid;grid-template-columns:1fr;gap:14px}
-@media(min-width:980px){.grid{grid-template-columns:420px 1fr}}
-.card{background:rgba(0,0,0,.18);border:1px solid var(--border);border-radius:16px;padding:14px}
-label{display:block;font-size:13px;color:var(--muted);margin:10px 0 6px}
-input,textarea,select{
-  width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--border);
-  background:rgba(255,255,255,.03);color:var(--fg);outline:none
-}
-textarea{min-height:80px}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.small{font-size:12px;color:var(--muted);margin-top:8px}
-.list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
-.item{border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(255,255,255,.03)}
-.links{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-a{color:#93c5fd;text-decoration:none}
-a:hover{text-decoration:underline}
-.thumbs{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:10px}
-.thumb{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:rgba(255,255,255,.05)}
-.thumbMedia{width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.thumb img,.thumb video{width:100%;height:100%;object-fit:cover}
-.viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:9999}
-.viewer.active{display:flex}
-.viewer img,.viewer video{max-width:96%;max-height:96%;border-radius:14px}
-.toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
-  background:rgba(15,23,42,.95);border:1px solid var(--border);
-  padding:10px 12px;border-radius:999px;display:none}
-.toast.show{display:block}
-
-/* ===== LOCK SCREEN INVISIBILE ===== */
-#lockScreen{
-  position:fixed;inset:0;z-index:10000;
-  background:#0b1220;color:#fff;
-  display:flex;align-items:center;justify-content:center;
-}
-#secretSentence{
-  max-width:460px;
-  line-height:1.8;
-  opacity:.95;
-  font-size:20px;        /* ← dimensione testo aumentata */
-  letter-spacing:0.3px; /* ← più leggibile */
-}}
-#secretSentence span{cursor:pointer}
-#pinError{display:none;color:#ff6b6b;margin-top:14px}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SerCucTech Admin – Vetrine (Index + File)</title>
+  <style>
+    :root { --bg:#0b1220; --card:#111b2e; --txt:#e8eefc; --mut:#a9b8dd; --acc:#5ee1a2; --warn:#ffcc66; --danger:#ff6b6b; }
+    body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:linear-gradient(180deg,#081024,#0b1220); color:var(--txt); }
+    .wrap { max-width:1100px; margin:0 auto; padding:18px; }
+    .top { display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+    .brand { font-weight:800; letter-spacing:.3px; }
+    .pill { display:inline-flex; gap:8px; align-items:center; padding:8px 12px; border-radius:999px; background:#0f1a31; border:1px solid #1b2a4f; color:var(--mut); font-size:13px; }
+    .grid { display:grid; grid-template-columns:1fr; gap:14px; margin-top:14px; }
+    @media (min-width: 900px){ .grid { grid-template-columns: 1fr 1fr; } }
+    .card { background:rgba(17,27,46,.92); border:1px solid #1b2a4f; border-radius:16px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,.22); }
+    h2 { margin:0 0 10px 0; font-size:18px; }
+    h3 { margin:14px 0 8px 0; font-size:15px; color:var(--mut); font-weight:700; }
+    label { display:block; margin:10px 0 6px; color:var(--mut); font-size:13px; }
+    input, textarea, select { width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px; border:1px solid #22345f; background:#0f1830; color:var(--txt); outline:none; }
+    textarea { min-height:88px; resize:vertical; }
+    .row { display:grid; gap:10px; grid-template-columns:1fr; }
+    @media (min-width: 600px){ .row { grid-template-columns: 1fr 1fr; } }
+    .btns { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    button { cursor:pointer; border:0; padding:10px 14px; border-radius:12px; font-weight:800; }
+    .ok { background:var(--acc); color:#052014; }
+    .sec { background:#22345f; color:var(--txt); }
+    .warn { background:var(--warn); color:#231a06; }
+    .danger { background:var(--danger); color:#2b0909; }
+    .mini { font-size:12px; color:var(--mut); line-height:1.35; }
+    .list { display:grid; gap:8px; margin-top:10px; }
+    .item { display:flex; gap:10px; align-items:flex-start; justify-content:space-between; padding:10px; border-radius:14px; border:1px solid #22345f; background:#0c1530; }
+    .item .meta { flex:1; }
+    .hr { height:1px; background:#1b2a4f; margin:14px 0; }
+    .hidden { display:none !important; }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas; background:#0f1a31; border:1px solid #22345f; padding:2px 8px; border-radius:10px; color:var(--mut); }
+  </style>
 </head>
 
 <body>
-
-<!-- ===== ACCESSO INVISIBILE ===== -->
-<div id="lockScreen">
-  <div>
-    <p id="secretSentence">
-      L’accesso alla gestione avviene solo quando la
-      <span data-k="a">luce</span>
-      incontra la
-      <span data-k="b">porta</span>
-      giusta nel momento corretto.
-    </p>
-    <p id="pinError">Accesso negato</p>
-  </div>
-</div>
-
-<header>
   <div class="wrap">
-    <h1>Admin Vetrine — SerCucTech</h1>
-    <div class="row">
-      <button class="btn secondary" id="btnExportIndex">⬇ Esporta data/vetrine.json</button>
+    <div class="top">
+      <div class="brand">SerCucTech – Admin Vetrine (Index + File)</div>
+      <div class="pill"><span>Stato:</span><b id="status">🔒 Bloccato</b></div>
+    </div>
+
+    <!-- Lock -->
+    <div class="card" id="lockCard">
+      <h2>Accesso</h2>
+      <div class="mini">
+        Tocca due parole *in sequenza* dentro questa frase per sbloccare l’admin.<br>
+        Frase: <span id="secretSentence"></span>
+      </div>
+      <div class="mini" style="margin-top:10px;">
+        Segreto: <span class="kbd">LUCE</span> poi <span class="kbd">PORTA</span>
+      </div>
+      <div class="btns"><button class="sec" onclick="resetLock()">Reset</button></div>
+    </div>
+
+    <div class="grid hidden" id="adminUI">
+
+      <!-- INDEX -->
+      <div class="card">
+        <h2>Index (data/index.json)</h2>
+        <div class="mini">
+          Questo file contiene la lista vetrine e gruppi. Le singole vetrine stanno in <span class="kbd">data/&lt;id&gt;.json</span>.
+        </div>
+
+        <div class="btns">
+          <button class="sec" onclick="loadIndexFromRepo()">📥 Carica index dal repo</button>
+          <button class="sec" onclick="document.getElementById('importIndex').click()">📂 Importa index.json</button>
+          <button class="ok" onclick="exportIndex()">⬇️ Scarica index.json</button>
+        </div>
+
+        <input id="importIndex" type="file" accept="application/json" class="hidden" />
+        <div class="hr"></div>
+        <div class="mini">
+          Ultimo aggiornamento index: <b id="indexUpdated">—</b><br>
+          Vetrine in index: <b id="indexCountV">0</b> • Gruppi: <b id="indexCountG">0</b>
+        </div>
+      </div>
+
+      <!-- VETRINE -->
+      <div class="card">
+        <h2>Vetrine</h2>
+
+        <h3>Seleziona vetrina</h3>
+        <select id="vSelect" onchange="loadSelectedVetrinaFile()">
+          <option value="">— scegli —</option>
+        </select>
+
+        <div class="btns">
+          <button class="sec" onclick="loadSelectedVetrinaFile()">📥 Carica file vetrina</button>
+          <button class="ok" onclick="downloadVetrinaFile()">⬇️ Scarica &lt;id&gt;.json</button>
+          <button class="danger" onclick="deleteVetrina()">🗑️ Elimina vetrina</button>
+        </div>
+
+        <div class="hr"></div>
+
+        <h3>Crea nuova vetrina</h3>
+        <label>ID (unico)</label>
+        <input id="newId" placeholder="es: scalvini10" />
+        <label>Titolo</label>
+        <input id="newTitle" placeholder="Titolo vetrina" />
+        <label>Tags (virgola)</label>
+        <input id="newTags" placeholder="casa, documenti" />
+
+        <div class="btns">
+          <button class="ok" onclick="createVetrina()">➕ Crea vetrina</button>
+        </div>
+
+        <div class="hr"></div>
+
+        <h3>Editor vetrina (file data/&lt;id&gt;.json)</h3>
+        <div class="pill">Vetrina attiva: <b id="activeId">—</b></div>
+
+        <label>Titolo</label>
+        <input id="eTitle" />
+        <label>Descrizione</label>
+        <textarea id="eDesc"></textarea>
+
+        <div class="row">
+          <div>
+            <label>Voce lang</label>
+            <input id="eVoiceLang" value="it-IT" />
+          </div>
+          <div>
+            <label>Voce testo</label>
+            <input id="eVoiceText" />
+          </div>
+        </div>
+
+        <label>Tags (virgola)</label>
+        <input id="eTags" />
+
+        <div class="btns">
+          <button class="ok" onclick="saveEdits()">💾 Salva modifiche (in memoria)</button>
+          <button class="warn" onclick="syncIndexFromVetrina()">🔁 Aggiorna index (titolo/tags)</button>
+        </div>
+
+        <div class="mini" style="margin-top:10px;">
+          Ricorda: dopo aver modificato, scarica <b>index.json</b> e <b>&lt;id&gt;.json</b> e ricaricali su GitHub.
+        </div>
+      </div>
+
+      <!-- MEDIA -->
+      <div class="card">
+        <h2>Media (immagini/video)</h2>
+        <div class="mini">Aggiungi URL a media già caricati nel repo (o link diretti).</div>
+
+        <div class="row">
+          <div>
+            <label>Tipo</label>
+            <select id="mType">
+              <option value="image">Immagine</option>
+              <option value="video">Video</option>
+            </select>
+          </div>
+          <div>
+            <label>Titolo</label>
+            <input id="mTitle" placeholder="Foto 1 / Tour" />
+          </div>
+        </div>
+
+        <label>URL</label>
+        <input id="mUrl" placeholder="media/file.jpg oppure https://..." />
+        <label>Nota</label>
+        <input id="mNote" placeholder="" />
+
+        <div class="btns">
+          <button class="ok" onclick="addMedia()">➕ Aggiungi</button>
+          <button class="sec" onclick="renderMediaList()">🔄 Aggiorna lista</button>
+        </div>
+
+        <div class="list" id="mediaList"></div>
+      </div>
+
+      <!-- GROUPS -->
+      <div class="card">
+        <h2>Gruppi</h2>
+
+        <label>Seleziona gruppo</label>
+        <select id="gSelect" onchange="loadGroupIntoEditor()">
+          <option value="">— scegli —</option>
+        </select>
+
+        <label>Key gruppo</label>
+        <input id="gKey" placeholder="scalvini" />
+        <label>Titolo gruppo</label>
+        <input id="gTitle" />
+        <label>Descrizione gruppo</label>
+        <textarea id="gDesc"></textarea>
+        <label>IDs vetrine (virgola)</label>
+        <input id="gItems" placeholder="scalvini10, altroId" />
+
+        <div class="btns">
+          <button class="ok" onclick="saveGroup()">💾 Salva gruppo</button>
+          <button class="danger" onclick="deleteGroup()">🗑️ Elimina gruppo</button>
+        </div>
+
+        <div class="mini" style="margin-top:10px;">
+          Pubblico gruppo: <span class="kbd">vetrina.html?group=scalvini</span>
+        </div>
+      </div>
+
     </div>
   </div>
-</header>
-
-<main class="wrap grid">
-  <section class="card">
-    <label>ID vetrina</label>
-    <input id="f_id" placeholder="scalvini10"/>
-
-    <label>Titolo</label>
-    <input id="f_title"/>
-
-    <label>Descrizione</label>
-    <textarea id="f_desc"></textarea>
-
-    <div class="two">
-      <div><label>Dimensione titolo</label><input id="f_titleSize" type="number" value="32"/></div>
-      <div>
-        <label>Font</label>
-        <select id="f_fontFamily">
-          <option value="system-ui">System</option>
-          <option>Arial</option><option>Georgia</option><option>Verdana</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="three">
-      <div><label>Colore titolo</label><input id="f_titleColor" type="color" value="#ffffff"/></div>
-      <div><label>Colore sfondo</label><input id="f_bgColor" type="color" value="#0b1220"/></div>
-      <div><label>Immagine sfondo</label><input id="f_bgImage" type="file" accept="image/*"/></div>
-    </div>
-
-    <label>Voce (lingua)</label>
-    <input id="f_voiceLang" value="it-IT"/>
-
-    <label>Testo voce</label>
-    <textarea id="f_voiceText"></textarea>
-
-    <label>Upload immagini / video (multiplo)</label>
-    <input id="f_files" type="file" accept="image/*,video/*" multiple/>
-
-    <div class="row">
-      <button class="btn ok" id="btnSave">💾 Salva (locale)</button>
-      <button class="btn secondary" id="btnExportOne">⬇ Esporta ID.json</button>
-      <button class="btn danger" id="btnDelete">🗑 Cancella</button>
-    </div>
-  </section>
-
-  <section class="card">
-    <div id="list" class="list"></div>
-    <div id="thumbs" class="thumbs"></div>
-  </section>
-</main>
-
-<div class="viewer" id="viewer"></div>
-<div class="toast" id="toast"></div>
 
 <script>
-/* ===== ACCESSO INVISIBILE ===== */
-const SECRET_SEQUENCE=["a","b"]; // luce → porta
-let seq=[];
-const unlock=()=>{document.getElementById("lockScreen").style.display="none";localStorage.setItem("adminUnlocked","1");}
-const err=()=>{const e=document.getElementById("pinError");e.style.display="block";setTimeout(()=>e.style.display="none",1200);}
-document.getElementById("secretSentence").addEventListener("click",e=>{
-  const k=e.target.getAttribute("data-k"); if(!k) return;
-  seq.push(k);
-  for(let i=0;i<seq.length;i++){ if(seq[i]!==SECRET_SEQUENCE[i]){seq=[];err();return;} }
-  if(seq.length===SECRET_SEQUENCE.length){unlock();seq=[];}
-});
-if(localStorage.getItem("adminUnlocked")==="1") unlock();
+/* ===== CONFIG ===== */
+const INDEX_PATH = "data/index.json";
+const SECRET_WORDS = ["LUCE","PORTA"];
+const SENTENCE = "Per entrare nell'area tecnica tocca LUCE poi PORTA nella frase.";
 
-/* ===== LOGICA ADMIN (salvataggio + export) ===== */
-const LS="sct_"; const idxKey="sct_index";
-const $=id=>document.getElementById(id);
-const show=m=>{const t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2000);}
-const clean=x=>(x||"").trim().replace(/\s+/g,"").replace(/[^a-z0-9_-]/gi,"");
-const getIndex=()=>JSON.parse(localStorage.getItem(idxKey)||"[]");
-const setIndex=a=>localStorage.setItem(idxKey,JSON.stringify(a));
-const load=id=>JSON.parse(localStorage.getItem(LS+id)||"null");
-const save=o=>{localStorage.setItem(LS+o.id,JSON.stringify(o));const i=getIndex().filter(x=>x.id!==o.id);i.unshift({id:o.id,title:o.title});setIndex(i);}
-const del=id=>{localStorage.removeItem(LS+id);setIndex(getIndex().filter(x=>x.id!==id));}
+/* ===== STATE ===== */
+let unlocked = false;
+let secretProgress = 0;
 
-const toDataURL=f=>new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f);});
+let indexDB = { meta:{version:1, updatedAt:null}, groups:{}, vetrine:{} };
+let activeId = "";
+let activeVetrina = null; // contenuto data/<id>.json
 
-$("btnSave").onclick=async()=>{
-  const id=clean($("f_id").value); if(!id) return alert("ID mancante");
-  $("f_id").value=id;
-  const prev=load(id)||{};
-  const files=[...(prev.files||[])];
-  if($("f_files").files.length){
-    for(const f of $("f_files").files){
-      files.push({name:f.name,kind:f.type.startsWith("video")?"video":"image",mime:f.type,url:await toDataURL(f)});
-    }
+/* ===== UTILS ===== */
+function nowISO(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2,"0");
+  const offMin = -d.getTimezoneOffset();
+  const sign = offMin >= 0 ? "+" : "-";
+  const hh = pad(Math.floor(Math.abs(offMin)/60));
+  const mm = pad(Math.abs(offMin)%60);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}${sign}${hh}:${mm}`;
+}
+function sanitizeId(s){
+  return (s||"").trim().toLowerCase().replace(/\s+/g,"").replace(/[^a-z0-9_-]/g,"");
+}
+function splitCSV(s){
+  return (s||"").split(",").map(x=>x.trim()).filter(Boolean);
+}
+function escapeHTML(s){
+  return String(s||"")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+function dlJSON(obj, filename){
+  const blob = new Blob([JSON.stringify(obj,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+function setStatus(txt){ document.getElementById("status").textContent = txt; }
+
+/* ===== LOCK ===== */
+function normalizeWord(w){ return (w||"").toUpperCase().replace(/[^\p{L}]/gu,""); }
+function renderSecretSentence(){
+  const el = document.getElementById("secretSentence");
+  el.innerHTML = "";
+  SENTENCE.split(" ").forEach((w,i)=>{
+    const span = document.createElement("span");
+    span.textContent = w + (i === SENTENCE.split(" ").length-1 ? "" : " ");
+    span.style.cursor = "pointer";
+    span.style.userSelect = "none";
+    const clean = normalizeWord(w);
+    span.style.fontWeight = (clean==="LUCE"||clean==="PORTA") ? "900" : "600";
+    span.onclick = ()=> secretClick(w);
+    el.appendChild(span);
+  });
+}
+function secretClick(w){
+  if(unlocked) return;
+  const clean = normalizeWord(w);
+  const expected = SECRET_WORDS[secretProgress];
+  if(clean === expected){
+    secretProgress++;
+    if(secretProgress >= SECRET_WORDS.length) unlockAdmin();
+  } else {
+    secretProgress = 0;
   }
-  const bg=$("f_bgImage").files[0]?await toDataURL($("f_bgImage").files[0]):(prev.bgImage||"");
-  const obj={
-    id,title:$("f_title").value||id,desc:$("f_desc").value||"",
-    titleSize:+$("f_titleSize").value||32,titleColor:$("f_titleColor").value,
-    bgColor:$("f_bgColor").value,bgImage:bg,fontFamily:$("f_fontFamily").value,
-    voiceLang:$("f_voiceLang").value,voiceText:$("f_voiceText").value,files
+}
+function resetLock(){ secretProgress=0; setStatus("🔒 Bloccato"); }
+function unlockAdmin(){
+  unlocked = true;
+  setStatus("✅ Sbloccato");
+  document.getElementById("lockCard").classList.add("hidden");
+  document.getElementById("adminUI").classList.remove("hidden");
+}
+
+/* ===== INDEX LOAD/IMPORT/EXPORT ===== */
+async function loadIndexFromRepo(){
+  try{
+    const res = await fetch(INDEX_PATH + "?t=" + Date.now(), {cache:"no-store"});
+    if(!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    normalizeIndex(data);
+    refreshIndexUI();
+    refreshSelects();
+    alert("✅ Index caricato");
+  }catch(e){
+    console.error(e);
+    alert("❌ Non trovo data/index.json. Devi crearlo (ti ho dato il file pronto).");
+  }
+}
+function normalizeIndex(data){
+  indexDB = (data && typeof data==="object") ? data : {};
+  indexDB.meta = indexDB.meta || {version:1, updatedAt:null};
+  indexDB.groups = indexDB.groups || {};
+  indexDB.vetrine = indexDB.vetrine || {};
+  indexDB.meta.version = 1;
+}
+function refreshIndexUI(){
+  document.getElementById("indexUpdated").textContent = indexDB.meta.updatedAt || "—";
+  document.getElementById("indexCountV").textContent = Object.keys(indexDB.vetrine).length;
+  document.getElementById("indexCountG").textContent = Object.keys(indexDB.groups).length;
+}
+function exportIndex(){
+  indexDB.meta.updatedAt = nowISO();
+  refreshIndexUI();
+  dlJSON(indexDB, "index.json");
+}
+document.getElementById("importIndex").addEventListener("change", async (ev)=>{
+  const f = ev.target.files && ev.target.files[0];
+  if(!f) return;
+  try{
+    const txt = await f.text();
+    const data = JSON.parse(txt);
+    normalizeIndex(data);
+    refreshIndexUI();
+    refreshSelects();
+    alert("✅ Index importato");
+  }catch(e){
+    console.error(e);
+    alert("❌ index.json non valido");
+  }finally{
+    ev.target.value = "";
+  }
+});
+
+/* ===== SELECTS ===== */
+function refreshSelects(){
+  const vSel = document.getElementById("vSelect");
+  const gSel = document.getElementById("gSelect");
+
+  const prevV = vSel.value;
+  const prevG = gSel.value;
+
+  vSel.innerHTML = `<option value="">— scegli —</option>`;
+  Object.keys(indexDB.vetrine).sort().forEach(id=>{
+    const opt = document.createElement("option");
+    opt.value = id;
+    opt.textContent = `${id} — ${indexDB.vetrine[id].title || ""}`;
+    vSel.appendChild(opt);
+  });
+
+  gSel.innerHTML = `<option value="">— scegli —</option>`;
+  Object.keys(indexDB.groups).sort().forEach(k=>{
+    const opt = document.createElement("option");
+    opt.value = k;
+    opt.textContent = `${k} — ${indexDB.groups[k].title || ""}`;
+    gSel.appendChild(opt);
+  });
+
+  if(prevV && indexDB.vetrine[prevV]) vSel.value = prevV;
+  if(prevG && indexDB.groups[prevG]) gSel.value = prevG;
+}
+
+/* ===== VETRINA FILE LOAD/EDIT ===== */
+async function loadSelectedVetrinaFile(){
+  const id = document.getElementById("vSelect").value;
+  if(!id){ alert("Seleziona una vetrina"); return; }
+  if(!indexDB.vetrine[id] || !indexDB.vetrine[id].file){
+    alert("Index non ha il campo file per questa vetrina.");
+    return;
+  }
+  const filePath = indexDB.vetrine[id].file;
+
+  try{
+    const res = await fetch(filePath + "?t=" + Date.now(), {cache:"no-store"});
+    if(!res.ok) throw new Error(res.status);
+    const data = await res.json();
+
+    activeId = id;
+    activeVetrina = normalizeVetrina(data, id);
+    fillEditor();
+    renderMediaList();
+    document.getElementById("activeId").textContent = activeId;
+    alert("✅ File vetrina caricato");
+  }catch(e){
+    console.error(e);
+    alert("❌ Non riesco a caricare: " + filePath + " (controlla che esista)");
+  }
+}
+function normalizeVetrina(v, id){
+  const o = (v && typeof v==="object") ? v : {};
+  o.id = o.id || id;
+  o.title = o.title || "";
+  o.description = o.description || "";
+  o.voice = o.voice || {lang:"it-IT", text:""};
+  o.tags = Array.isArray(o.tags) ? o.tags : [];
+  o.media = Array.isArray(o.media) ? o.media : [];
+  o.files = Array.isArray(o.files) ? o.files : [];
+  o.createdAt = o.createdAt || nowISO();
+  o.updatedAt = o.updatedAt || nowISO();
+  return o;
+}
+function fillEditor(){
+  if(!activeVetrina) return;
+  document.getElementById("eTitle").value = activeVetrina.title || "";
+  document.getElementById("eDesc").value = activeVetrina.description || "";
+  document.getElementById("eVoiceLang").value = (activeVetrina.voice && activeVetrina.voice.lang) ? activeVetrina.voice.lang : "it-IT";
+  document.getElementById("eVoiceText").value = (activeVetrina.voice && activeVetrina.voice.text) ? activeVetrina.voice.text : "";
+  document.getElementById("eTags").value = (activeVetrina.tags || []).join(", ");
+}
+function saveEdits(){
+  if(!activeVetrina){ alert("Carica prima una vetrina"); return; }
+  activeVetrina.title = (document.getElementById("eTitle").value||"").trim();
+  activeVetrina.description = (document.getElementById("eDesc").value||"").trim();
+  activeVetrina.voice = activeVetrina.voice || {lang:"it-IT", text:""};
+  activeVetrina.voice.lang = (document.getElementById("eVoiceLang").value||"it-IT").trim();
+  activeVetrina.voice.text = (document.getElementById("eVoiceText").value||"").trim();
+  activeVetrina.tags = splitCSV(document.getElementById("eTags").value);
+  activeVetrina.updatedAt = nowISO();
+  alert("✅ Salvato in memoria. Ora scarica il file JSON.");
+}
+function syncIndexFromVetrina(){
+  if(!activeVetrina || !activeId){ alert("Carica prima una vetrina"); return; }
+  const rec = indexDB.vetrine[activeId];
+  if(!rec){ alert("Questa vetrina non è in index"); return; }
+  rec.title = activeVetrina.title || rec.title || activeId;
+  rec.tags = activeVetrina.tags || rec.tags || [];
+  rec.updatedAt = nowISO();
+  indexDB.meta.updatedAt = nowISO();
+  refreshIndexUI();
+  refreshSelects();
+  alert("✅ Index aggiornato (titolo/tags)");
+}
+function downloadVetrinaFile(){
+  if(!activeVetrina || !activeId){ alert("Carica una vetrina"); return; }
+  dlJSON(activeVetrina, `${activeId}.json`);
+}
+
+/* ===== CREATE/DELETE VETRINA ===== */
+function createVetrina(){
+  const id = sanitizeId(document.getElementById("newId").value);
+  if(!id){ alert("ID non valido"); return; }
+  if(indexDB.vetrine[id]){ alert("ID già esistente"); return; }
+
+  const title = (document.getElementById("newTitle").value||"").trim() || id;
+  const tags = splitCSV(document.getElementById("newTags").value);
+
+  // aggiorna index
+  indexDB.vetrine[id] = {
+    id,
+    title,
+    file: `data/${id}.json`,
+    tags,
+    updatedAt: nowISO()
   };
-  save(obj); show("Salvato");
-};
+  indexDB.meta.updatedAt = nowISO();
+  refreshIndexUI();
+  refreshSelects();
 
-$("btnExportOne").onclick=()=>{
-  const id=clean($("f_id").value); const o=load(id); if(!o) return alert("Salva prima");
-  const b=new Blob([JSON.stringify(o,null,2)],{type:"application/json"});
-  const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=id+".json";a.click();
-};
+  // crea vetrina in memoria
+  activeId = id;
+  activeVetrina = normalizeVetrina({
+    id,
+    title,
+    description: "",
+    voice: {lang:"it-IT", text:""},
+    tags,
+    media: [],
+    files: [],
+    createdAt: nowISO(),
+    updatedAt: nowISO()
+  }, id);
 
-$("btnExportIndex").onclick=()=>{
-  const out=getIndex().map(x=>({id:x.id,title:x.title}));
-  const b=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
-  const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="vetrine.json";a.click();
-};
+  fillEditor();
+  renderMediaList();
+  document.getElementById("activeId").textContent = activeId;
 
-$("btnDelete").onclick=()=>{
-  const id=clean($("f_id").value); if(!id) return;
-  if(confirm("Cancellare "+id+"?")){del(id); show("Cancellata");}
-};
+  alert("✅ Creata. Ora scarica: index.json e " + id + ".json e caricali su GitHub in /data/");
+}
+
+function deleteVetrina(){
+  const id = document.getElementById("vSelect").value || activeId;
+  if(!id){ alert("Seleziona una vetrina"); return; }
+  if(!indexDB.vetrine[id]){ alert("Non trovata in index"); return; }
+  if(!confirm("Eliminare vetrina " + id + " ? (Ricorda: poi devi cancellare anche data/"+id+".json dal repo)")) return;
+
+  // rimuovi da gruppi
+  Object.keys(indexDB.groups).forEach(gk=>{
+    const g = indexDB.groups[gk];
+    if(Array.isArray(g.items)) g.items = g.items.filter(x => x !== id);
+  });
+
+  delete indexDB.vetrine[id];
+  indexDB.meta.updatedAt = nowISO();
+  refreshIndexUI();
+  refreshSelects();
+
+  if(activeId === id){
+    activeId = "";
+    activeVetrina = null;
+    document.getElementById("activeId").textContent = "—";
+    document.getElementById("mediaList").innerHTML = "";
+  }
+
+  alert("🗑️ Rimossa da index. Ora scarica index.json e caricalo su GitHub. Poi cancella anche il file data/"+id+".json manualmente.");
+}
+
+/* ===== MEDIA ===== */
+function addMedia(){
+  if(!activeVetrina){ alert("Carica una vetrina"); return; }
+  const type = document.getElementById("mType").value;
+  const url = (document.getElementById("mUrl").value||"").trim();
+  const title = (document.getElementById("mTitle").value||"").trim();
+  const note = (document.getElementById("mNote").value||"").trim();
+  if(!url){ alert("Inserisci URL"); return; }
+
+  activeVetrina.media.push({type,url,title,note});
+  activeVetrina.updatedAt = nowISO();
+  renderMediaList();
+
+  document.getElementById("mUrl").value="";
+  document.getElementById("mTitle").value="";
+  document.getElementById("mNote").value="";
+}
+function renderMediaList(){
+  const list = document.getElementById("mediaList");
+  list.innerHTML = "";
+  if(!activeVetrina){ list.innerHTML = `<div class="mini">Nessuna vetrina caricata.</div>`; return; }
+  if(!activeVetrina.media || activeVetrina.media.length===0){
+    list.innerHTML = `<div class="mini">Nessun media.</div>`; return;
+  }
+
+  activeVetrina.media.forEach((m,idx)=>{
+    const row = document.createElement("div");
+    row.className = "item";
+    row.innerHTML = `
+      <div class="meta">
+        <b>${m.type==="video"?"🎬 Video":"🖼️ Immagine"} ${m.title? "— "+escapeHTML(m.title):""}</b>
+        <div class="mini">${escapeHTML(m.url||"")}</div>
+        ${m.note? `<div class="mini">📝 ${escapeHTML(m.note)}</div>` : ""}
+      </div>
+      <div><button class="danger" onclick="removeMedia(${idx})">Rimuovi</button></div>
+    `;
+    list.appendChild(row);
+  });
+}
+function removeMedia(idx){
+  if(!activeVetrina) return;
+  activeVetrina.media.splice(idx,1);
+  activeVetrina.updatedAt = nowISO();
+  renderMediaList();
+}
+
+/* ===== GROUPS ===== */
+function loadGroupIntoEditor(){
+  const k = document.getElementById("gSelect").value;
+  if(!k) return;
+  const g = indexDB.groups[k];
+  if(!g) return;
+  document.getElementById("gKey").value = k;
+  document.getElementById("gTitle").value = g.title || "";
+  document.getElementById("gDesc").value = g.description || "";
+  document.getElementById("gItems").value = (g.items||[]).join(", ");
+}
+function saveGroup(){
+  const k = sanitizeId(document.getElementById("gKey").value);
+  if(!k){ alert("Key gruppo non valida"); return; }
+  indexDB.groups[k] = {
+    title: (document.getElementById("gTitle").value||"").trim(),
+    description: (document.getElementById("gDesc").value||"").trim(),
+    items: splitCSV(document.getElementById("gItems").value).map(sanitizeId).filter(Boolean)
+  };
+  indexDB.meta.updatedAt = nowISO();
+  refreshIndexUI();
+  refreshSelects();
+  alert("✅ Gruppo salvato (scarica index.json)");
+}
+function deleteGroup(){
+  const k = sanitizeId(document.getElementById("gKey").value);
+  if(!k || !indexDB.groups[k]){ alert("Gruppo non trovato"); return; }
+  if(!confirm("Eliminare gruppo " + k + " ?")) return;
+  delete indexDB.groups[k];
+  indexDB.meta.updatedAt = nowISO();
+  refreshIndexUI();
+  refreshSelects();
+  alert("🗑️ Gruppo eliminato (scarica index.json)");
+}
+
+/* ===== INIT ===== */
+renderSecretSentence();
 </script>
 </body>
 </html>
