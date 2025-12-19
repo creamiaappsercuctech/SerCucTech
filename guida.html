@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SerCucTech – Percorso Guida Vetrine</title>
+  <style>
+    :root{ --bg:#0b1220; --card:#111b2e; --txt:#e8eefc; --mut:#a9b8dd; --acc:#5ee1a2; --b:#22345f; --warn:#ffcc66; }
+    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:linear-gradient(180deg,#081024,#0b1220); color:var(--txt); }
+    .wrap{ max-width:980px; margin:0 auto; padding:18px; }
+    .card{ background:rgba(17,27,46,.92); border:1px solid #1b2a4f; border-radius:18px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,.22); }
+    h1{ margin:0 0 8px 0; font-size:20px; }
+    .mut{ color:var(--mut); }
+    .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    button{ cursor:pointer; border:0; padding:10px 14px; border-radius:12px; font-weight:900; background:var(--acc); color:#052014; }
+    .sec{ background:#22345f; color:var(--txt); }
+    .warn{ background:var(--warn); color:#231a06; }
+    a{ color:#9fe9ff; }
+    .list{ margin-top:12px; display:grid; gap:10px; }
+    .item{ border:1px solid var(--b); background:#0c1530; border-radius:14px; padding:12px; }
+    .toprow{ display:flex; gap:10px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+    .check{ display:flex; gap:10px; align-items:center; }
+    input[type="checkbox"]{ transform:scale(1.3); }
+    .pill{ display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; background:#0f1a31; border:1px solid #1b2a4f; color:var(--mut); font-size:12px; }
+    .cur{ outline:2px dashed var(--acc); outline-offset:4px; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Percorso guida – Vetrine SerCucTech (Audio + Testo)</h1>
+    <div class="mut">Spunta gli step che vuoi usare. Premi “Voce” per ascoltare lo step corrente.</div>
+
+    <div class="btns">
+      <button class="sec" id="prevBtn">⬅️ Indietro</button>
+      <button id="speakBtn">🔊 Voce</button>
+      <button class="sec" id="stopBtn">⏹ Stop</button>
+      <button class="sec" id="nextBtn">Avanti ➡️</button>
+      <button class="warn" id="resetBtn">Reset spunte</button>
+    </div>
+
+    <div class="btns">
+      <a class="pill" href="admin.html" target="_blank" rel="noopener">Apri Admin</a>
+      <a class="pill" href="vetrina.html?id=scalvini10" target="_blank" rel="noopener">Apri Vetrina scalvini10</a>
+      <a class="pill mono" href="data/index.json" target="_blank" rel="noopener">data/index.json</a>
+    </div>
+
+    <div class="pill" style="margin-top:10px;">
+      Step corrente: <b id="curLabel">—</b>
+    </div>
+  </div>
+
+  <div class="list" id="steps"></div>
+</div>
+
+<script>
+const KEY = "sercuctech_guida_vetrine_v1";
+
+const steps = [
+  {
+    id:"S1",
+    title:"Apri Admin e sblocca",
+    speak:"Apri l’admin. Poi sblocca toccando la parola LUCE e poi la parola PORTA.",
+    links:[
+      {label:"Apri Admin", url:"admin.html"}
+    ],
+    detail:[
+      "Vai su admin.html",
+      "Sblocca: tocca LUCE poi PORTA nella frase"
+    ]
+  },
+  {
+    id:"S2",
+    title:"Carica index dal repo",
+    speak:"In admin, carica l’index dal repo. Controlla che vedi la lista vetrine e gruppi.",
+    links:[
+      {label:"Controlla index.json", url:"data/index.json"}
+    ],
+    detail:[
+      "Admin → 'Carica index dal repo'",
+      "Devi vedere le vetrine nel menu a tendina"
+    ]
+  },
+  {
+    id:"S3",
+    title:"Carica vetrina scalvini10",
+    speak:"Seleziona scalvini10 e carica il file vetrina. Controlla titolo, descrizione, voce e tags.",
+    links:[
+      {label:"Vetrina pubblica scalvini10", url:"vetrina.html?id=scalvini10"},
+      {label:"JSON scalvini10", url:"data/scalvini10.json"}
+    ],
+    detail:[
+      "Admin → scegli scalvini10",
+      "Clic 'Carica file vetrina'"
+    ]
+  },
+  {
+    id:"S4",
+    title:"Aggiungi un PDF in files[]",
+    speak:"Se vuoi un PDF, caricalo in files e aggiungi la riga dentro files nel JSON della vetrina.",
+    links:[
+      {label:"Esempio PDF", url:"files/manuale.pdf"}
+    ],
+    detail:[
+      "Carica il file su GitHub dentro /files/",
+      "Nel JSON vetrina: files: [{label:'Manuale', url:'files/manuale.pdf'}]",
+      "Poi scarica il JSON e ricaricalo in /data/"
+    ]
+  },
+  {
+    id:"S5",
+    title:"Upload multiplo media e ZIP",
+    speak:"Se vuoi foto o video, seleziona più file. Aggiungili al JSON. Scarica lo ZIP e carica i file dentro media.",
+    links:[
+      {label:"Cartella media (repo)", url:"media/"}
+    ],
+    detail:[
+      "Admin → Media → seleziona più file",
+      "Clic 'Aggiungi al JSON'",
+      "Clic 'Scarica ZIP media'",
+      "Estrai e carica in /media/ su GitHub"
+    ]
+  },
+  {
+    id:"S6",
+    title:"Riordino Media e Files",
+    speak:"Riordina media e files con trascinamento o con frecce. Poi scarica il JSON e ricaricalo nel repo.",
+    links:[],
+    detail:[
+      "Admin → Media presenti: trascina o usa ↑ ↓",
+      "Admin → Files presenti: trascina o usa ↑ ↓",
+      "Poi: Scarica <id>.json e carica in /data/"
+    ]
+  },
+  {
+    id:"S7",
+    title:"OCR (solo Admin) e TXT in /files/",
+    speak:"Usa OCR in admin. Scarica il testo TXT e caricalo in files. Poi aggiungi il link in files della vetrina.",
+    links:[],
+    detail:[
+      "Admin → OCR → carica immagine",
+      "Avvia OCR → Scarica TXT",
+      "Carica TXT in /files/",
+      "Clic 'Aggiungi TXT in files[]' e poi ricarica il JSON in /data/"
+    ]
+  },
+  {
+    id:"S8",
+    title:"Duplica vetrina scalvini10 → scalvini11",
+    speak:"Per duplicare, premi Duplica vetrina. Inserisci scalvini11 e crea clone. Poi scarica index.json e scalvini11.json e caricali in data.",
+    links:[
+      {label:"Vetrina pubblica scalvini11", url:"vetrina.html?id=scalvini11"},
+      {label:"JSON scalvini11", url:"data/scalvini11.json"}
+    ],
+    detail:[
+      "Admin → carica scalvini10",
+      "Clic 'Duplica vetrina' → nuovo ID scalvini11 → crea clone",
+      "Scarica index.json + scalvini11.json",
+      "Caricali in /data/"
+    ]
+  },
+  {
+    id:"S9",
+    title:"Controllo finale pubblico",
+    speak:"Apri la vetrina pubblica e controlla media, file e PDF. Se qualcosa non si vede, controlla i percorsi: media slash nome file, files slash nome file.",
+    links:[
+      {label:"Apri scalvini10", url:"vetrina.html?id=scalvini10"},
+      {label:"Apri scalvini11", url:"vetrina.html?id=scalvini11"}
+    ],
+    detail:[
+      "I percorsi corretti sono: media/nome.jpg e files/nome.pdf",
+      "Se non si vede: controlla maiuscole/minuscole e nome identico"
+    ]
+  }
+];
+
+function loadState(){
+  try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ return {}; }
+}
+function saveState(st){ localStorage.setItem(KEY, JSON.stringify(st)); }
+
+let state = loadState();
+if(!state.enabled) state.enabled = {};
+if(typeof state.currentIndex !== "number") state.currentIndex = 0;
+
+function stopTTS(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }
+function speak(text){
+  stopTTS();
+  if(!('speechSynthesis' in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "it-IT";
+  window.speechSynthesis.speak(u);
+}
+
+function render(){
+  const box = document.getElementById("steps");
+  box.innerHTML = "";
+
+  steps.forEach((s, idx)=>{
+    const div = document.createElement("div");
+    div.className = "item" + (idx === state.currentIndex ? " cur" : "");
+    const checked = !!state.enabled[s.id];
+
+    const linksHTML = (s.links||[]).map(l => `<a href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`).join(" • ");
+    const detailsHTML = (s.detail||[]).map(x => `<li>${x}</li>`).join("");
+
+    div.innerHTML = `
+      <div class="toprow">
+        <div>
+          <div class="pill"><b>${s.id}</b> • ${s.title}</div>
+          <div class="mut" style="margin-top:8px;">${linksHTML || ""}</div>
+        </div>
+        <label class="check">
+          <input type="checkbox" ${checked ? "checked" : ""} data-id="${s.id}" />
+          <span class="mut">Usa questo step</span>
+        </label>
+      </div>
+      <ul class="mut" style="margin:10px 0 0 18px;">${detailsHTML}</ul>
+    `;
+    box.appendChild(div);
+  });
+
+  const cur = steps[state.currentIndex];
+  document.getElementById("curLabel").textContent = cur ? `${cur.id} – ${cur.title}` : "—";
+
+  box.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener("change", (e)=>{
+      const id = e.target.getAttribute("data-id");
+      state.enabled[id] = e.target.checked;
+      saveState(state);
+    });
+  });
+}
+
+function next(){
+  let i = state.currentIndex;
+  for(let t=i+1; t<steps.length; t++){
+    if(state.enabled[steps[t].id]) { state.currentIndex = t; saveState(state); render(); return; }
+  }
+  // se non trova successivi abilitati, va avanti normale
+  if(i < steps.length-1){ state.currentIndex++; saveState(state); render(); }
+}
+function prev(){
+  let i = state.currentIndex;
+  for(let t=i-1; t>=0; t--){
+    if(state.enabled[steps[t].id]) { state.currentIndex = t; saveState(state); render(); return; }
+  }
+  if(i > 0){ state.currentIndex--; saveState(state); render(); }
+}
+
+document.getElementById("speakBtn").onclick = ()=>{
+  const cur = steps[state.currentIndex];
+  if(!cur) return;
+  const on = !!state.enabled[cur.id];
+  const prefix = on ? "Step attivo. " : "Step disattivato. ";
+  speak(prefix + cur.speak);
+};
+document.getElementById("stopBtn").onclick = stopTTS;
+document.getElementById("nextBtn").onclick = next;
+document.getElementById("prevBtn").onclick = prev;
+document.getElementById("resetBtn").onclick = ()=>{
+  if(!confirm("Reset spunte e progressi?")) return;
+  state = { enabled:{}, currentIndex:0 };
+  saveState(state);
+  render();
+};
+
+render();
+</script>
+</body>
+</html>
