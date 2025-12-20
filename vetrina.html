@@ -1,81 +1,215 @@
 <!doctype html>
-<html lang="it">
+<html lang="it" data-theme="auto">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>SerCucTech – Vetrina</title>
 
+  <!-- PWA -->
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#0b1220">
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <link rel="stylesheet" href="stile.css" />
-  <style>
-    .topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
-    .grid2{display:grid;gap:12px}
-    @media(min-width:900px){ .grid2{grid-template-columns:1fr 1fr;} }
-  </style>
 </head>
 
-<body>
-  <div class="wrap">
-
-    <div class="card">
-      <div class="topbar">
-        <div>
-          <h1 id="title" style="margin:0">Caricamento…</h1>
-          <div id="desc" class="mut"></div>
-        </div>
-
-        <div class="btns">
-          <a class="btn sec" href="index.html">⬅️ Home</a>
-          <a class="btn sec" href="admin.html">🔐 Admin</a>
-        </div>
-      </div>
-
-      <div class="btns" style="margin-top:10px">
-        <button id="speakBtn" class="sec">🔊 Voce</button>
-        <button id="stopBtn" class="sec">⏹ Stop</button>
-      </div>
-
-      <div id="hint" class="mut" style="margin-top:10px"></div>
-      <div class="mut" style="margin-top:8px">
-        Parametri: <span class="mono">?id=ID</span> oppure <span class="mono">?group=NOME</span>
-      </div>
+<body class="vetrina-page">
+  <!-- TOP (si nasconde in kiosk) -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-left">
+      <a class="btn sec small" href="index.html" id="homeTop">🏠 Home</a>
     </div>
-
-    <div class="grid2">
-      <div class="card">
-        <h2 style="margin:0 0 10px 0">Media</h2>
-        <div id="media"></div>
-      </div>
-
-      <div class="card">
-        <h2 style="margin:0 0 10px 0">File</h2>
-        <div id="files"></div>
-      </div>
+    <div class="topbar-center">
+      <div class="brand">SerCucTech</div>
     </div>
-
-    <div class="card">
-      <h2 style="margin:0 0 10px 0">Gruppo (se usi ?group=)</h2>
-      <div id="list"></div>
-      <div class="mut" style="margin-top:10px">
-        Se apri <span class="mono">vetrina.html?group=scalvini</span> qui sotto vedrai le vetrine del gruppo.
-      </div>
+    <div class="topbar-right">
+      <button class="btn sec small" id="btnThemeTop" title="Tema">🌓</button>
+      <button class="btn sec small" id="btnKioskTop" title="Kiosk">📺</button>
     </div>
+  </header>
 
-  </div>
+  <main class="wrap vetrina-wrap" id="mainWrap">
+    <section class="card vetrina-card">
+      <div class="pillrow">
+        <span class="pill" id="hint"></span>
+        <span class="pill mono" id="vIdPill">—</span>
+      </div>
+
+      <h1 class="v-title" id="title">Caricamento…</h1>
+      <p class="mut v-desc" id="desc"></p>
+
+      <div class="hr"></div>
+
+      <h2 class="sectionTitle">Media</h2>
+      <div class="list" id="media"></div>
+
+      <div class="hr"></div>
+
+      <h2 class="sectionTitle">Files</h2>
+      <div class="list" id="files"></div>
+
+      <div class="hr"></div>
+
+      <!-- pulsanti standard (si possono nascondere in kiosk se vuoi) -->
+      <div class="btns" id="classicBtns">
+        <button class="btn ok big" id="speakBtn">🔊 Ascolta</button>
+        <button class="btn danger big" id="stopBtn">⏹ Stop</button>
+      </div>
+    </section>
+
+    <div style="height:84px"></div><!-- spazio per barra fissa -->
+  </main>
+
+  <!-- BOTTOM BAR FIXED -->
+  <nav class="bottombar" id="bottomBar">
+    <button class="bb-btn" id="bbHome" title="Home">🏠<span>Home</span></button>
+    <button class="bb-btn" id="bbSpeak" title="Ascolta">🔊<span>Voce</span></button>
+    <button class="bb-btn" id="bbStop" title="Stop">⏹<span>Stop</span></button>
+    <button class="bb-btn" id="bbFull" title="Schermo intero">⛶<span>Full</span></button>
+    <button class="bb-btn" id="bbTheme" title="Tema">🌓<span>Tema</span></button>
+    <button class="bb-btn" id="bbKiosk" title="Kiosk">📺<span>Kiosk</span></button>
+  </nav>
 
   <script src="app.js"></script>
   <script>
-    // PWA
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./service-worker.js").catch(console.error);
+    /* ===================== THEME ===================== */
+    const THEME_KEY = "sercuctech_theme"; // auto | dark | light
+    function getTheme(){ return localStorage.getItem(THEME_KEY) || "auto"; }
+    function setTheme(t){
+      localStorage.setItem(THEME_KEY, t);
+      document.documentElement.setAttribute("data-theme", t);
+      syncThemeColors();
+    }
+    function cycleTheme(){
+      const t = getTheme();
+      if(t === "auto") setTheme("dark");
+      else if(t === "dark") setTheme("light");
+      else setTheme("auto");
+      toastTheme();
+    }
+    function toastTheme(){
+      const t = getTheme();
+      const msg = t === "auto" ? "Tema: Auto (sistema)" : (t === "dark" ? "Tema: Scuro" : "Tema: Chiaro");
+      quickToast(msg);
+    }
+    function syncThemeColors(){
+      // Aggiorna theme-color in base al tema attivo (utile su Android)
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if(!meta) return;
+      const t = getTheme();
+      if(t === "light") meta.setAttribute("content", "#f6f8ff");
+      else meta.setAttribute("content", "#0b1220");
     }
 
-    // Se è un gruppo, app.js renderizza in #list.
-    // Se è una vetrina singola, #list resta vuoto e compaiono media/files.
+    /* ===================== KIOSK ===================== */
+    const KIOSK_KEY = "sercuctech_kiosk";
+    let wakeLock = null;
+
+    function isKiosk(){ return localStorage.getItem(KIOSK_KEY) === "1"; }
+    async function setKiosk(on){
+      localStorage.setItem(KIOSK_KEY, on ? "1" : "0");
+      document.body.classList.toggle("kiosk", !!on);
+
+      // In kiosk: prova fullscreen + wake lock
+      if(on){
+        await tryFullscreen();
+        await tryWakeLock();
+        quickToast("Kiosk: ON");
+      }else{
+        await releaseWakeLock();
+        quickToast("Kiosk: OFF");
+      }
+    }
+    async function toggleKiosk(){ await setKiosk(!isKiosk()); }
+
+    async function tryFullscreen(){
+      try{
+        if(!document.fullscreenElement && document.documentElement.requestFullscreen){
+          await document.documentElement.requestFullscreen();
+        }
+      }catch(e){}
+    }
+    async function tryWakeLock(){
+      try{
+        if("wakeLock" in navigator){
+          wakeLock = await navigator.wakeLock.request("screen");
+        }
+      }catch(e){}
+    }
+    async function releaseWakeLock(){
+      try{
+        if(wakeLock){
+          await wakeLock.release();
+          wakeLock = null;
+        }
+      }catch(e){}
+    }
+
+    document.addEventListener("visibilitychange", ()=>{
+      // se torna visibile in kiosk, riattiva wake lock
+      if(document.visibilityState === "visible" && isKiosk()){
+        tryWakeLock();
+      }
+    });
+
+    /* ===================== QUICK TOAST ===================== */
+    let toastT = null;
+    function quickToast(text){
+      let t = document.getElementById("quickToast");
+      if(!t){
+        t = document.createElement("div");
+        t.id = "quickToast";
+        t.className = "toast";
+        document.body.appendChild(t);
+      }
+      t.textContent = text;
+      t.classList.add("show");
+      clearTimeout(toastT);
+      toastT = setTimeout(()=>t.classList.remove("show"), 1300);
+    }
+
+    /* ===================== BIND UI ===================== */
+    function bindBars(){
+      // top buttons
+      const btnThemeTop = document.getElementById("btnThemeTop");
+      const btnKioskTop = document.getElementById("btnKioskTop");
+      if(btnThemeTop) btnThemeTop.onclick = cycleTheme;
+      if(btnKioskTop) btnKioskTop.onclick = toggleKiosk;
+
+      // bottom bar
+      document.getElementById("bbHome").onclick = ()=> location.href = "index.html";
+      document.getElementById("bbSpeak").onclick = ()=> document.getElementById("speakBtn").click();
+      document.getElementById("bbStop").onclick  = ()=> document.getElementById("stopBtn").click();
+      document.getElementById("bbTheme").onclick = cycleTheme;
+      document.getElementById("bbKiosk").onclick = toggleKiosk;
+      document.getElementById("bbFull").onclick  = tryFullscreen;
+    }
+
+    /* ===================== INIT ===================== */
+    (function initLocalUI(){
+      // theme init
+      document.documentElement.setAttribute("data-theme", getTheme());
+      syncThemeColors();
+
+      // kiosk init
+      document.body.classList.toggle("kiosk", isKiosk());
+      if(isKiosk()){
+        // prova subito (non sempre concesso senza tap, ma ci proviamo)
+        tryWakeLock();
+      }
+
+      bindBars();
+    })();
+
+    /* Aggiorna pill ID quando carica la vetrina */
+    const origBoot = window.boot;
+    // Non tocchiamo app.js; il suo boot() parte su DOMContentLoaded.
+    // Qui facciamo un piccolo "watch" del parametro id:
+    const vid = (new URLSearchParams(location.search).get("id") || "").trim();
+    if(vid){
+      const pill = document.getElementById("vIdPill");
+      if(pill) pill.textContent = "id: " + vid;
+    }
   </script>
 </body>
 </html>
