@@ -5,6 +5,7 @@
    - TTS
    - Admin Unlock 24h + Device Binding + Multi-device allowlist
    - ✅ Auto-voce SOLO prima volta per vetrina (per dispositivo)
+   - ✅ Toggle globale Auto-Voce ON/OFF
 ========================================================= */
 
 /* ===================== CONFIG ===================== */
@@ -71,12 +72,17 @@ function speakText(text, opts={}){
   }
 }
 
-/* ===================== AUTO-VOICE (FIRST TIME ONLY) ===================== */
-/*
-  - Per ogni vetrina, tenta autoplay SOLO la prima volta su quel dispositivo.
-  - Se il browser blocca autoplay, mostriamo overlay "tap to play".
-  - Segniamo "già fatta" SOLO quando l'audio parte davvero (o l'utente preme Avvia).
-*/
+/* ===================== AUTO-VOICE (FIRST TIME ONLY + GLOBAL TOGGLE) ===================== */
+const AUTO_VOICE_GLOBAL_KEY = "sercuctech_autovoice_global"; // "1"=ON, "0"=OFF
+
+function isAutoVoiceEnabled(){
+  const v = localStorage.getItem(AUTO_VOICE_GLOBAL_KEY);
+  return (v === null) ? true : (v === "1");
+}
+function setAutoVoiceEnabled(on){
+  localStorage.setItem(AUTO_VOICE_GLOBAL_KEY, on ? "1" : "0");
+}
+
 function autoVoiceKeyForVetrina(vetrinaId){
   return `sercuctech_autovoice_done_${sanitizeId(vetrinaId)}`;
 }
@@ -103,6 +109,8 @@ function waitForSpeaking(timeoutMs=900){
 }
 
 async function autoSpeakFirstTime(v){
+  if(!isAutoVoiceEnabled()) return; // ✅ toggle globale OFF → non fare nulla
+
   const vid = sanitizeId(v?.id);
   if(!vid) return;
 
@@ -269,7 +277,7 @@ function parseDeviceShareCode(code){
 
 /* ===================== INDEXEDDB CACHE ===================== */
 const DB_NAME = "sercuctech_vetrine_db";
-const DB_VER  = 2; // aggiornato
+const DB_VER  = 2;
 const STORE_V = "vetrine";
 const STORE_M = "meta";
 
@@ -542,7 +550,7 @@ async function boot(){
       const { vetrina, source } = await loadVetrinaById(id);
       renderVetrina(vetrina, { source });
 
-      // ✅ AUTO VOCE: SOLO PRIMA VOLTA
+      // ✅ AUTO VOCE: SOLO PRIMA VOLTA + toggle globale
       autoSpeakFirstTime(vetrina);
 
       return;
@@ -622,7 +630,9 @@ window.SerCucTech = {
   addAllowedDevice,
   loadAllowedDevices,
 
-  // auto voice helpers (se ti servono in futuro)
+  // auto voice helpers
   hasAutoVoiceDone,
-  setAutoVoiceDone
+  setAutoVoiceDone,
+  isAutoVoiceEnabled,
+  setAutoVoiceEnabled
 };
