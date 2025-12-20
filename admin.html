@@ -402,6 +402,7 @@
 
 <script src="app.js"></script>
 <script>
+/* PWA register */
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./service-worker.js").catch(console.error);
 }
@@ -410,6 +411,7 @@ if ("serviceWorker" in navigator) {
 let secretProgress = 0;
 const SENTENCE = "SerCucTech. Con i suoi servizi ti aiuta a gestire qualsiasi genere di problematiche in modo semplice creando anche App personalizzate.";
 
+/* ====== Index/Vetrina admin state ====== */
 let indexDB = { meta:{version:1, updatedAt:null}, groups:{}, vetrine:{} };
 let activeId = "";
 let activeVetrina = null;
@@ -421,6 +423,7 @@ let ocrLastTxtFilename = "";
 function normalizeWord(w){
   return (w||"").toLowerCase().replace(/[^a-zàèéìòù0-9_-]/g,"");
 }
+
 function renderClickableSentence(){
   const intro = document.getElementById("adminIntro");
   const p = document.createElement("div");
@@ -439,11 +442,13 @@ function renderClickableSentence(){
 
   intro.parentNode.insertBefore(p, intro.nextSibling);
 }
+
 function onWordTap(word){
   if (window.SerCucTech.isAdminSessionValid()) return;
 
   const clean = normalizeWord(word);
   const expected = window.SerCucTech.UNLOCK_WORDS[secretProgress];
+
   if(clean.includes(expected)){
     secretProgress++;
     if(secretProgress >= window.SerCucTech.UNLOCK_WORDS.length){
@@ -454,6 +459,7 @@ function onWordTap(word){
     secretProgress = 0;
   }
 }
+
 function showUnlockedUI(){
   document.getElementById("status").textContent = "✅ Sbloccato (24h)";
   document.getElementById("lockCard").style.display = "none";
@@ -464,8 +470,10 @@ function showUnlockedUI(){
   initAutoVoiceResetUI();
   initAutoVoiceGlobalToggleUI();
 
+  // carica subito index dal repo per comodità
   loadIndexFromRepo().catch(()=>{});
 }
+
 function showLockedUI(){
   document.getElementById("status").textContent = "🔒 Bloccato";
   document.getElementById("lockCard").style.display = "block";
@@ -489,6 +497,7 @@ function showLockedUI(){
     document.getElementById("lockInfo").textContent = "";
   }
 }
+
 document.getElementById("resetTapBtn").onclick = ()=>{ secretProgress = 0; };
 document.getElementById("logoutBtn").onclick = ()=>{
   window.SerCucTech.clearAdminSession();
@@ -510,6 +519,7 @@ function initDeviceCodeBox(){
     }
   };
 }
+
 function initDevicesUI(){
   const addBtn = document.getElementById("addDeviceBtn");
   const addInput = document.getElementById("addDeviceCodeInput");
@@ -539,7 +549,6 @@ function initAutoVoiceGlobalToggleUI(){
   const out = document.getElementById("autoVoiceGlobalOut");
   if(!t || !out) return;
 
-  // default ON se non esiste
   t.checked = window.SerCucTech.isAutoVoiceEnabled();
   out.textContent = t.checked ? "✅ Auto-Voce: ON" : "⛔ Auto-Voce: OFF";
 
@@ -595,11 +604,13 @@ function normalizeIndex(data){
   indexDB.vetrine = indexDB.vetrine || {};
   indexDB.meta.version = 1;
 }
+
 function refreshIndexUI(){
   document.getElementById("indexUpdated").textContent = indexDB.meta.updatedAt || "—";
   document.getElementById("indexCountV").textContent = Object.keys(indexDB.vetrine).length;
   document.getElementById("indexCountG").textContent = Object.keys(indexDB.groups).length;
 }
+
 function refreshSelects(){
   const vSel = document.getElementById("vSelect");
   const gSel = document.getElementById("gSelect");
@@ -627,12 +638,14 @@ function refreshSelects(){
   if(prevV && indexDB.vetrine[prevV]) vSel.value = prevV;
   if(prevG && indexDB.groups[prevG]) gSel.value = prevG;
 }
+
 async function loadIndexFromRepo(){
   const idx = await window.SerCucTech.loadIndexSmart();
   normalizeIndex(idx);
   refreshIndexUI();
   refreshSelects();
 }
+
 function dlJSON(obj, filename){
   const blob = new Blob([JSON.stringify(obj,null,2)], {type:"application/json"});
   const a = document.createElement("a");
@@ -640,11 +653,13 @@ function dlJSON(obj, filename){
   a.download = filename;
   a.click();
 }
+
 function downloadIndex(){
   indexDB.meta.updatedAt = window.SerCucTech.nowISO();
   refreshIndexUI();
   dlJSON(indexDB, "index.json");
 }
+
 document.getElementById("importIndex").addEventListener("change", async (ev)=>{
   const f = ev.target.files && ev.target.files[0];
   if(!f) return;
@@ -674,6 +689,7 @@ function normalizeVetrina(v, id){
   o.updatedAt = o.updatedAt || window.SerCucTech.nowISO();
   return o;
 }
+
 function fillEditor(){
   document.getElementById("activeId").textContent = activeId || "—";
   if(!activeVetrina) return;
@@ -827,10 +843,512 @@ function duplicateCurrentVetrina(){
   alert("✅ Clone creato IN MEMORIA. Ora scarica: index.json e " + newId + ".json e caricali su GitHub in /data/");
 }
 
-/* ======= (MEDIA/FILES/OCR/GROUPS) =======
-   Per non allungare oltre, qui restano IDENTICI al file che ti ho dato prima.
-   Se vuoi che te li reinserisca anche qui dentro, dimmelo e te lo invio “super-integrale” in un unico blocco.
-*/
+/* ================= MEDIA (URL + MULTI + riordino) ================= */
+document.getElementById("mFiles").addEventListener("change", ()=>{
+  const files = Array.from(document.getElementById("mFiles").files || []);
+  mediaQueue = files.map(f=>{
+    const isVideo = f.type.startsWith("video/");
+    const type = isVideo ? "video" : "image";
+    const objectUrl = URL.createObjectURL(f);
+    return { file:f, type, url:`media/${f.name}`, title:f.name, note:"", objectUrl };
+  });
+  renderMediaQueue();
+});
+
+function renderMediaQueue(){
+  const box = document.getElementById("mediaQueue");
+  box.innerHTML = "";
+  if(mediaQueue.length === 0){
+    box.innerHTML = `<div class="mut">Nessun file selezionato.</div>`;
+    return;
+  }
+  mediaQueue.forEach((m, idx)=>{
+    const row = document.createElement("div");
+    row.className = "item";
+    row.innerHTML = `
+      <div style="flex:1">
+        <b>${m.type==="video" ? "🎬 Video" : "🖼️ Immagine"} — ${escapeHtml(m.file.name)}</b>
+        <div class="mut">URL nel JSON: <span class="kbd">${escapeHtml(m.url)}</span></div>
+        <label style="margin-top:8px;">Titolo</label>
+        <input id="qTitle_${idx}" value="${escapeHtml(m.title)}" />
+        <label>Nota</label>
+        <input id="qNote_${idx}" value="${escapeHtml(m.note)}" />
+        <div style="margin-top:10px;">
+          ${m.type==="video"
+            ? `<video class="preview" controls src="${m.objectUrl}"></video>`
+            : `<img class="preview" src="${m.objectUrl}" alt="preview">`
+          }
+        </div>
+      </div>
+      <div>
+        <button class="btn danger smallbtn" onclick="removeQueued(${idx})">Rimuovi</button>
+      </div>
+    `;
+    box.appendChild(row);
+  });
+}
+
+function removeQueued(idx){
+  const it = mediaQueue[idx];
+  if(it && it.objectUrl) URL.revokeObjectURL(it.objectUrl);
+  mediaQueue.splice(idx,1);
+  renderMediaQueue();
+}
+
+function clearMediaQueue(){
+  mediaQueue.forEach(it=>{ if(it.objectUrl) URL.revokeObjectURL(it.objectUrl); });
+  mediaQueue = [];
+  document.getElementById("mFiles").value = "";
+  renderMediaQueue();
+}
+
+function addMediaByUrl(){
+  if(!activeVetrina){ alert("Carica una vetrina"); return; }
+  const type = document.getElementById("mType").value;
+  const url = (document.getElementById("mUrl").value||"").trim();
+  const title = (document.getElementById("mTitle").value||"").trim();
+  const note = (document.getElementById("mNote").value||"").trim();
+  if(!url){ alert("Inserisci URL"); return; }
+
+  activeVetrina.media.push({type, url, title, note});
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
+  renderMediaList();
+
+  document.getElementById("mUrl").value="";
+  document.getElementById("mTitle").value="";
+  document.getElementById("mNote").value="";
+}
+
+function addMediaFromFiles(){
+  if(!activeVetrina){ alert("Carica una vetrina"); return; }
+  if(mediaQueue.length === 0){ alert("Seleziona file"); return; }
+
+  mediaQueue.forEach((m, idx)=>{
+    const title = (document.getElementById(`qTitle_${idx}`)?.value || m.title || "").trim();
+    const note = (document.getElementById(`qNote_${idx}`)?.value || m.note || "").trim();
+    activeVetrina.media.push({ type:m.type, url:m.url, title, note });
+  });
+
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
+  renderMediaList();
+
+  alert("✅ Aggiunti al JSON. Ora: scarica ZIP e carica i file in /media/, poi scarica " + activeId + ".json e caricalo in /data/.");
+}
+
+async function downloadMediaZip(){
+  if(mediaQueue.length === 0){ alert("Seleziona file prima."); return; }
+  const zip = new JSZip();
+  const folder = zip.folder("media");
+  for(const m of mediaQueue){ folder.file(m.file.name, m.file); }
+  const blob = await zip.generateAsync({type:"blob"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `media_upload_${activeId || "vetrina"}.zip`;
+  a.click();
+}
+
+function moveInArray(arr, from, to){
+  if(from === to) return;
+  const item = arr.splice(from, 1)[0];
+  arr.splice(to, 0, item);
+}
+function swapInArray(arr, i, j){
+  const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+}
+
+function removeMedia(idx){
+  activeVetrina.media.splice(idx,1);
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
+  renderMediaList();
+}
+function applyMediaEdits(idx){
+  activeVetrina.media[idx].title = String(document.getElementById(`mt_${idx}`)?.value || "").trim();
+  activeVetrina.media[idx].note  = String(document.getElementById(`mn_${idx}`)?.value || "").trim();
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
+  alert("✅ Modifiche media applicate (scarica poi il JSON).");
+}
+function previewMedia(idx){
+  const m = activeVetrina.media[idx];
+  const box = document.getElementById(`prevM_${idx}`);
+  if(!box) return;
+  if(m.type==="video") box.innerHTML = `<video class="preview" controls src="${escapeHtml(m.url)}"></video>`;
+  else box.innerHTML = `<img class="preview" src="${escapeHtml(m.url)}" alt="preview">`;
+}
+function moveMediaUp(idx){
+  if(idx<=0) return;
+  swapInArray(activeVetrina.media, idx, idx-1);
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
+  renderMediaList();
+}
+function moveMediaDown(idx){
+  if(idx >= activeVetrina.media.length-1) return;
+  swapInArray(activeVetrina.media, idx, idx+1);
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
+  renderMediaList();
+}
+
+function renderMediaList(){
+  const list = document.getElementById("mediaList");
+  list.innerHTML = "";
+  if(!activeVetrina){ list.innerHTML = `<div class="mut">Carica una vetrina.</div>`; return; }
+  const media = activeVetrina.media || [];
+  if(media.length === 0){ list.innerHTML = `<div class="mut">Nessun media.</div>`; return; }
+
+  media.forEach((m, idx)=>{
+    const row = document.createElement("div");
+    row.className = "item";
+    row.draggable = true;
+    row.dataset.index = String(idx);
+
+    row.addEventListener("dragstart", (ev)=>{
+      ev.dataTransfer.setData("text/plain", String(idx));
+      ev.dataTransfer.effectAllowed = "move";
+    });
+    row.addEventListener("dragover", (ev)=>{
+      ev.preventDefault();
+      row.classList.add("dropHint");
+      ev.dataTransfer.dropEffect = "move";
+    });
+    row.addEventListener("dragleave", ()=> row.classList.remove("dropHint"));
+    row.addEventListener("drop", (ev)=>{
+      ev.preventDefault();
+      row.classList.remove("dropHint");
+      const from = Number(ev.dataTransfer.getData("text/plain"));
+      const to = Number(row.dataset.index);
+      if(Number.isFinite(from) && Number.isFinite(to)){
+        moveInArray(activeVetrina.media, from, to);
+        activeVetrina.updatedAt = window.SerCucTech.nowISO();
+        renderMediaList();
+      }
+    });
+
+    const typeIcon = m.type==="video" ? "🎬" : "🖼️";
+    row.innerHTML = `
+      <div style="flex:1">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <span class="drag">⇅</span>
+          <b>${typeIcon} ${escapeHtml(m.title||"(senza titolo)")}</b>
+        </div>
+        <div class="mut mono">${escapeHtml(m.url||"")}</div>
+        <label style="margin-top:6px;">Titolo</label>
+        <input id="mt_${idx}" value="${escapeHtml(m.title||"")}" />
+        <label>Nota</label>
+        <input id="mn_${idx}" value="${escapeHtml(m.note||"")}" />
+        <div class="btns">
+          <button class="btn sec smallbtn" onclick="applyMediaEdits(${idx})">Applica</button>
+          <button class="btn sec smallbtn" onclick="previewMedia(${idx})">Anteprima</button>
+        </div>
+        <div id="prevM_${idx}" class="mut" style="margin-top:8px;"></div>
+      </div>
+      <div>
+        <div class="btns" style="justify-content:flex-end;">
+          <button class="btn sec smallbtn" onclick="moveMediaUp(${idx})">↑</button>
+          <button class="btn sec smallbtn" onclick="moveMediaDown(${idx})">↓</button>
+          <button class="btn danger smallbtn" onclick="removeMedia(${idx})">Rimuovi</button>
+        </div>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+/* ================= FILES (riordino) ================= */
+function addFileByUrl(){
+  if(!activeVetrina){ alert("Carica una vetrina"); return; }
+  const label = (document.getElementById("fLabel").value||"").trim();
+  const url = (document.getElementById("fUrl").value||"").trim();
+  if(!label || !url){ alert("Inserisci Label e URL"); return; }
+  activeVetrina.files.push({label, url});
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
+  renderFilesList();
+  document.getElementById("fLabel").value = "";
+  document.getElementById("fUrl").value = "";
+}
+function removeFile(idx){
+  activeVetrina.files.splice(idx,1);
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
+  renderFilesList();
+}
+function applyFileEdits(idx){
+  activeVetrina.files[idx].label = String(document.getElementById(`fl_${idx}`)?.value || "").trim();
+  activeVetrina.files[idx].url   = String(document.getElementById(`fu_${idx}`)?.value || "").trim();
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
+  alert("✅ Modifiche file applicate (scarica poi il JSON).");
+}
+function previewFile(idx){
+  const f = activeVetrina.files[idx];
+  const box = document.getElementById(`prevF_${idx}`);
+  if(!box) return;
+  if((f.url||"").toLowerCase().split("?")[0].endsWith(".pdf")){
+    box.innerHTML = `<iframe class="preview" src="${escapeHtml(f.url)}"></iframe>`;
+  }else{
+    box.innerHTML = `<div class="mut">Anteprima solo PDF. Link: <span class="kbd">${escapeHtml(f.url)}</span></div>`;
+  }
+}
+function moveFileUp(idx){
+  if(idx<=0) return;
+  swapInArray(activeVetrina.files, idx, idx-1);
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
+  renderFilesList();
+}
+function moveFileDown(idx){
+  if(idx >= activeVetrina.files.length-1) return;
+  swapInArray(activeVetrina.files, idx, idx+1);
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
+  renderFilesList();
+}
+function renderFilesList(){
+  const list = document.getElementById("filesList");
+  list.innerHTML = "";
+  if(!activeVetrina){ list.innerHTML = `<div class="mut">Carica una vetrina.</div>`; return; }
+  const files = activeVetrina.files || [];
+  if(files.length === 0){ list.innerHTML = `<div class="mut">Nessun file.</div>`; return; }
+
+  files.forEach((f, idx)=>{
+    const row = document.createElement("div");
+    row.className = "item";
+    row.draggable = true;
+    row.dataset.index = String(idx);
+
+    row.addEventListener("dragstart", (ev)=>{
+      ev.dataTransfer.setData("text/plain", String(idx));
+      ev.dataTransfer.effectAllowed = "move";
+    });
+    row.addEventListener("dragover", (ev)=>{
+      ev.preventDefault();
+      row.classList.add("dropHint");
+      ev.dataTransfer.dropEffect = "move";
+    });
+    row.addEventListener("dragleave", ()=> row.classList.remove("dropHint"));
+    row.addEventListener("drop", (ev)=>{
+      ev.preventDefault();
+      row.classList.remove("dropHint");
+      const from = Number(ev.dataTransfer.getData("text/plain"));
+      const to = Number(row.dataset.index);
+      if(Number.isFinite(from) && Number.isFinite(to)){
+        moveInArray(activeVetrina.files, from, to);
+        activeVetrina.updatedAt = window.SerCucTech.nowISO();
+        renderFilesList();
+      }
+    });
+
+    const ico = (f.url||"").toLowerCase().split("?")[0].endsWith(".pdf") ? "📄" : "📎";
+    row.innerHTML = `
+      <div style="flex:1">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <span class="drag">⇅</span>
+          <b>${ico} ${escapeHtml(f.label||"(senza label)")}</b>
+        </div>
+        <div class="mut mono">${escapeHtml(f.url||"")}</div>
+
+        <label style="margin-top:6px;">Label</label>
+        <input id="fl_${idx}" value="${escapeHtml(f.label||"")}" />
+        <label>URL</label>
+        <input id="fu_${idx}" value="${escapeHtml(f.url||"")}" />
+
+        <div class="btns">
+          <button class="btn sec smallbtn" onclick="applyFileEdits(${idx})">Applica</button>
+          <button class="btn sec smallbtn" onclick="previewFile(${idx})">Anteprima</button>
+        </div>
+        <div id="prevF_${idx}" class="mut" style="margin-top:8px;"></div>
+      </div>
+
+      <div>
+        <div class="btns" style="justify-content:flex-end;">
+          <button class="btn sec smallbtn" onclick="moveFileUp(${idx})">↑</button>
+          <button class="btn sec smallbtn" onclick="moveFileDown(${idx})">↓</button>
+          <button class="btn danger smallbtn" onclick="removeFile(${idx})">Rimuovi</button>
+        </div>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+/* ================= BACKUP ZIP ================= */
+async function fetchAsBlob(path){
+  const res = await fetch(path + "?t=" + Date.now(), {cache:"no-store"});
+  if(!res.ok) throw new Error("Fetch failed: " + path);
+  return await res.blob();
+}
+
+async function downloadBackupZip(){
+  if(!activeVetrina || !activeId){ alert("Carica una vetrina prima."); return; }
+  const zip = new JSZip();
+  zip.folder("data").file(`${activeId}.json`, JSON.stringify(activeVetrina, null, 2));
+
+  const mediaFolder = zip.folder("media");
+  const filesFolder = zip.folder("files");
+  let okCount = 0, failCount = 0;
+
+  for(const m of (activeVetrina.media || [])){
+    if(!m?.url || !String(m.url).startsWith("media/")) continue;
+    const name = m.url.replace(/^media\//, "");
+    try{ mediaFolder.file(name, await fetchAsBlob(m.url)); okCount++; }catch(e){ failCount++; }
+  }
+  for(const f of (activeVetrina.files || [])){
+    if(!f?.url || !String(f.url).startsWith("files/")) continue;
+    const name = f.url.replace(/^files\//, "");
+    try{ filesFolder.file(name, await fetchAsBlob(f.url)); okCount++; }catch(e){ failCount++; }
+  }
+
+  const blob = await zip.generateAsync({type:"blob"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `backup_${activeId}.zip`;
+  a.click();
+
+  alert(`✅ Backup creato. File inclusi: ${okCount} • Non trovati: ${failCount}`);
+}
+
+/* ================= OCR ================= */
+const ocrFile = document.getElementById("ocrFile");
+const ocrPreview = document.getElementById("ocrPreview");
+const ocrNoPreview = document.getElementById("ocrNoPreview");
+const ocrText = document.getElementById("ocrText");
+const ocrStatus = document.getElementById("ocrStatus");
+const ocrBar = document.getElementById("ocrBar");
+
+if(ocrFile){
+  ocrFile.addEventListener("change", (e)=>{
+    const f = e.target.files && e.target.files[0];
+    if(!f){ ocrImage=null; return; }
+    if(!f.type.startsWith("image/")){
+      alert("Carica un'immagine.");
+      e.target.value = "";
+      return;
+    }
+    ocrImage = f;
+    ocrPreview.src = URL.createObjectURL(f);
+    ocrPreview.style.display = "block";
+    ocrNoPreview.style.display = "none";
+    ocrStatus.textContent = "Immagine caricata";
+    ocrBar.style.width = "0%";
+  });
+}
+
+async function runOCR(){
+  if(!ocrImage){ alert("Carica un'immagine"); return; }
+  const lang = document.getElementById("ocrLang").value;
+
+  ocrStatus.textContent = "OCR in corso…";
+  ocrBar.style.width = "0%";
+
+  try{
+    const { data } = await Tesseract.recognize(ocrImage, lang, {
+      logger: (m)=>{
+        if(m?.status) ocrStatus.textContent = m.status;
+        if(typeof m?.progress === "number") ocrBar.style.width = Math.round(m.progress*100) + "%";
+      }
+    });
+    const text = (data?.text ? data.text : "").trim();
+    ocrText.value = text;
+    ocrStatus.textContent = text ? "✅ OCR completato" : "✅ OCR completato (nessun testo)";
+    ocrBar.style.width = "100%";
+    const ts = new Date().toISOString().replaceAll(":","-");
+    ocrLastTxtFilename = `ocr-${activeId || "vetrina"}-${ts}.txt`;
+  }catch(err){
+    console.error(err);
+    ocrStatus.textContent = "❌ Errore OCR";
+    alert("Errore OCR: riprova con foto più nitida.");
+  }
+}
+
+async function copyOCR(){
+  const txt = (ocrText.value||"").trim();
+  if(!txt){ alert("Nessun testo"); return; }
+  try{ await navigator.clipboard.writeText(txt); ocrStatus.textContent = "📋 Copiato"; }
+  catch(e){ ocrText.select(); document.execCommand("copy"); ocrStatus.textContent = "📋 Copiato"; }
+}
+
+function speakOCR(){
+  const txt = (ocrText.value||"").trim();
+  if(!txt){ alert("Nessun testo"); return; }
+  const lang = document.getElementById("ocrLang").value;
+  const map = { ita:"it-IT", eng:"en-US", ukr:"uk-UA", deu:"de-DE", spa:"es-ES", fra:"fr-FR" };
+  window.SerCucTech.speakText(txt, { lang: map[lang] || "it-IT" });
+}
+
+function downloadOCRtxt(){
+  const txt = (ocrText.value||"").trim();
+  if(!txt){ alert("Nessun testo"); return; }
+  const name = ocrLastTxtFilename || `ocr-${activeId || "vetrina"}.txt`;
+  const blob = new Blob([txt], {type:"text/plain;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+}
+
+function addOCRtoFiles(){
+  if(!activeVetrina){ alert("Carica una vetrina"); return; }
+  const txt = (ocrText.value||"").trim();
+  if(!txt){ alert("Nessun testo"); return; }
+  const name = ocrLastTxtFilename || `ocr-${activeId || "vetrina"}.txt`;
+  activeVetrina.files.push({ label: "Testo OCR", url: `files/${name}` });
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
+  renderFilesList();
+  ocrStatus.textContent = "➕ Aggiunto in files[] (carica il TXT in /files/)";
+  alert("✅ Aggiunto. Ora: scarica il TXT e caricalo in /files/. Poi scarica " + activeId + ".json e caricalo in /data/.");
+}
+
+function clearOCR(){
+  if(document.getElementById("ocrFile")) document.getElementById("ocrFile").value = "";
+  ocrImage = null;
+  if(ocrPreview){ ocrPreview.src = ""; ocrPreview.style.display = "none"; }
+  if(ocrNoPreview) ocrNoPreview.style.display = "block";
+  if(ocrText) ocrText.value = "";
+  if(ocrStatus) ocrStatus.textContent = "Pronto";
+  if(ocrBar) ocrBar.style.width = "0%";
+  ocrLastTxtFilename = "";
+}
+
+/* ================= GROUPS ================= */
+function loadGroupIntoEditor(){
+  const k = document.getElementById("gSelect").value;
+  if(!k) return;
+  const g = indexDB.groups[k];
+  if(!g) return;
+  document.getElementById("gKey").value = k;
+  document.getElementById("gTitle").value = g.title || "";
+  document.getElementById("gDesc").value = g.description || "";
+  document.getElementById("gItems").value = (g.items||[]).join(", ");
+}
+
+function saveGroup(){
+  const k = window.SerCucTech.sanitizeId(document.getElementById("gKey").value);
+  if(!k){ alert("Key non valida"); return; }
+  indexDB.groups[k] = {
+    title: (document.getElementById("gTitle").value||"").trim(),
+    description: (document.getElementById("gDesc").value||"").trim(),
+    items: window.SerCucTech.splitCSV(document.getElementById("gItems").value).map(window.SerCucTech.sanitizeId).filter(Boolean)
+  };
+  indexDB.meta.updatedAt = window.SerCucTech.nowISO();
+  refreshIndexUI();
+  refreshSelects();
+  alert("✅ Gruppo salvato. Scarica index.json");
+}
+
+function deleteGroup(){
+  const k = window.SerCucTech.sanitizeId(document.getElementById("gKey").value);
+  if(!k || !indexDB.groups[k]){ alert("Gruppo non trovato"); return; }
+  if(!confirm("Eliminare gruppo " + k + " ?")) return;
+  delete indexDB.groups[k];
+  indexDB.meta.updatedAt = window.SerCucTech.nowISO();
+  refreshIndexUI();
+  refreshSelects();
+  alert("🗑️ Gruppo eliminato. Scarica index.json");
+}
+
+/* ================= INIT ================= */
+initDeviceCodeBox();
+renderClickableSentence();
+
+if(window.SerCucTech.isAdminSessionValid()){
+  showUnlockedUI();
+}else{
+  showLockedUI();
+}
 </script>
 </body>
 </html>
