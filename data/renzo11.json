@@ -3,11 +3,41 @@
   "title": "Bazar di Bostone",
   "description": "Vetrina commerciale del Bazar di Bostone.",
   "voice": {
-    "lang": "it-IT",
-    "text": "Benvenuto nella vetrina del Bazar di Bostone."
+    "lang": "it-IT",  
+    "text": "Benvenuto nella vetrina del Bazar di Bostone.
+   Qui da noi trovi ottime cose e oggetti di ogni genere usati
+Contatta Renzo al 3 3 3 2 9 2 7 8 4 2 per chiarimenti e appuntamento o Sergio su whatsapp al 3 2 0 8 8 5 2 8 5 8
+Vi aspettiamo
+Facciamo svuota cantina e soffitti ecc. a pagamento "
   },
   "tags": ["commercio"],
-  "media": [],
+  "media": [
+    { "type": "image", "url": "media/renzo11-010.jpg", "label": "Foto 010" },
+    { "type": "image", "url": "media/renzo11-011.jpg", "label": "Foto 011" },
+    { "type": "image", "url": "media/renzo11-012.jpg", "label": "Foto 012" },
+    { "type": "image", "url": "media/renzo11-013.jpg", "label": "Foto 013" },
+    { "type": "image", "url": "media/renzo11-014.jpg", "label": "Foto 014" },
+    { "type": "image", "url": "media/renzo11-015.jpg", "label": "Foto 015" },
+    { "type": "image", "url": "media/renzo11-016.jpg", "label": "Foto 016" },
+    { "type": "image", "url": "media/renzo11-017.jpg", "label": "Foto 017" },
+    { "type": "image", "url": "media/renzo11-018.jpg", "label": "Foto 018" },
+    { "type": "image", "url": "media/renzo11-019.jpg", "label": "Foto 019" },
+    { "type": "image", "url": "media/renzo11-020.jpg", "label": "Foto 020" },
+    { "type": "image", "url": "media/renzo11-021.jpg", "label": "Foto 021" },
+    { "type": "image", "url": "media/renzo11-022.jpg", "label": "Foto 022" },
+    { "type": "image", "url": "media/renzo11-023.jpg", "label": "Foto 023" },
+    { "type": "image", "url": "media/renzo11-0234.jpg", "label": "Foto 0234" },
+    { "type": "image", "url": "media/renzo11-024.jpg", "label": "Foto 024" },
+    { "type": "image", "url": "media/renzo11-025.jpg", "label": "Foto 025" },
+    { "type": "image", "url": "media/renzo11-026.jpg", "label": "Foto 026" },
+    { "type": "image", "url": "media/renzo11-027.jpg", "label": "Foto 027" },
+    { "type": "image", "url": "media/renzo11-028.jpg", "label": "Foto 028" },
+    { "type": "image", "url": "media/renzo11-029.jpg", "label": "Foto 029" },
+    { "type": "image", "url": "media/renzo11-030.jpg", "label": "Foto 030" },
+    { "type": "image", "url": "media/renzo11-031.jpg", "label": "Foto 031" },
+    { "type": "image", "url": "media/renzo11-032.jpg", "label": "Foto 032" },
+    { "type": "image", "url": "media/renzo11-033.jpg", "label": "Foto 033" }
+  ],
   "files": [],
   "createdAt": "2025-12-19T07:00:00+01:00",
   "updatedAt": "2025-12-19T07:03:00+01:00"
