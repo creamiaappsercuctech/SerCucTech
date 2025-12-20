@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#0b1220" />
   <title>SerCucTech — Vetrina</title>
-
   <link rel="stylesheet" href="stile.css" />
 </head>
 
@@ -22,6 +21,23 @@
       <p class="heroDesc" id="heroDesc"></p>
     </section>
 
+    <!-- QR + Share -->
+    <section class="card" id="shareCard" hidden>
+      <div class="cardTitle">Condividi</div>
+      <div class="shareBox">
+        <div class="qrBox">
+          <img id="qrImg" alt="QR Code" />
+          <div class="muted" id="shareLinkText"></div>
+        </div>
+
+        <div class="shareBtns">
+          <button class="shareBtn" id="btnShareNative">📲 Condividi</button>
+          <button class="shareBtn wa" id="btnShareWA2">🟢 WhatsApp</button>
+          <button class="shareBtn" id="btnCopy">📋 Copia link</button>
+        </div>
+      </div>
+    </section>
+
     <!-- GALLERY -->
     <section class="galleryWrap" id="galleryWrap" hidden>
       <div class="gallery" id="gallery"></div>
@@ -35,7 +51,7 @@
     </section>
   </main>
 
-  <!-- SHARE WHATSAPP -->
+  <!-- SHARE WHATSAPP FLOAT -->
   <div class="shareWhatsApp" id="shareWhatsApp" hidden>
     <button id="btnShareWA">📲 Condividi questa vetrina su WhatsApp</button>
   </div>
@@ -44,9 +60,7 @@
   <div class="audioGate" id="audioGate" hidden>
     <div class="audioGateCard">
       <div class="audioGateTitle">Audio bloccato</div>
-      <div class="audioGateText">
-        Tocca per attivare la voce (poi partirà automaticamente).
-      </div>
+      <div class="audioGateText">Tocca per attivare la voce (poi partirà automaticamente).</div>
       <button id="btnEnableAudio">Attiva audio</button>
       <button id="btnSkipAudio" class="ghost">Non ora</button>
     </div>
@@ -77,6 +91,13 @@ function applyTheme(t){
   applyTheme(s==="light"||s==="dark"?s:"dark");
 })();
 
+/* ===================== FULLSCREEN / KIOSK ===================== */
+let kiosk=false;
+async function toggleFull(){
+  if(document.fullscreenElement) await document.exitFullscreen();
+  else await document.documentElement.requestFullscreen();
+}
+
 /* ===================== SPEECH ===================== */
 let isSpeaking=false;
 
@@ -85,48 +106,83 @@ function stopSpeech(){
   isSpeaking=false;
 }
 
-/* formatta numeri telefono:
-   - pausa prima del numero
-   - lettura cifra per cifra */
-function formatPhonesForSpeech(txt){
+/* Numeri a coppie + micro pausa prima del numero:
+   3332927842 -> ". 33 32 92 78 42" */
+function formatPhonesPairsForSpeech(txt){
   return String(txt||"").replace(/\b\d{7,12}\b/g, m => {
-    return " . " + m.split("").join(" ");
+    const pairs = m.match(/.{1,2}/g) || [m];
+    return " . " + pairs.join(" ");
   });
+}
+
+/* lingua auto: it / en / ua */
+function detectLang(){
+  const nav = (navigator.language || "it").toLowerCase();
+  if(nav.startsWith("uk") || nav.startsWith("ua")) return "ua";
+  if(nav.startsWith("en")) return "en";
+  return "it";
 }
 
 function speakOnce(text, lang){
   if(!("speechSynthesis" in window)) return false;
+  if(!text) return false;
   try{
     stopSpeech();
     const u=new SpeechSynthesisUtterance(text);
-    u.lang=lang||"it-IT";
+    u.lang=lang || "it-IT";
     u.rate=1.02;
     u.pitch=1;
     u.volume=1;
     u.onend=()=>isSpeaking=false;
+    u.onerror=()=>isSpeaking=false;
     isSpeaking=true;
     speechSynthesis.speak(u);
     return true;
   }catch(e){ return false; }
 }
 
-/* ===================== FULLSCREEN / KIOSK ===================== */
-let kiosk=false;
-async function toggleFull(){
-  if(document.fullscreenElement) await document.exitFullscreen();
-  else await document.documentElement.requestFullscreen();
+/* ===================== SHARE + QR ===================== */
+function makeShareUrl(){
+  return location.href;
 }
 
-/* ===================== SHARE ===================== */
-function setupShare(title){
-  const w=document.getElementById("shareWhatsApp");
-  const b=document.getElementById("btnShareWA");
-  w.hidden=false;
-  b.onclick=()=>{
-    const url=location.href;
-    const msg=`${title}\nGuarda la vetrina:\n${url}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,"_blank");
-  };
+function setQr(url){
+  // usa un servizio QR (immagine) — semplice e stabile
+  // Nota: se un giorno vuoi farlo offline, lo facciamo con JS puro
+  const qr = document.getElementById("qrImg");
+  qr.src = "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" + encodeURIComponent(url);
+}
+
+async function copyText(txt){
+  try{
+    await navigator.clipboard.writeText(txt);
+    return true;
+  }catch(e){
+    // fallback
+    const ta=document.createElement("textarea");
+    ta.value=txt;
+    document.body.appendChild(ta);
+    ta.select();
+    try{ document.execCommand("copy"); }catch(e2){}
+    ta.remove();
+    return true;
+  }
+}
+
+async function shareNative(title, url){
+  const msg = `${title}\n${url}`;
+  if(navigator.share){
+    try{
+      await navigator.share({title, text: msg, url});
+      return true;
+    }catch(e){}
+  }
+  return false;
+}
+
+function shareWhatsApp(title, url){
+  const msg = `${title}\nGuarda la vetrina:\n${url}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
 }
 
 /* ===================== GALLERY (ULTIMA VISTA) ===================== */
@@ -159,12 +215,15 @@ function buildGallery(media){
 
   function setDot(i){
     [...d.children].forEach((x,k)=>x.classList.toggle("on",k===i));
-    localStorage.setItem(KEY,String(i));
+    try{ localStorage.setItem(KEY,String(i)); }catch(e){}
   }
 
+  let t=null;
   g.addEventListener("scroll",()=>{
     const i=clamp(Math.round(g.scrollLeft/g.clientWidth),0,imgs.length-1);
-    setDot(i);
+    [...d.children].forEach((x,k)=>x.classList.toggle("on",k===i));
+    if(t) clearTimeout(t);
+    t=setTimeout(()=>{ try{ localStorage.setItem(KEY,String(i)); }catch(e){} }, 200);
   },{passive:true});
 
   requestAnimationFrame(()=>{
@@ -172,6 +231,12 @@ function buildGallery(media){
     g.scrollLeft=last*g.clientWidth;
     setDot(last);
   });
+
+  window.addEventListener("resize",()=>{
+    const last=clamp(parseInt(localStorage.getItem(KEY)||"0",10),0,imgs.length-1);
+    g.scrollLeft=last*g.clientWidth;
+    setDot(last);
+  },{passive:true});
 }
 
 /* ===================== FILES ===================== */
@@ -184,42 +249,105 @@ function buildFiles(files){
   files.forEach(f=>{
     const a=document.createElement("a");
     a.className="fileRow";
-    a.href=f.url; a.target="_blank";
+    a.href=f.url; a.target="_blank"; a.rel="noopener";
     a.textContent=f.label||f.url;
     l.appendChild(a);
   });
 }
 
+/* ===================== AUDIO GATE ===================== */
+function showAudioGate(onEnable){
+  const gate=document.getElementById("audioGate");
+  gate.hidden=false;
+  document.getElementById("btnEnableAudio").onclick=()=>{
+    gate.hidden=true;
+    onEnable && onEnable();
+  };
+  document.getElementById("btnSkipAudio").onclick=()=>{
+    gate.hidden=true;
+  };
+}
+
 /* ===================== LOAD ===================== */
 async function load(){
   const id=qs("id");
-  document.getElementById("chipId").textContent="id: "+id;
-  const r=await fetch(`data/${id}.json`,{cache:"no-store"});
+  document.getElementById("chipId").textContent="id: "+(id||"—");
+  if(!id){
+    document.getElementById("heroTitle").textContent="Manca id";
+    document.getElementById("heroDesc").textContent="Apri così: vetrina.html?id=renzo11";
+    return;
+  }
+
+  const r=await fetch(`data/${encodeURIComponent(id)}.json`,{cache:"no-store"});
   const data=await r.json();
 
-  const title=`${data.title} con SerCucTech`;
+  // Titolo richiesto per renzo11
+  const title=(id==="renzo11")
+    ? "Bazar di Bostone con SerCucTech"
+    : `${data.title||id} con SerCucTech`;
+
   document.title=title;
   document.getElementById("heroTitle").textContent=title;
   document.getElementById("heroDesc").textContent=data.description||"";
 
+  // Gallery + files
   buildGallery(data.media||[]);
   buildFiles(data.files||[]);
-  setupShare(title);
 
-  const voiceText=formatPhonesForSpeech(
-    [data.description||"", data.voice?.text||""].join(" ")
-  );
+  // Share UI + QR
+  const shareUrl = makeShareUrl();
+  document.getElementById("shareCard").hidden = false;
+  document.getElementById("shareLinkText").textContent = shareUrl;
+  setQr(shareUrl);
 
-  const autoKey="autoplay_"+id;
-  if(!localStorage.getItem(autoKey)){
+  document.getElementById("btnShareWA").onclick = ()=>shareWhatsApp(title, shareUrl);
+  document.getElementById("btnShareWA2").onclick = ()=>shareWhatsApp(title, shareUrl);
+
+  document.getElementById("btnCopy").onclick = async ()=>{
+    await copyText(shareUrl);
+    alert("Link copiato!");
+  };
+
+  document.getElementById("btnShareNative").onclick = async ()=>{
+    const ok = await shareNative(title, shareUrl);
+    if(!ok) shareWhatsApp(title, shareUrl);
+  };
+
+  // ===== MULTILINGUA (audio) =====
+  const L = detectLang();
+
+  const intro = {
+    it: `Benvenuto nella vetrina. ${data.description || ""}`,
+    en: `Welcome to the showcase. ${data.description || ""}`,
+    ua: `Ласкаво просимо до вітрини. ${data.description || ""}`
+  };
+
+  // voce: preferisci voice.text, altrimenti description
+  const baseVoice = (data.voice?.text || "").trim();
+  const rawText = baseVoice ? baseVoice : intro[L];
+
+  // numeri telefoni a coppie + micro pausa
+  const voiceText = formatPhonesPairsForSpeech(rawText);
+
+  // lang TTS
+  const ttsLang = (L==="ua") ? "uk-UA" : (L==="en") ? "en-US" : "it-IT";
+
+  // Autoplay solo prima volta
+  const autoKey="sercuctech_autoplay_done_"+id;
+  const wantAuto = !localStorage.getItem(autoKey);
+  if(wantAuto){
     localStorage.setItem(autoKey,"1");
-    const ok=speakOnce(voiceText,data.voice?.lang);
-    if(!ok){
-      document.getElementById("audioGate").hidden=false;
-    }
+    const ok = speakOnce(voiceText, ttsLang);
+    // se non parte (bloccato), mostro popup
+    setTimeout(()=>{
+      if(!isSpeaking){
+        showAudioGate(()=>speakOnce(voiceText, ttsLang));
+      }
+    }, 700);
   }
 
-  document.getElementById("btnVoice").onclick=()=>speakOnce(voiceText,data.voice?.lang);
+  // Bottom buttons
+  document.getElementById("btnVoice").onclick=()=>speakOnce(voiceText, ttsLang);
   document.getElementById("btnStop").onclick=()=>stopSpeech();
   document.getElementById("btnFull").onclick=()=>toggleFull();
   document.getElementById("btnTheme").onclick=()=>{
@@ -231,17 +359,45 @@ async function load(){
     document.body.classList.toggle("kioskOn",kiosk);
     if(kiosk) await document.documentElement.requestFullscreen();
   };
-
-  document.getElementById("btnEnableAudio").onclick=()=>{
-    document.getElementById("audioGate").hidden=true;
-    speakOnce(voiceText,data.voice?.lang);
-  };
-  document.getElementById("btnSkipAudio").onclick=()=>{
-    document.getElementById("audioGate").hidden=true;
-  };
 }
 
 load();
 </script>
+
+<style>
+/* Piccole aggiunte layout share + QR (non tocca stile.css) */
+.shareBox{ padding: 12px 14px 14px; }
+.qrBox{
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+}
+#qrImg{
+  width: 220px; height: 220px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--card);
+}
+.shareBtns{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+.shareBtn{
+  width:100%;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--card2);
+  color: var(--txt);
+  font-weight: 950;
+  padding: 12px 14px;
+}
+.shareBtn:active{ transform: scale(.99); }
+.shareBtn.wa{
+  background: #25D366;
+  border: none;
+  color: #fff;
+}
+</style>
+
 </body>
 </html>
