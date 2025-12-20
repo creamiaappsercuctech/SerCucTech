@@ -2,10 +2,10 @@
    SerCucTech – app.js (PWA + data/index.json)
    - Loader index.json + vetrine singole + groups
    - IndexedDB cache
-   - TTS
+   - TTS (con fix Android voci)
    - Admin Unlock 24h + Device Binding + Multi-device allowlist
-   - ✅ Auto-voce SOLO prima volta per vetrina (per dispositivo)
-   - ✅ Toggle globale Auto-Voce ON/OFF
+   - Auto-voce SOLO prima volta per vetrina (per dispositivo)
+   - Toggle globale Auto-Voce ON/OFF
 ========================================================= */
 
 /* ===================== CONFIG ===================== */
@@ -53,8 +53,13 @@ async function fetchJson(path){
 
 /* ===================== SPEECH (TTS) ===================== */
 function stopSpeak(){
-  try{ if("speechSynthesis" in window) window.speechSynthesis.cancel(); }catch(e){}
+  try{
+    if("speechSynthesis" in window){
+      window.speechSynthesis.cancel();
+    }
+  }catch(e){}
 }
+
 function speakText(text, opts={}){
   if(!text) return false;
   if(!("speechSynthesis" in window)) return false;
@@ -70,6 +75,47 @@ function speakText(text, opts={}){
   }catch(e){
     return false;
   }
+}
+
+/* ===== ANDROID FIX: attesa voci ===== */
+function waitVoicesReady(timeoutMs = 1500){
+  return new Promise((resolve)=>{
+    if(!("speechSynthesis" in window)) return resolve(false);
+
+    const hasVoices = ()=>{
+      try{ return speechSynthesis.getVoices().length > 0; }
+      catch(e){ return false; }
+    };
+
+    if(hasVoices()) return resolve(true);
+
+    let done = false;
+    const finish = (ok)=>{
+      if(done) return;
+      done = true;
+      try{ speechSynthesis.onvoiceschanged = null; }catch(e){}
+      resolve(ok);
+    };
+
+    const t = setTimeout(()=>finish(hasVoices()), timeoutMs);
+
+    try{
+      speechSynthesis.onvoiceschanged = ()=>{
+        clearTimeout(t);
+        finish(hasVoices());
+      };
+      speechSynthesis.getVoices(); // trigger
+    }catch(e){
+      clearTimeout(t);
+      finish(false);
+    }
+  });
+}
+
+async function speakTextReliable(text, opts={}){
+  await waitVoicesReady(1500);
+  await new Promise(r=>setTimeout(r, 120));
+  return speakText(text, opts);
 }
 
 /* ===================== AUTO-VOICE (FIRST TIME ONLY + GLOBAL TOGGLE) ===================== */
@@ -93,58 +139,13 @@ function setAutoVoiceDone(vetrinaId){
   localStorage.setItem(autoVoiceKeyForVetrina(vetrinaId), "1");
 }
 
-// tenta di capire se ha iniziato a parlare entro poco tempo
-function waitForSpeaking(timeoutMs=900){
-  return new Promise((resolve)=>{
-    const start = Date.now();
-    const tick = ()=>{
-      let speaking = false;
-      try{ speaking = !!window.speechSynthesis && window.speechSynthesis.speaking; }catch(e){}
-      if(speaking) return resolve(true);
-      if(Date.now() - start > timeoutMs) return resolve(false);
-      setTimeout(tick, 80);
-    };
-    tick();
-  });
-}
-
-async function autoSpeakFirstTime(v){
-  if(!isAutoVoiceEnabled()) return; // ✅ toggle globale OFF → non fare nulla
-
-  const vid = sanitizeId(v?.id);
-  if(!vid) return;
-
-  // SOLO prima volta
-  if(hasAutoVoiceDone(vid)) return;
-
-  const lang = (v.voice && v.voice.lang) ? v.voice.lang : "it-IT";
-  const text = (v.voice && v.voice.text) ? v.voice.text : (v.title || v.id || "");
-  if(!text) return;
-
-  // Tenta autoplay
-  const ok = speakText(text, { lang });
-  if(ok){
-    const started = await waitForSpeaking(900);
-    if(started){
-      setAutoVoiceDone(vid);
-      return;
-    }
-  }
-
-  // Autoplay bloccato → overlay 1 tap (non segniamo done finché non preme Avvia)
-  showAutoVoiceOverlay({ lang, text, vetrinaId: vid });
-}
-
 function showAutoVoiceOverlay({lang, text, vetrinaId}){
   if(document.getElementById("autoSpeakOverlay")) return;
 
   const overlay = document.createElement("div");
   overlay.id = "autoSpeakOverlay";
   overlay.style.position = "fixed";
-  overlay.style.left = "0";
-  overlay.style.top = "0";
-  overlay.style.right = "0";
-  overlay.style.bottom = "0";
+  overlay.style.inset = "0";
   overlay.style.background = "rgba(0,0,0,.55)";
   overlay.style.display = "flex";
   overlay.style.alignItems = "center";
@@ -153,16 +154,21 @@ function showAutoVoiceOverlay({lang, text, vetrinaId}){
   overlay.style.padding = "18px";
 
   overlay.innerHTML = `
-    <div style="max-width:520px;width:100%;background:rgba(17,27,46,.95);border:1px solid #22345f;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.22);">
+    <div style="max-width:520px;width:100%;background:rgba(17,27,46,.95);
+      border:1px solid #22345f;border-radius:16px;padding:16px;">
       <div style="font-weight:900;margin-bottom:6px;">Avvio audio</div>
-      <div style="opacity:.85;font-size:13px;line-height:1.4;margin-bottom:12px;">
-        Il browser può bloccare l’audio automatico. Tocca “Avvia audio” una volta.
+      <div style="opacity:.85;font-size:13px;margin-bottom:12px;">
+        Tocca per avviare la voce (il browser ha bloccato l’autoplay).
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button id="autoSpeakBtn" style="border:0;padding:10px 14px;border-radius:12px;font-weight:900;cursor:pointer;background:#5ee1a2;color:#052014;">
+      <div style="display:flex;gap:10px;">
+        <button id="autoSpeakBtn"
+          style="border:0;padding:10px 14px;border-radius:12px;
+          font-weight:900;background:#5ee1a2;color:#052014;cursor:pointer;">
           🔊 Avvia audio
         </button>
-        <button id="autoSpeakClose" style="border:0;padding:10px 14px;border-radius:12px;font-weight:900;cursor:pointer;background:#22345f;color:#e8eefc;">
+        <button id="autoSpeakClose"
+          style="border:0;padding:10px 14px;border-radius:12px;
+          font-weight:900;background:#22345f;color:#e8eefc;cursor:pointer;">
           Chiudi
         </button>
       </div>
@@ -172,17 +178,65 @@ function showAutoVoiceOverlay({lang, text, vetrinaId}){
   document.body.appendChild(overlay);
 
   document.getElementById("autoSpeakBtn").onclick = async ()=>{
-    const ok = speakText(text, { lang });
+    const ok = await speakTextReliable(text, { lang });
     if(ok){
-      const started = await waitForSpeaking(900);
-      if(started){
-        setAutoVoiceDone(vetrinaId); // ✅ segna "prima volta fatta" solo se parte
-      }
+      setAutoVoiceDone(vetrinaId);
     }
     overlay.remove();
   };
 
-  document.getElementById("autoSpeakClose").onclick = ()=> overlay.remove();
+  document.getElementById("autoSpeakClose").onclick = ()=>{
+    overlay.remove();
+  };
+}
+
+async function autoSpeakFirstTime(v){
+  // toggle globale
+  if(!isAutoVoiceEnabled()) return;
+
+  const vid = sanitizeId(v?.id);
+  if(!vid) return;
+
+  // solo prima volta
+  if(hasAutoVoiceDone(vid)) return;
+
+  const lang = (v.voice && v.voice.lang) ? v.voice.lang : "it-IT";
+  const text =
+    (v.voice && v.voice.text && v.voice.text.trim())
+      ? v.voice.text.trim()
+      : (v.title || v.id || "");
+
+  if(!text) return;
+
+  console.log("[AUTO-VOICE] enabled?", isAutoVoiceEnabled());
+  console.log("[AUTO-VOICE] id:", vid, "done?", hasAutoVoiceDone(vid));
+  console.log("[AUTO-VOICE] text:", text);
+
+  // tentativo autoplay affidabile
+  const ok = await speakTextReliable(text, { lang });
+
+  if(ok){
+    // aspetta se sta parlando davvero
+    const started = await new Promise(res=>{
+      const start = Date.now();
+      const chk = ()=>{
+        let speaking = false;
+        try{ speaking = speechSynthesis.speaking; }catch(e){}
+        if(speaking) return res(true);
+        if(Date.now() - start > 1200) return res(false);
+        setTimeout(chk, 100);
+      };
+      chk();
+    });
+
+    if(started){
+      setAutoVoiceDone(vid);
+      return;
+    }
+  }
+
+  // autoplay bloccato → overlay 1 tap
+  showAutoVoiceOverlay({ lang, text, vetrinaId: vid });
 }
 
 /* ===================== ADMIN UNLOCK (24h + device) ===================== */
@@ -527,7 +581,7 @@ function renderVetrina(v, opts={}){
     speakBtn.onclick = ()=>{
       const lang = (v.voice && v.voice.lang) ? v.voice.lang : "it-IT";
       const text = (v.voice && v.voice.text) ? v.voice.text : (v.title || v.id);
-      speakText(text, { lang });
+      speakTextReliable(text, { lang });
     };
   }
   const stopBtn = el("stopBtn");
@@ -550,7 +604,7 @@ async function boot(){
       const { vetrina, source } = await loadVetrinaById(id);
       renderVetrina(vetrina, { source });
 
-      // ✅ AUTO VOCE: SOLO PRIMA VOLTA + toggle globale
+      // AUTO VOCE: SOLO PRIMA VOLTA + toggle globale
       autoSpeakFirstTime(vetrina);
 
       return;
@@ -613,6 +667,7 @@ window.SerCucTech = {
 
   // utils
   speakText,
+  speakTextReliable,
   stopSpeak,
   sanitizeId,
   splitCSV,
