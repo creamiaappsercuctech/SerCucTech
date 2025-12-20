@@ -1,9 +1,9 @@
 /* =====================================================
-   SerCucTech – stile.css
-   Mobile-first • PWA • Smartphone friendly
+   SerCucTech – stile.css (FULL)
+   Mobile-first • PWA • Kiosk • Theme • Bottom Bar
 ===================================================== */
 
-/* ---------- RESET BASE ---------- */
+/* ---------- RESET ---------- */
 *{
   box-sizing:border-box;
   margin:0;
@@ -37,6 +37,45 @@ body{
   --warn:#ffcc66;
   --danger:#ff6b6b;
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* ---------- THEME ---------- */
+html[data-theme="auto"]{ color-scheme: light dark; }
+html[data-theme="dark"]{ color-scheme: dark; }
+html[data-theme="light"]{ color-scheme: light; }
+
+/* DARK */
+html[data-theme="auto"] body,
+html[data-theme="dark"] body{
+  background:#0b1220;
+  color:#e8eefc;
+}
+
+/* LIGHT */
+html[data-theme="light"] body{
+  background:#f6f8ff;
+  color:#0b1220;
+}
+html[data-theme="light"] .card{
+  background:linear-gradient(180deg,#ffffff,#eef2ff);
+  border-color:#cfd8ff;
+}
+html[data-theme="light"] .item{
+  background:#ffffff;
+  border-color:#cfd8ff;
+}
+html[data-theme="light"] .mut{ color:#3b4a7a; }
+html[data-theme="light"] .hr{ background:#cfd8ff; }
+html[data-theme="light"] .pill{
+  background:#eef2ff;
+  border-color:#cfd8ff;
+  color:#26345f;
+}
+html[data-theme="light"] .btn,
+html[data-theme="light"] .btn.sec{
+  background:#e6ecff;
+  color:#15224a;
+  border-color:#cfd8ff;
 }
 
 /* ---------- LAYOUT ---------- */
@@ -75,17 +114,17 @@ body{
   padding:14px;
 }
 
+.card h1,
 .card h2{
   font-size:18px;
   margin-bottom:8px;
 }
-
 .card h3{
   font-size:16px;
   margin-bottom:6px;
 }
 
-/* ---------- LISTE / ITEM ---------- */
+/* ---------- LISTE ---------- */
 .list{
   display:flex;
   flex-direction:column;
@@ -104,18 +143,13 @@ body{
 }
 
 /* ---------- TESTI ---------- */
-b,strong{
-  font-weight:900;
-}
+b,strong{ font-weight:900; }
 
 a{
   color:var(--acc);
   text-decoration:none;
 }
-
-a:hover{
-  text-decoration:underline;
-}
+a:hover{ text-decoration:underline; }
 
 /* ---------- INPUT ---------- */
 input, textarea, select{
@@ -142,7 +176,7 @@ label{
   color:var(--mut);
 }
 
-/* ---------- BOTTONI (SMARTPHONE FRIENDLY) ---------- */
+/* ---------- BOTTONI (SMARTPHONE) ---------- */
 .btns{
   display:flex;
   flex-wrap:wrap;
@@ -158,7 +192,7 @@ button{
   gap:10px;
 
   width:100%;
-  min-height:48px;              /* touch target */
+  min-height:48px;
   padding:12px 14px;
 
   border-radius:14px;
@@ -184,24 +218,21 @@ button:hover{
   color:#052014;
   border-color:var(--acc);
 }
-
 .btn.warn{
   background:var(--warn);
   color:#2b2000;
   border-color:var(--warn);
 }
-
 .btn.danger{
   background:var(--danger);
   color:#300;
   border-color:var(--danger);
 }
-
 .btn.sec{
   background:#22345f;
 }
 
-/* 2 colonne su smartphone */
+/* 2 colonne smartphone */
 @media (min-width:360px){
   .btns .btn,
   .btns button{
@@ -209,20 +240,12 @@ button:hover{
   }
 }
 
-/* 1 colonna su schermi piccoli */
-@media (max-width:359px){
-  .btns .btn,
-  .btns button{
-    width:100%;
-  }
-}
-
-/* Bottone sempre grande */
+/* Bottone grande */
 .btn.big{
   width:100% !important;
 }
 
-/* ---------- PILL / BADGE ---------- */
+/* ---------- PILL ---------- */
 .pill{
   display:inline-flex;
   align-items:center;
@@ -248,7 +271,7 @@ img, video{
   margin-top:8px;
 }
 
-/* ---------- IFRAME (PDF) ---------- */
+/* ---------- IFRAME ---------- */
 iframe{
   width:100%;
   min-height:380px;
@@ -257,25 +280,139 @@ iframe{
   background:#000;
 }
 
-/* ---------- OVERLAY AUDIO ---------- */
-#autoSpeakOverlay{
-  animation:fadeIn .2s ease-out;
+/* ---------- TOP BAR (VETRINA) ---------- */
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:rgba(11,18,32,.85);
+  backdrop-filter: blur(10px);
+  border-bottom:1px solid var(--border);
+  padding:10px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
 }
 
-@keyframes fadeIn{
-  from{opacity:0}
-  to{opacity:1}
+.topbar-left,
+.topbar-center,
+.topbar-right{
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
 
-/* ---------- UTIL ---------- */
-.hidden{
+.btn.small{
+  min-height:40px;
+  padding:9px 10px;
+  border-radius:12px;
+  width:auto;
+}
+
+/* ---------- VETRINA ---------- */
+.vetrina-wrap{
+  padding-bottom: calc(86px + env(safe-area-inset-bottom));
+}
+
+.v-title{
+  font-size:22px;
+  font-weight:1000;
+  margin-top:10px;
+}
+
+.v-desc{
+  margin-top:6px;
+}
+
+.sectionTitle{
+  font-size:16px;
+  margin-bottom:8px;
+}
+
+.pillrow{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+/* ---------- BOTTOM BAR ---------- */
+.bottombar{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:9990;
+  padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+  background:rgba(11,18,32,.92);
+  backdrop-filter: blur(12px);
+  border-top:1px solid var(--border);
+  display:flex;
+  gap:8px;
+}
+
+.bb-btn{
+  flex:1;
+  border:1px solid var(--border);
+  background:#13204a;
+  color:var(--text);
+  border-radius:14px;
+  min-height:54px;
+  padding:8px 6px;
+  font-weight:1000;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  cursor:pointer;
+}
+
+.bb-btn span{
+  font-size:11px;
+  opacity:.9;
+}
+
+.bb-btn:active{
+  transform:scale(.98);
+}
+
+/* ---------- KIOSK MODE ---------- */
+body.kiosk .topbar{
   display:none !important;
 }
 
-.center{
-  text-align:center;
+body.kiosk .classicBtns{
+  display:none !important;
 }
 
-.right{
-  text-align:right;
+body.kiosk{
+  overscroll-behavior:none;
 }
+
+/* ---------- TOAST ---------- */
+.toast{
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  bottom: calc(92px + env(safe-area-inset-bottom));
+  background:rgba(0,0,0,.75);
+  color:#fff;
+  padding:10px 14px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.15);
+  font-weight:900;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .18s ease;
+  z-index:99999;
+}
+.toast.show{
+  opacity:1;
+}
+
+/* ---------- UTIL ---------- */
+.hidden{ display:none !important; }
+.center{ text-align:center; }
+.right{ text-align:right; }
