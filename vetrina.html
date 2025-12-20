@@ -57,8 +57,10 @@
   </div>
 
   <!-- AUDIO GATE -->
-  <div class="audioGate" id="audioGate" hidden>
-    <div class="audioGateCard">
+  <div class="audioGate" id="audioGate" hidden aria-hidden="true">
+    <div class="audioGateBackdrop" id="audioGateBackdrop"></div>
+
+    <div class="audioGateCard" role="dialog" aria-modal="true" aria-label="Audio bloccato">
       <div class="audioGateTitle">Audio bloccato</div>
       <div class="audioGateText">Tocca per attivare la voce (poi partirà automaticamente).</div>
       <button id="btnEnableAudio">Attiva audio</button>
@@ -106,8 +108,7 @@ function stopSpeech(){
   isSpeaking=false;
 }
 
-/* Numeri a coppie + micro pausa prima del numero:
-   3332927842 -> ". 33 32 92 78 42" */
+/* Numeri a coppie: 3332927842 -> ". 33 32 92 78 42" */
 function formatPhonesPairsForSpeech(txt){
   return String(txt||"").replace(/\b\d{7,12}\b/g, m => {
     const pairs = m.match(/.{1,2}/g) || [m];
@@ -142,13 +143,9 @@ function speakOnce(text, lang){
 }
 
 /* ===================== SHARE + QR ===================== */
-function makeShareUrl(){
-  return location.href;
-}
+function makeShareUrl(){ return location.href; }
 
 function setQr(url){
-  // usa un servizio QR (immagine) — semplice e stabile
-  // Nota: se un giorno vuoi farlo offline, lo facciamo con JS puro
   const qr = document.getElementById("qrImg");
   qr.src = "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" + encodeURIComponent(url);
 }
@@ -158,7 +155,6 @@ async function copyText(txt){
     await navigator.clipboard.writeText(txt);
     return true;
   }catch(e){
-    // fallback
     const ta=document.createElement("textarea");
     ta.value=txt;
     document.body.appendChild(ta);
@@ -213,11 +209,6 @@ function buildGallery(media){
     d.appendChild(dot);
   });
 
-  function setDot(i){
-    [...d.children].forEach((x,k)=>x.classList.toggle("on",k===i));
-    try{ localStorage.setItem(KEY,String(i)); }catch(e){}
-  }
-
   let t=null;
   g.addEventListener("scroll",()=>{
     const i=clamp(Math.round(g.scrollLeft/g.clientWidth),0,imgs.length-1);
@@ -229,13 +220,13 @@ function buildGallery(media){
   requestAnimationFrame(()=>{
     const last=clamp(parseInt(localStorage.getItem(KEY)||"0",10),0,imgs.length-1);
     g.scrollLeft=last*g.clientWidth;
-    setDot(last);
+    [...d.children].forEach((x,k)=>x.classList.toggle("on",k===last));
   });
 
   window.addEventListener("resize",()=>{
     const last=clamp(parseInt(localStorage.getItem(KEY)||"0",10),0,imgs.length-1);
     g.scrollLeft=last*g.clientWidth;
-    setDot(last);
+    [...d.children].forEach((x,k)=>x.classList.toggle("on",k===last));
   },{passive:true});
 }
 
@@ -255,17 +246,25 @@ function buildFiles(files){
   });
 }
 
-/* ===================== AUDIO GATE ===================== */
-function showAudioGate(onEnable){
+/* ===================== AUDIO GATE (FIX BLOCCO BOTTONI) ===================== */
+let gateOpen=false;
+function openGate(){
   const gate=document.getElementById("audioGate");
   gate.hidden=false;
-  document.getElementById("btnEnableAudio").onclick=()=>{
-    gate.hidden=true;
-    onEnable && onEnable();
-  };
-  document.getElementById("btnSkipAudio").onclick=()=>{
-    gate.hidden=true;
-  };
+  gate.setAttribute("aria-hidden","false");
+  gateOpen=true;
+}
+function closeGate(){
+  const gate=document.getElementById("audioGate");
+  gate.hidden=true;
+  gate.setAttribute("aria-hidden","true");
+  gateOpen=false;
+}
+
+function withGateClose(fn){
+  // se overlay aperto, chiudilo e poi esegui
+  if(gateOpen) closeGate();
+  fn && fn();
 }
 
 /* ===================== LOAD ===================== */
@@ -281,7 +280,6 @@ async function load(){
   const r=await fetch(`data/${encodeURIComponent(id)}.json`,{cache:"no-store"});
   const data=await r.json();
 
-  // Titolo richiesto per renzo11
   const title=(id==="renzo11")
     ? "Bazar di Bostone con SerCucTech"
     : `${data.title||id} con SerCucTech`;
@@ -290,11 +288,9 @@ async function load(){
   document.getElementById("heroTitle").textContent=title;
   document.getElementById("heroDesc").textContent=data.description||"";
 
-  // Gallery + files
   buildGallery(data.media||[]);
   buildFiles(data.files||[]);
 
-  // Share UI + QR
   const shareUrl = makeShareUrl();
   document.getElementById("shareCard").hidden = false;
   document.getElementById("shareLinkText").textContent = shareUrl;
@@ -313,89 +309,138 @@ async function load(){
     if(!ok) shareWhatsApp(title, shareUrl);
   };
 
-  // ===== MULTILINGUA (audio) =====
   const L = detectLang();
-
-  const intro = {
-    it: `Benvenuto nella vetrina. ${data.description || ""}`,
-    en: `Welcome to the showcase. ${data.description || ""}`,
-    ua: `Ласкаво просимо до вітрини. ${data.description || ""}`
-  };
-
-  // voce: preferisci voice.text, altrimenti description
-  const baseVoice = (data.voice?.text || "").trim();
-  const rawText = baseVoice ? baseVoice : intro[L];
-
-  // numeri telefoni a coppie + micro pausa
-  const voiceText = formatPhonesPairsForSpeech(rawText);
-
-  // lang TTS
   const ttsLang = (L==="ua") ? "uk-UA" : (L==="en") ? "en-US" : "it-IT";
 
-  // Autoplay solo prima volta
+  const rawText = (data.voice?.text || "").trim()
+    ? data.voice.text.trim()
+    : (L==="en")
+      ? `Welcome to the showcase. ${data.description||""}`
+      : (L==="ua")
+        ? `Ласкаво просимо до вітрини. ${data.description||""}`
+        : `Benvenuto nella vetrina. ${data.description||""}`;
+
+  const voiceText = formatPhonesPairsForSpeech(rawText);
+
+  // Autoplay solo prima volta: se bloccato apriamo gate
   const autoKey="sercuctech_autoplay_done_"+id;
   const wantAuto = !localStorage.getItem(autoKey);
   if(wantAuto){
     localStorage.setItem(autoKey,"1");
     const ok = speakOnce(voiceText, ttsLang);
-    // se non parte (bloccato), mostro popup
     setTimeout(()=>{
-      if(!isSpeaking){
-        showAudioGate(()=>speakOnce(voiceText, ttsLang));
+      if(!ok || !isSpeaking){
+        openGate();
       }
-    }, 700);
+    }, 500);
   }
 
-  // Bottom buttons
-  document.getElementById("btnVoice").onclick=()=>speakOnce(voiceText, ttsLang);
-  document.getElementById("btnStop").onclick=()=>stopSpeech();
-  document.getElementById("btnFull").onclick=()=>toggleFull();
-  document.getElementById("btnTheme").onclick=()=>{
+  // Gate buttons (sempre cliccabili ora)
+  document.getElementById("btnEnableAudio").onclick = ()=>{
+    closeGate();
+    speakOnce(voiceText, ttsLang);
+  };
+  document.getElementById("btnSkipAudio").onclick = ()=>closeGate();
+  document.getElementById("audioGateBackdrop").onclick = ()=>closeGate();
+
+  // Bottom buttons: se gate aperto, chiude e poi esegue
+  document.getElementById("btnVoice").onclick = ()=>withGateClose(()=> {
+    const ok = speakOnce(voiceText, ttsLang);
+    if(!ok) openGate();
+  });
+
+  document.getElementById("btnStop").onclick = ()=>withGateClose(()=>stopSpeech());
+  document.getElementById("btnFull").onclick = ()=>withGateClose(()=>toggleFull());
+  document.getElementById("btnTheme").onclick = ()=>withGateClose(()=>{
     const c=document.documentElement.getAttribute("data-theme");
     applyTheme(c==="dark"?"light":"dark");
-  };
-  document.getElementById("btnKiosk").onclick=async()=>{
+  });
+
+  document.getElementById("btnKiosk").onclick = ()=>withGateClose(async()=>{
     kiosk=!kiosk;
     document.body.classList.toggle("kioskOn",kiosk);
-    if(kiosk) await document.documentElement.requestFullscreen();
-  };
+    if(kiosk && !document.fullscreenElement){
+      try{ await document.documentElement.requestFullscreen(); }catch(e){}
+    }
+  });
 }
 
 load();
 </script>
 
+<!-- FIX overlay: z-index + pointer-events garantiti -->
 <style>
-/* Piccole aggiunte layout share + QR (non tocca stile.css) */
+/* Share + QR */
 .shareBox{ padding: 12px 14px 14px; }
-.qrBox{
-  display:flex; flex-direction:column; align-items:center; gap:10px;
-}
+.qrBox{ display:flex; flex-direction:column; align-items:center; gap:10px; }
 #qrImg{
   width: 220px; height: 220px;
   border-radius: 18px;
-  border: 1px solid var(--line);
-  background: var(--card);
+  border: 1px solid var(--line, rgba(255,255,255,.12));
+  background: var(--card, rgba(255,255,255,.06));
 }
-.shareBtns{
-  display:grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-  margin-top: 12px;
-}
+.shareBtns{ display:grid; grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
 .shareBtn{
   width:100%;
   border-radius: 16px;
-  border: 1px solid var(--line);
-  background: var(--card2);
-  color: var(--txt);
+  border: 1px solid var(--line, rgba(255,255,255,.12));
+  background: var(--card2, rgba(255,255,255,.08));
+  color: var(--txt, #fff);
   font-weight: 950;
   padding: 12px 14px;
 }
 .shareBtn:active{ transform: scale(.99); }
-.shareBtn.wa{
-  background: #25D366;
-  border: none;
+.shareBtn.wa{ background:#25D366; border:none; color:#fff; }
+
+/* AUDIO GATE (IMPORTANTE) */
+.audioGate{
+  position: fixed;
+  inset: 0;
+  z-index: 99999;           /* sopra tutto */
+  display: grid;
+  place-items: center;
+  pointer-events: auto;     /* prende i tocchi */
+}
+.audioGate[hidden]{ display:none !important; }
+
+.audioGateBackdrop{
+  position:absolute;
+  inset:0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+
+.audioGateCard{
+  position: relative;
+  z-index: 100000;          /* sopra backdrop */
+  width: min(92vw, 420px);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(20,28,44,.92);
+  border: 1px solid rgba(255,255,255,.14);
   color: #fff;
+  pointer-events: auto;     /* bottoni cliccabili */
+}
+
+.audioGateTitle{ font-weight: 950; font-size: 18px; margin-bottom: 6px; }
+.audioGateText{ opacity:.9; font-size: 14px; margin-bottom: 10px; line-height: 1.3; }
+
+#audioGate button{
+  width:100%;
+  margin-top:10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.10);
+  color:#fff;
+  font-weight: 900;
+}
+
+#audioGate button.ghost{
+  background: transparent;
+  opacity: .9;
 }
 </style>
 
