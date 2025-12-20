@@ -1,100 +1,166 @@
 <!doctype html>
 <html lang="it">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SerCucTech – Guida Pubblicazione Vetrine</title>
-<meta property="og:title" content="SerCucTech – Pubblicare una vetrina">
-<meta property="og:description" content="Guida rapida per rendere una vetrina visibile a tutti e con anteprima WhatsApp">
-<meta property="og:type" content="website">
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SerCucTech – Pubblica Vetrina</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0b1220">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <style>
+    :root{ --bg:#0b1220; --card:#111b2e; --txt:#e8eefc; --mut:#a9b8dd; --acc:#5ee1a2; --b:#22345f; }
+    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:linear-gradient(180deg,#081024,#0b1220); color:var(--txt); }
+    .wrap{ max-width:900px; margin:0 auto; padding:16px; }
+    .card{ background:rgba(17,27,46,.92); border:1px solid #1b2a4f; border-radius:16px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,.22); margin-top:14px; }
+    label{ display:block; margin:10px 0 6px; color:var(--mut); font-size:13px; }
+    input, textarea{ width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px; border:1px solid var(--b); background:#0f1830; color:var(--txt); outline:none; }
+    textarea{ min-height:84px; resize:vertical; }
+    .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    a.btn, button{ cursor:pointer; border:0; padding:10px 14px; border-radius:12px; font-weight:900; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+    .sec{ background:#22345f; color:var(--txt); }
+    .ok{ background:var(--acc); color:#052014; }
+    .mini{ font-size:12px; color:var(--mut); line-height:1.35; }
+    .kbd{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas; background:#0f1a31; border:1px solid #22345f; padding:2px 8px; border-radius:10px; color:var(--mut); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas; }
+    .hr{ height:1px; background:#1b2a4f; margin:14px 0; }
+  </style>
 </head>
 <body>
-
 <div class="wrap">
-  <div class="card">
-    <h2>Guida Pubblicazione Vetrine (SerCucTech)</h2>
-    <div class="small">
-      Questa guida serve per far funzionare i link condivisi (WhatsApp, Telegram, ecc.).
-      <br>Perché? Perché i dati salvati nell’admin sono locali finché non li pubblichi in <b>/data/</b>.
-    </div>
-    <div class="small" style="margin-top:10px">
-      <a href="index.html">⬅ Torna alle vetrine</a> • <a href="admin.html">🔐 Vai all’admin</a>
-    </div>
-  </div>
 
   <div class="card">
-    <h3>✅ Obiettivo</h3>
-    <div class="small">
-      Una vetrina è visibile a TUTTI solo se esiste il file:
-      <br><b>/data/ID.json</b>
+    <h2 style="margin:0 0 8px 0">📣 Pubblica una Vetrina</h2>
+    <div class="mini">
+      Questa pagina ti dice esattamente <b>che file caricare</b> e ti crea <b>i link pronti</b>.
+    </div>
+    <div class="btns">
+      <a class="btn sec" href="index.html">🏠 Home</a>
+      <a class="btn sec" href="admin.html">🔐 Admin</a>
+      <a class="btn sec" href="vetrina.html?id=scalvini10">🪟 Esempio scalvini10</a>
     </div>
   </div>
 
   <div class="card">
-    <h3>1️⃣ Crea la vetrina in Admin</h3>
-    <ol class="small">
-      <li>Apri <b>admin.html</b></li>
-      <li>Inserisci il PIN</li>
-      <li>Scrivi <b>ID vetrina</b> (es: <b>negozio1</b>)</li>
-      <li>Inserisci titolo/descrizione, carica file, salva</li>
-    </ol>
-  </div>
-
-  <div class="card">
-    <h3>2️⃣ Esporta il file JSON</h3>
-    <ol class="small">
-      <li>In Admin, scrivi l’ID della vetrina</li>
-      <li>Premi <b>⬇ Esporta JSON</b></li>
-      <li>Otterrai un file sul telefono: <b>ID.json</b> (es: <b>negozio1.json</b>)</li>
-    </ol>
-  </div>
-
-  <div class="card">
-    <h3>3️⃣ Carica su GitHub in /data/</h3>
-    <ol class="small">
-      <li>Apri la repo su GitHub</li>
-      <li>Se non esiste, crea la cartella <b>data</b> (minuscolo)</li>
-      <li>Carica il file dentro: <b>data/ID.json</b></li>
-    </ol>
-
-    <div class="card" style="background:#0b1224">
-      <div class="small">
-        ✅ Controllo: apri questo link (sostituisci ID):
-        <br><code>https://creamiaappsercuctech.github.io/SerCucTech/data/ID.json</code>
-        <br>Se vedi testo JSON → è pubblicato.
-        <br>Se vedi 404 → non è pubblicato (quindi WhatsApp non lo vede).
-      </div>
+    <h2 style="margin:0 0 8px 0">1) Inserisci ID vetrina</h2>
+    <div class="mini">
+      Esempio: <span class="kbd">scalvini10</span> → file vetrina: <span class="kbd">data/scalvini10.json</span>
+    </div>
+    <label>ID</label>
+    <input id="vid" placeholder="es: scalvini10" autocomplete="off">
+    <div class="btns">
+      <button class="ok" onclick="build()">✅ Genera link</button>
+      <button class="sec" onclick="copyAll()">📋 Copia tutto</button>
     </div>
   </div>
 
-  <div class="card">
-    <h3>4️⃣ Condividi il link della vetrina</h3>
-    <div class="small">
-      Il link pubblico è:
-      <br><code>https://creamiaappsercuctech.github.io/SerCucTech/vetrina.html?id=ID</code>
-    </div>
-  </div>
+  <div class="card" id="outCard" style="display:none;">
+    <h2 style="margin:0 0 8px 0">2) Risultato</h2>
+    <div class="mini">File e link pronti:</div>
 
-  <div class="card">
-    <h3>📸 Anteprima WhatsApp (consigliata)</h3>
-    <div class="small">
-      Per far apparire un’anteprima bella su WhatsApp, carica anche una cover immagine:
-      <br><b>/data/ID-cover.jpg</b>
-      <br>(es: <b>data/negozio1-cover.jpg</b>)
-      <br><br>Consiglio: usa una foto rettangolare (es. 1200×630).
-    </div>
-  </div>
+    <div class="hr"></div>
 
-  <div class="card">
-    <h3>🧠 Nota importante</h3>
-    <div class="small">
-      Se la vetrina esiste solo nel tuo admin (localStorage), la vedi solo TU.
-      Gli altri (WhatsApp) vedono solo quello che è pubblicato in <b>/data/</b>.
+    <div class="mini"><b>File da caricare su GitHub</b></div>
+    <div class="mini">
+      - <span class="kbd" id="fIndex"></span><br>
+      - <span class="kbd" id="fVetrina"></span><br>
+      - media: <span class="kbd">/media/</span> (es: <span class="kbd">media/foto1.jpg</span>, <span class="kbd">media/tour.mp4</span>)<br>
+      - files: <span class="kbd">/files/</span> (es: <span class="kbd">files/manuale.pdf</span>, <span class="kbd">files/ocr-...txt</span>)
     </div>
+
+    <div class="hr"></div>
+
+    <div class="mini"><b>Link pubblici</b></div>
+    <div class="mini">
+      - Vetrina: <span class="mono" id="lVetrina"></span><br>
+      - JSON vetrina: <span class="mono" id="lJson"></span><br>
+      - Index JSON: <span class="mono" id="lIndex"></span>
+    </div>
+
+    <div class="btns" style="margin-top:12px">
+      <a class="btn sec" id="openV" target="_blank" rel="noopener">Apri vetrina</a>
+      <a class="btn sec" id="openJ" target="_blank" rel="noopener">Apri JSON</a>
+      <a class="btn sec" id="openI" target="_blank" rel="noopener">Apri Index</a>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="mini"><b>Riga pronta da mettere nel JSON</b></div>
+    <textarea id="snippet" readonly></textarea>
   </div>
 
 </div>
 
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./service-worker.js").catch(console.error);
+}
+
+function sanitizeId(s){
+  return (s||"").trim().toLowerCase().replace(/\s+/g,"").replace(/[^a-z0-9_-]/g,"");
+}
+
+function build(){
+  const id = sanitizeId(document.getElementById("vid").value);
+  if(!id){ alert("Inserisci un ID valido (es: scalvini10)"); return; }
+
+  const base = location.origin + location.pathname.replace(/\/[^\/]*$/, "/");
+
+  const fIndex = "data/index.json";
+  const fVetrina = `data/${id}.json`;
+
+  const lVetrina = `${base}vetrina.html?id=${encodeURIComponent(id)}`;
+  const lJson = `${base}data/${encodeURIComponent(id)}.json`;
+  const lIndex = `${base}data/index.json`;
+
+  document.getElementById("fIndex").textContent = fIndex;
+  document.getElementById("fVetrina").textContent = fVetrina;
+
+  document.getElementById("lVetrina").textContent = lVetrina;
+  document.getElementById("lJson").textContent = lJson;
+  document.getElementById("lIndex").textContent = lIndex;
+
+  document.getElementById("openV").href = lVetrina;
+  document.getElementById("openJ").href = lJson;
+  document.getElementById("openI").href = lIndex;
+
+  document.getElementById("snippet").value =
+`// Dentro data/${id}.json (esempio files[]):
+{ "label": "Manuale", "url": "files/manuale.pdf" }
+// Esempio media[]:
+{ "type": "image", "url": "media/foto1.jpg", "title": "Foto", "note": "" }`;
+
+  document.getElementById("outCard").style.display = "block";
+}
+
+async function copyAll(){
+  const id = sanitizeId(document.getElementById("vid").value);
+  if(!id){ alert("Prima genera i link"); return; }
+  const base = location.origin + location.pathname.replace(/\/[^\/]*$/, "/");
+  const txt =
+`PUBBLICA VETRINA
+ID: ${id}
+
+FILE DA CARICARE:
+- data/index.json
+- data/${id}.json
+- media/ (es: media/foto1.jpg, media/tour.mp4)
+- files/ (es: files/manuale.pdf, files/ocr-${id}.txt)
+
+LINK:
+- Vetrina: ${base}vetrina.html?id=${id}
+- JSON vetrina: ${base}data/${id}.json
+- Index JSON: ${base}data/index.json
+`;
+  try{
+    await navigator.clipboard.writeText(txt);
+    alert("📋 Copiato!");
+  }catch(e){
+    alert("Non riesco a copiare automaticamente. Seleziona e copia manualmente.");
+  }
+}
+</script>
 </body>
 </html>
