@@ -1,139 +1,81 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0b1220">
-<link rel="apple-touch-icon" href="icon-192.png">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SerCucTech - Vetrina</title>
-  <script src="./guide.js"></script>
+  <title>SerCucTech – Vetrina</title>
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0b1220">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <link rel="stylesheet" href="stile.css" />
   <style>
-    :root{--bg:#0b1220;--card:rgba(27,46,92,.55);--txt:#e8eefc;--mut:#a9b8dd;--b:#22345f;}
-    body{margin:0;font-family:system-ui;background:var(--bg);color:var(--txt);}
-    .wrap{max-width:980px;margin:0 auto;padding:18px;}
-    .card{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:16px;}
-    h1{margin:0 0 8px 0;font-size:26px;}
-    .mut{color:var(--mut);}
-    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
-    button{cursor:pointer;border:0;padding:10px 14px;border-radius:12px;font-weight:900;}
-    .sec{background:var(--b);color:var(--txt);}
-    .grid{display:grid;gap:12px;margin-top:14px;grid-template-columns:1fr;}
-    @media(min-width:900px){.grid{grid-template-columns:1fr 1fr;}}
-    a.file{display:flex;gap:10px;align-items:center;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.18);text-decoration:none;color:var(--txt);font-weight:800;}
-    .pill{display:inline-block;font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.1);opacity:.9}
+    .topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .grid2{display:grid;gap:12px}
+    @media(min-width:900px){ .grid2{grid-template-columns:1fr 1fr;} }
   </style>
 </head>
- <body>
-  <div class="wrap">
-    <div class="card">
-      <h1 id="title">Caricamento…</h1>
-      <div class="mut" id="desc"></div>
 
-      <div class="btns">
-        <button class="sec" id="speakBtn">🔊 Voce</button>
-        <button class="sec" id="stopBtn">⏹ Stop</button>
-        <button class="sec" id="guideBtn" style="display:none;">📘 Guida</button>
-        <span class="pill" id="hint"></span>
+<body>
+  <div class="wrap">
+
+    <div class="card">
+      <div class="topbar">
+        <div>
+          <h1 id="title" style="margin:0">Caricamento…</h1>
+          <div id="desc" class="mut"></div>
+        </div>
+
+        <div class="btns">
+          <a class="btn sec" href="index.html">⬅️ Home</a>
+          <a class="btn sec" href="admin.html">🔐 Admin</a>
+        </div>
+      </div>
+
+      <div class="btns" style="margin-top:10px">
+        <button id="speakBtn" class="sec">🔊 Voce</button>
+        <button id="stopBtn" class="sec">⏹ Stop</button>
+      </div>
+
+      <div id="hint" class="mut" style="margin-top:10px"></div>
+      <div class="mut" style="margin-top:8px">
+        Parametri: <span class="mono">?id=ID</span> oppure <span class="mono">?group=NOME</span>
       </div>
     </div>
 
-    <div class="grid">
+    <div class="grid2">
       <div class="card">
-        <h2 style="margin:0 0 8px 0;">Files</h2>
+        <h2 style="margin:0 0 10px 0">Media</h2>
+        <div id="media"></div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin:0 0 10px 0">File</h2>
         <div id="files"></div>
       </div>
-      <div class="card">
-        <h2 style="margin:0 0 8px 0;">Media</h2>
-        <div class="mut">Apri la cartella media dall’Admin/Upload.</div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 10px 0">Gruppo (se usi ?group=)</h2>
+      <div id="list"></div>
+      <div class="mut" style="margin-top:10px">
+        Se apri <span class="mono">vetrina.html?group=scalvini</span> qui sotto vedrai le vetrine del gruppo.
       </div>
     </div>
+
   </div>
 
-<script>
-  const id = new URL(location.href).searchParams.get("id") || "scalvini10";
-  const jsonUrl = "./data/" + id + ".json";
-
-  const elTitle = document.getElementById("title");
-  const elDesc = document.getElementById("desc");
-  const elFiles = document.getElementById("files");
-  const elHint = document.getElementById("hint");
-  const guideBtn = document.getElementById("guideBtn");
-
-  function absUrl(u){
-    if(!u) return "";
-    if(u.startsWith("http://") || u.startsWith("https://")) return u;
-    const base = location.origin + location.pathname.replace(/[^\/]+$/, "");
-    return new URL(u, base).toString();
-  }
-
-  function speakWelcome(text){
-    if(SCTGuide.getBool(SCTGuide.LS.guideVetrina,true)) SCTGuide.speak(text);
-  }
-
-  async function load() {
-    const r = await fetch(jsonUrl, {cache:"no-store"});
-    if(!r.ok){ elTitle.textContent = "Vetrina non trovata"; elDesc.textContent="Controlla data/"+id+".json"; return; }
-    const data = await r.json();
-
-    elTitle.textContent = data.title || id;
-    elDesc.textContent = data.description || "";
-
-    // pulsante guida pubblico SOLO se showGuide=true
-    const showGuide = !!data.showGuide;
-    if(showGuide){
-      guideBtn.style.display="inline-block";
-      guideBtn.onclick = () => {
-        // apri checklist
-        location.href = "./checklist.html?id=" + encodeURIComponent(id);
-      };
+  <script src="app.js"></script>
+  <script>
+    // PWA
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./service-worker.js").catch(console.error);
     }
 
-    // files
-    elFiles.innerHTML = "";
-    const files = Array.isArray(data.files) ? data.files : [];
-    if(files.length === 0){
-      elFiles.innerHTML = `<div class="mut">Nessun file. Aggiungi in Admin.</div>`;
-    } else {
-      files.forEach((f, idx) => {
-        const a = document.createElement("a");
-        a.className = "file";
-        a.href = absUrl(f.url);
-        a.target = "_blank";
-        a.rel = "noopener";
-        a.dataset.step = "file_" + idx;
-        a.innerHTML = `📄 <span>${f.label || ("File " + (idx+1))}</span>`;
-        a.onclick = () => {
-          if(SCTGuide.getBool(SCTGuide.LS.guideVetrina,true)){
-            SCTGuide.speak("Hai aperto " + (f.label || "un file") + ". Se vuoi, torna indietro e apri gli altri file.");
-          }
-        };
-        elFiles.appendChild(a);
-      });
-    }
-
-    // voce vetrina
-    const voiceText = (data.voice && data.voice.text) ? data.voice.text : ("Benvenuto nella vetrina " + (data.title||id));
-    const voiceLang = (data.voice && data.voice.lang) ? data.voice.lang : (navigator.language||"it-IT");
-    document.getElementById("speakBtn").onclick = () => {
-      if(!SCTGuide.getBool(SCTGuide.LS.voiceEnabled,true)) SCTGuide.setBool(SCTGuide.LS.voiceEnabled,true);
-      try{ speechSynthesis.cancel(); }catch(e){}
-      const u = new SpeechSynthesisUtterance(voiceText);
-      u.lang = voiceLang;
-      speechSynthesis.speak(u);
-    };
-    document.getElementById("stopBtn").onclick = () => { try{ speechSynthesis.cancel(); }catch(e){} };
-
-    elHint.textContent = showGuide ? "Guida disponibile" : "Guida non attiva";
-    speakWelcome("Sei nella vetrina. Tocca un file per aprirlo. Se vedi ‘Guida’, puoi seguire il percorso passo passo.");
-  }
-
-  load();
-</script>
-   <script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./service-worker.js").catch(console.error);
-  }
-</script>
+    // Se è un gruppo, app.js renderizza in #list.
+    // Se è una vetrina singola, #list resta vuoto e compaiono media/files.
+  </script>
 </body>
 </html>
