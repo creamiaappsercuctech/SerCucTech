@@ -1,9 +1,9 @@
 /* =========================================================
-   SerCucTech – app.js (CORRETTO per data/index.json)
-   - Fix TTS (windowFS -> window)
-   - Loader index.json + vetrine singole
-   - Group support
-   - IndexedDB cache (offline)
+   SerCucTech – app.js (PWA + data/index.json)
+   - Loader index.json + vetrine singole + groups
+   - IndexedDB cache
+   - TTS
+   - Admin Unlock 24h + Device Binding + Multi-device allowlist
 ========================================================= */
 
 /* ===================== CONFIG ===================== */
@@ -55,7 +55,7 @@ function stopSpeak(){
 }
 function speakText(text, opts={}){
   if(!text) return false;
-  if(!("speechSynthesis" in window)) return false;  // ✅ FIX QUI
+  if(!("speechSynthesis" in window)) return false;
   try{
     stopSpeak();
     const u = new SpeechSynthesisUtterance(String(text));
@@ -70,11 +70,101 @@ function speakText(text, opts={}){
   }
 }
 
+/* ===================== ADMIN UNLOCK (24h + device) ===================== */
+const ADMIN_DEVICE_ID_KEY = "sercuctech_device_id";
+const ADMIN_SESSION_KEY   = "sercuctech_admin_session_v1";
+const ADMIN_DEVICES_KEY   = "sercuctech_admin_devices_v1";
+const ADMIN_SESSION_HOURS = 24;
+
+// parole segrete (case-insensitive) presenti nella frase
+const UNLOCK_WORDS = ["sercuctech", "qualsiasi"];
+
+function getOrCreateDeviceId(){
+  let id = localStorage.getItem(ADMIN_DEVICE_ID_KEY);
+  if(!id){
+    id = "dev_" + crypto.getRandomValues(new Uint32Array(4)).join("-");
+    localStorage.setItem(ADMIN_DEVICE_ID_KEY, id);
+  }
+  return id;
+}
+function loadAllowedDevices(){
+  try{
+    const raw = localStorage.getItem(ADMIN_DEVICES_KEY);
+    if(!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  }catch(e){ return []; }
+}
+function saveAllowedDevices(arr){
+  localStorage.setItem(ADMIN_DEVICES_KEY, JSON.stringify(arr));
+}
+function addAllowedDevice(deviceId){
+  if(!deviceId) return false;
+  const arr = loadAllowedDevices();
+  if(!arr.includes(deviceId)){
+    arr.push(deviceId);
+    saveAllowedDevices(arr);
+  }
+  return true;
+}
+function isThisDeviceAllowed(){
+  const myId = getOrCreateDeviceId();
+  const arr = loadAllowedDevices();
+  return arr.includes(myId);
+}
+function setAdminSession24h(){
+  const deviceId = getOrCreateDeviceId();
+  const exp = Date.now() + ADMIN_SESSION_HOURS * 60 * 60 * 1000;
+  const session = { deviceId, exp };
+  localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session));
+}
+function clearAdminSession(){
+  localStorage.removeItem(ADMIN_SESSION_KEY);
+}
+function isAdminSessionValid(){
+  try{
+    const raw = localStorage.getItem(ADMIN_SESSION_KEY);
+    if(!raw) return false;
+    const s = JSON.parse(raw);
+    if(!s || !s.deviceId || !s.exp) return false;
+    if(Date.now() > Number(s.exp)) return false;
+    if(s.deviceId !== getOrCreateDeviceId()) return false;
+    if(!isThisDeviceAllowed()) return false;
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+function matchesUnlockWords(text){
+  const t = String(text||"").toLowerCase();
+  return UNLOCK_WORDS.every(w => t.includes(w));
+}
+function adminUnlockSuccess(){
+  addAllowedDevice(getOrCreateDeviceId());
+  setAdminSession24h();
+}
+
+// codice device da condividere (copi/incolli)
+function getMyDeviceShareCode(){
+  const payload = { v:1, deviceId: getOrCreateDeviceId(), createdAt: new Date().toISOString() };
+  const json = JSON.stringify(payload);
+  return btoa(unescape(encodeURIComponent(json))).replaceAll("+","-").replaceAll("/","_");
+}
+function parseDeviceShareCode(code){
+  try{
+    const clean = String(code||"").trim().replaceAll("-","+").replaceAll("_","/");
+    const json = decodeURIComponent(escape(atob(clean)));
+    const obj = JSON.parse(json);
+    if(!obj || obj.v !== 1 || !obj.deviceId) return null;
+    return obj;
+  }catch(e){ return null; }
+}
+
 /* ===================== INDEXEDDB CACHE ===================== */
 const DB_NAME = "sercuctech_vetrine_db";
-const DB_VER  = 1;
+const DB_VER  = 2; // ⬅️ aumentato per evitare errori store vecchi
 const STORE_V = "vetrine";
-const STORE_M = "meta"; // per salvare index e timestamp
+const STORE_M = "meta";
 
 function idbOpen(){
   return new Promise((resolve, reject)=>{
@@ -92,7 +182,6 @@ function idbOpen(){
     req.onerror = ()=>reject(req.error);
   });
 }
-
 async function idbPut(store, obj){
   const db = await idbOpen();
   return new Promise((resolve, reject)=>{
@@ -130,7 +219,7 @@ async function idbDelete(store, key){
   });
 }
 
-/* ===================== DATA LOADER (INDEX.JSON) ===================== */
+/* ===================== DATA LOADER ===================== */
 function normalizeIndex(idx){
   const out = (idx && typeof idx==="object") ? idx : {};
   out.meta = out.meta || { version:1, updatedAt:null };
@@ -138,7 +227,6 @@ function normalizeIndex(idx){
   out.vetrine = out.vetrine || {};
   return out;
 }
-
 async function loadIndexOnline(){
   const idx = normalizeIndex(await fetchJson(INDEX_PATH));
   await idbPut(STORE_M, { key:"index", value: idx, savedAt: nowISO() });
@@ -149,7 +237,6 @@ async function loadIndexCached(){
   return row && row.value ? normalizeIndex(row.value) : null;
 }
 async function loadIndexSmart(){
-  // prova online, se fallisce usa cache
   try{
     return await loadIndexOnline();
   }catch(e){
@@ -173,7 +260,6 @@ function normalizeVetrina(v, id){
   o.updatedAt = o.updatedAt || nowISO();
   return o;
 }
-
 async function cacheVetrina(v){
   await idbPut(STORE_V, { ...v, _cachedAt: nowISO() });
 }
@@ -181,12 +267,9 @@ async function getCachedVetrina(id){
   const v = await idbGet(STORE_V, id);
   return v ? normalizeVetrina(v, id) : null;
 }
-
 async function loadVetrinaById(id){
   const vid = sanitizeId(id);
   if(!vid) throw new Error("ID vetrina non valido");
-
-  // prova online (via index)
   try{
     const idx = await loadIndexSmart();
     const rec = idx.vetrine[vid];
@@ -195,7 +278,6 @@ async function loadVetrinaById(id){
     await cacheVetrina(v);
     return { vetrina: v, source:"online" };
   }catch(e){
-    // fallback cache
     const cached = await getCachedVetrina(vid);
     if(cached) return { vetrina: cached, source:"cache" };
     throw e;
@@ -265,16 +347,12 @@ function renderGroupList(targetId, idx, groupKey){
 }
 
 function renderVetrina(v, opts={}){
-  // prova a riempire i blocchi tipici che hai nelle pagine
   if(el("title")) el("title").textContent = v.title || v.id;
   if(el("desc"))  el("desc").textContent  = v.description || "";
   if(el("hint")){
-    el("hint").textContent = opts.source === "cache"
-      ? "📦 Offline: dati da cache"
-      : "";
+    el("hint").textContent = opts.source === "cache" ? "📦 Offline: dati da cache" : "";
   }
 
-  // MEDIA
   const mBox = el("media");
   if(mBox){
     const media = v.media || [];
@@ -303,7 +381,6 @@ function renderVetrina(v, opts={}){
     }
   }
 
-  // FILES
   const fBox = el("files");
   if(fBox){
     const files = v.files || [];
@@ -330,7 +407,6 @@ function renderVetrina(v, opts={}){
     }
   }
 
-  // BOTTONI VOCE (se esistono)
   const speakBtn = el("speakBtn");
   if(speakBtn){
     speakBtn.onclick = ()=>{
@@ -345,18 +421,14 @@ function renderVetrina(v, opts={}){
   }
 }
 
-/* ===================== BOOT (AUTO) ===================== */
+/* ===================== BOOT ===================== */
 async function boot(){
   initPin();
 
-  // Se siamo su index.html: prova a renderizzare lista in #list
   const listEl = el("list");
-
-  // Se siamo su vetrina.html: parametro id o group
   const id = qs("id");
   const group = qs("group");
 
-  // 1) pagina vetrina
   if(id){
     try{
       const { vetrina, source } = await loadVetrinaById(id);
@@ -365,12 +437,11 @@ async function boot(){
     }catch(e){
       console.error(e);
       if(el("hint")) el("hint").textContent = "❌ Errore: " + (e.message || e);
-      if(el("desc")) el("desc").textContent = "Controlla che esista in data/index.json e che il file .json sia presente in /data/";
+      if(el("desc")) el("desc").textContent = "Controlla data/index.json e il file data/<id>.json";
       return;
     }
   }
 
-  // 2) pagina gruppo
   if(group && listEl){
     try{
       const idx = await loadIndexSmart();
@@ -383,7 +454,6 @@ async function boot(){
     }
   }
 
-  // 3) index elenco
   if(listEl){
     try{
       const idx = await loadIndexSmart();
@@ -397,7 +467,7 @@ async function boot(){
             <b>Errore caricamento</b>
             <div class="mut">
               Non riesco a leggere <span class="mono">data/index.json</span>.<br>
-              Controlla che esista questo file: <span class="mono">/data/index.json</span>
+              Controlla che esista: <span class="mono">/data/index.json</span>
             </div>
           </div>
         </div>`;
@@ -405,10 +475,9 @@ async function boot(){
     }
   }
 }
-
 document.addEventListener("DOMContentLoaded", boot);
 
-/* ===================== EXPORT (per admin o altri script) ===================== */
+/* ===================== EXPORT ===================== */
 window.SerCucTech = {
   // loader
   loadIndexSmart,
@@ -425,5 +494,17 @@ window.SerCucTech = {
   stopSpeak,
   sanitizeId,
   splitCSV,
-  nowISO
+  nowISO,
+
+  // admin unlock
+  UNLOCK_WORDS,
+  matchesUnlockWords,
+  adminUnlockSuccess,
+  isAdminSessionValid,
+  clearAdminSession,
+  getOrCreateDeviceId,
+  getMyDeviceShareCode,
+  parseDeviceShareCode,
+  addAllowedDevice,
+  loadAllowedDevices
 };
