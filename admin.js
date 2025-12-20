@@ -1,33 +1,34 @@
-/* ===================== BACKUP EXPORT ===================== */
-async function exportFullBackup(){
-  const backup = {
-    app: "SerCucTech",
-    createdAt: new Date().toISOString(),
-    vetrine: [],
-    links: []
-  };
+/* ===================== DEVICE MANAGER ===================== */
+const MAX_DEVICES = 3;
 
-  const index = await loadIndexSmart();
-
-  for(const id in index.vetrine){
-    const file = index.vetrine[id].file;
-    try{
-      const v = await fetch(file).then(r=>r.json());
-      backup.vetrine.push(v);
-      backup.links.push(`vetrina.html?id=${id}`);
-    }catch(e){}
+function getAllowedDevices(){
+  try{
+    return JSON.parse(localStorage.getItem("sercuctech_admin_devices")) || [];
+  }catch(e){
+    return [];
   }
-
-  const blob = new Blob(
-    [JSON.stringify(backup,null,2)],
-    {type:"application/json"}
-  );
-
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `sercuctech-backup-${Date.now()}.json`;
-  a.click();
 }
 
-document.getElementById("exportBackupBtn")
-  ?.addEventListener("click", exportFullBackup);
+function saveAllowedDevices(list){
+  localStorage.setItem("sercuctech_admin_devices", JSON.stringify(list));
+}
+
+function addAllowedDevice(deviceId){
+  let devices = getAllowedDevices();
+
+  if(devices.includes(deviceId)) return true;
+
+  if(devices.length >= MAX_DEVICES){
+    alert("Limite dispositivi raggiunto. Rimuovine uno prima.");
+    return false;
+  }
+
+  devices.push(deviceId);
+  saveAllowedDevices(devices);
+  return true;
+}
+
+function removeAllowedDevice(deviceId){
+  let devices = getAllowedDevices().filter(d => d !== deviceId);
+  saveAllowedDevices(devices);
+}
