@@ -3,12 +3,8 @@
   "title": "Bazar di Bostone",
   "description": "Vetrina commerciale del Bazar di Bostone.",
   "voice": {
-    "lang": "it-IT",  
-    "text": "Benvenuto nella vetrina del Bazar di Bostone.
-   Qui da noi trovi ottime cose e oggetti di ogni genere usati
-Contatta Renzo al 3 3 3 2 9 2 7 8 4 2 per chiarimenti e appuntamento o Sergio su whatsapp al 3 2 0 8 8 5 2 8 5 8
-Vi aspettiamo
-Facciamo svuota cantina e soffitti ecc. a pagamento "
+    "lang": "it-IT",
+    "text": "Benvenuto nella vetrina del Bazar di Bostone. Qui da noi trovi ottime cose e oggetti di ogni genere usati. Contatta Renzo al 3332927842 per chiarimenti o appuntamento, oppure Sergio su WhatsApp al 3208852858. Facciamo svuota cantine e soffitti, anche a pagamento."
   },
   "tags": ["commercio"],
   "media": [
