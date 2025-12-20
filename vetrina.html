@@ -24,12 +24,7 @@
     .pill{display:inline-block;font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.1);opacity:.9}
   </style>
 </head>
-<script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./service-worker.js").catch(console.error);
-  }
-</script>
-  <body>
+ <body>
   <div class="wrap">
     <div class="card">
       <h1 id="title">Caricamento…</h1>
@@ -134,6 +129,11 @@
   }
 
   load();
+</script>
+   <script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./service-worker.js").catch(console.error);
+  }
 </script>
 </body>
 </html>
