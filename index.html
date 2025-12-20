@@ -102,7 +102,10 @@
       min-height: 320px;
       display:grid;
       place-items:center;
-      touch-action: none; /* drag su mobile */
+
+      /* ✅ FIX ANDROID: permetti scroll verticale.
+         Blocchiamo i gesti SOLO mentre trascini un pin (via JS). */
+      touch-action: pan-y;
     }
     #photo{
       max-width:100%;
@@ -147,6 +150,11 @@
       font-size:12px;
       color: var(--muted);
     }
+    code{
+      padding:2px 6px; border-radius:10px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+    }
   </style>
 </head>
 
@@ -180,7 +188,7 @@
           <label class="small">URL immagine (può essere relativo):</label>
           <input id="imgUrl" type="text" placeholder='Esempio: media/renzo11-001.jpg  (o URL completo https://...)'>
           <div class="hint">
-            Suggerimento: se questo file sta nella tua repo SerCucTech, usa: <b>media/nomefile.jpg</b>
+            Suggerimento: se il file sta nella repo SerCucTech, usa: <b>media/nomefile.jpg</b>
           </div>
         </div>
 
@@ -235,6 +243,7 @@ renzo11-003.jpg"></textarea>
           • Tocca la foto sull’oggetto → crea numero (1,2,3…).<br>
           • Trascina il numero per posizionarlo.<br>
           • <b>Doppio tap</b> su un numero = cancella.<br>
+          • Su Android lo scroll funziona: trascina SOLO il pin per spostarlo.
         </div>
 
         <div class="stage" id="stage">
@@ -264,7 +273,7 @@ renzo11-003.jpg"></textarea>
         <div class="hr"></div>
 
         <div class="hint">
-          Se vuoi, posso aggiungere anche: prezzo/testo per ogni numero + export “media item” completo.
+          Nota: GitHub Pages non elenca automaticamente i file in <b>media/</b>. Per questo usi URL o lista file.
         </div>
 
       </div>
@@ -398,22 +407,28 @@ function deletePin(id){
   renderPins();
 }
 
-/* ===================== DRAG ===================== */
+/* ===================== DRAG (✅ FIX ANDROID) ===================== */
 function makeDraggable(el){
   let dragging = false;
   let pid = null;
+  const prevTouchAction = stage.style.touchAction;
 
   el.addEventListener("pointerdown", (e)=>{
     e.preventDefault();
     e.stopPropagation();
     dragging = true;
     pid = e.pointerId;
+
+    // ✅ Blocca i gesti SOLO mentre trascini
+    stage.style.touchAction = "none";
+
     el.setPointerCapture?.(pid);
   });
 
   el.addEventListener("pointermove", (e)=>{
     if(!dragging || e.pointerId!==pid) return;
     const imgR = imageRect();
+
     const cx = clamp(e.clientX, imgR.left, imgR.right);
     const cy = clamp(e.clientY, imgR.top,  imgR.bottom);
     const {x,y} = clientToPercent(cx, cy);
@@ -421,8 +436,8 @@ function makeDraggable(el){
     const id = el.dataset.id;
     const p = pins.find(pp=>pp.id===id);
     if(!p) return;
-    p.x = x; p.y = y;
 
+    p.x = x; p.y = y;
     const pos = percentToStagePx(x,y);
     el.style.left = pos.x + "px";
     el.style.top  = pos.y + "px";
@@ -432,6 +447,10 @@ function makeDraggable(el){
     if(e.pointerId!==pid) return;
     dragging = false;
     pid = null;
+
+    // ✅ Ripristina scroll
+    stage.style.touchAction = prevTouchAction || "pan-y";
+
     renderPins();
   };
 
@@ -468,11 +487,8 @@ fileInput.addEventListener("change", (e)=>{
 function normalizeUrl(u){
   u = String(u||"").trim();
   if(!u) return "";
-  // se è già http/https, lascialo
   if(/^https?:\/\//i.test(u)) return u;
-  // se inizia con /, relativo al dominio
   if(u.startsWith("/")) return u;
-  // altrimenti relativo alla cartella corrente (es: media/xxx.jpg)
   return u;
 }
 
@@ -491,22 +507,20 @@ async function loadImage(url, nameLabel="URL"){
   setStatus("Carico immagine…");
   imgNameEl.textContent = nameLabel;
 
-  // usa Image per gestire errori di rete
   const test = new Image();
-  test.crossOrigin = "anonymous"; // se l'immagine è sullo stesso dominio OK; se esterna potrebbe non permettere
+  test.crossOrigin = "anonymous";
   test.onload = ()=>{
     photo.src = finalUrl;
     photo.style.display = "block";
     photo.onload = ()=>{
       setStatus("Foto pronta: tocca sugli oggetti per numerare");
       renderPins();
-      // salva l’ultimo URL
       try{ localStorage.setItem("sct_last_img_url", finalUrl); }catch(e){}
     };
   };
   test.onerror = ()=>{
     setStatus("Errore caricamento immagine");
-    alert("Non riesco a caricare questa immagine.\nControlla percorso e nome file.\nEsempio corretto: media/renzo11-001.jpg");
+    alert("Non riesco a caricare questa immagine.\nControlla percorso e nome file.\nEsempio: media/renzo11-001.jpg");
   };
   test.src = finalUrl;
 }
@@ -531,7 +545,6 @@ function buildSelectFromList(){
   imgSelect.innerHTML = `<option value="">— scegli immagine —</option>`;
 
   lines.forEach(line=>{
-    // se è solo nome file, prefix media/
     const url = /^https?:\/\//i.test(line) ? line : (line.includes("/") ? line : ("media/" + line));
     const opt = document.createElement("option");
     opt.value = url;
@@ -562,7 +575,6 @@ btnUndo.addEventListener("click", ()=>{
 });
 
 btnRenumber.addEventListener("click", ()=>{
-  // rinumera in ordine di creazione
   pins.forEach((p,i)=> p.n = i+1);
   renderPins();
 });
@@ -606,7 +618,6 @@ window.addEventListener("resize", ()=>renderPins());
     const lastUrl = localStorage.getItem("sct_last_img_url");
     if(lastUrl){
       imgUrlEl.value = lastUrl;
-      // non auto-carico per evitare errori se offline; ma puoi premere "Apri da URL"
     }
   }catch(e){}
 })();
