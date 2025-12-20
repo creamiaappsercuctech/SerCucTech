@@ -1,215 +1,352 @@
 <!doctype html>
-<html lang="it" data-theme="auto">
+<html lang="it">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>SerCucTech – Vetrina</title>
-
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#0b1220">
-  <link rel="apple-touch-icon" href="icon-192.png">
-
   <link rel="stylesheet" href="stile.css" />
+  <meta name="theme-color" content="#0b1220" />
 </head>
 
-<body class="vetrina-page">
-  <!-- TOP (si nasconde in kiosk) -->
-  <header class="topbar" id="topbar">
-    <div class="topbar-left">
-      <a class="btn sec small" href="index.html" id="homeTop">🏠 Home</a>
-    </div>
-    <div class="topbar-center">
-      <div class="brand">SerCucTech</div>
-    </div>
-    <div class="topbar-right">
-      <button class="btn sec small" id="btnThemeTop" title="Tema">🌓</button>
-      <button class="btn sec small" id="btnKioskTop" title="Kiosk">📺</button>
-    </div>
-  </header>
+<body>
+  <div class="appShell" id="appShell">
 
-  <main class="wrap vetrina-wrap" id="mainWrap">
-    <section class="card vetrina-card">
-      <div class="pillrow">
-        <span class="pill" id="hint"></span>
-        <span class="pill mono" id="vIdPill">—</span>
-      </div>
+    <!-- HEADER -->
+    <header class="topHeader">
+      <div class="badgeLeft" aria-hidden="true"></div>
+      <div class="idPill" id="idPill">id: —</div>
+    </header>
 
-      <h1 class="v-title" id="title">Caricamento…</h1>
-      <p class="mut v-desc" id="desc"></p>
+    <!-- HERO (prima schermata) -->
+    <section class="hero" id="hero">
+      <div class="heroInner">
+        <h1 class="heroTitle" id="heroTitle">Vetrina</h1>
+        <p class="heroSub" id="heroSub"></p>
 
-      <div class="hr"></div>
-
-      <h2 class="sectionTitle">Media</h2>
-      <div class="list" id="media"></div>
-
-      <div class="hr"></div>
-
-      <h2 class="sectionTitle">Files</h2>
-      <div class="list" id="files"></div>
-
-      <div class="hr"></div>
-
-      <!-- pulsanti standard (si possono nascondere in kiosk se vuoi) -->
-      <div class="btns" id="classicBtns">
-        <button class="btn ok big" id="speakBtn">🔊 Ascolta</button>
-        <button class="btn danger big" id="stopBtn">⏹ Stop</button>
+        <div class="heroMediaWrap" id="heroMediaWrap">
+          <img id="heroImg" class="heroImg" alt="Immagine vetrina" />
+          <div class="heroEmpty" id="heroEmpty">
+            Nessuna immagine principale disponibile
+          </div>
+        </div>
       </div>
     </section>
 
-    <div style="height:84px"></div><!-- spazio per barra fissa -->
-  </main>
+    <!-- CONTENUTO -->
+    <main class="content" id="content">
+      <section class="card">
+        <h2 class="cardTitle">Media</h2>
+        <div class="grid" id="mediaGrid"></div>
+      </section>
 
-  <!-- BOTTOM BAR FIXED -->
-  <nav class="bottombar" id="bottomBar">
-    <button class="bb-btn" id="bbHome" title="Home">🏠<span>Home</span></button>
-    <button class="bb-btn" id="bbSpeak" title="Ascolta">🔊<span>Voce</span></button>
-    <button class="bb-btn" id="bbStop" title="Stop">⏹<span>Stop</span></button>
-    <button class="bb-btn" id="bbFull" title="Schermo intero">⛶<span>Full</span></button>
-    <button class="bb-btn" id="bbTheme" title="Tema">🌓<span>Tema</span></button>
-    <button class="bb-btn" id="bbKiosk" title="Kiosk">📺<span>Kiosk</span></button>
-  </nav>
+      <section class="card">
+        <h2 class="cardTitle">File</h2>
+        <div class="files" id="filesList"></div>
+      </section>
 
-  <script src="app.js"></script>
-  <script>
-    /* ===================== THEME ===================== */
-    const THEME_KEY = "sercuctech_theme"; // auto | dark | light
-    function getTheme(){ return localStorage.getItem(THEME_KEY) || "auto"; }
-    function setTheme(t){
-      localStorage.setItem(THEME_KEY, t);
-      document.documentElement.setAttribute("data-theme", t);
-      syncThemeColors();
+      <div class="spaceBottom"></div>
+    </main>
+
+    <!-- BANNER AUDIO (se autoplay bloccato) -->
+    <div class="audioGate" id="audioGate" hidden>
+      <div class="audioGateBox">
+        <div class="audioGateTitle">Audio bloccato dal telefono</div>
+        <div class="audioGateText">Tocca qui per attivare la voce.</div>
+        <button class="btnPrimary" id="btnEnableAudio">Attiva audio</button>
+      </div>
+    </div>
+
+    <!-- BOTTOM BAR -->
+    <nav class="bottomBar" id="bottomBar">
+      <a class="bBtn" href="index.html" title="Home">🏠<span>Home</span></a>
+
+      <button class="bBtn" id="btnVoice" title="Voce">🔊<span>Voce</span></button>
+      <button class="bBtn danger" id="btnStop" title="Stop">⏹️<span>Stop</span></button>
+
+      <button class="bBtn" id="btnFull" title="Schermo intero">⛶<span>Full</span></button>
+      <button class="bBtn" id="btnTheme" title="Tema">🌗<span>Tema</span></button>
+      <button class="bBtn" id="btnKiosk" title="Kiosk">🧷<span>Kiosk</span></button>
+    </nav>
+  </div>
+
+<script>
+/* ===================== UTIL ===================== */
+function qs(name){
+  return new URLSearchParams(location.search).get(name);
+}
+function esc(s){
+  return String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+}
+function joinUrl(rel){
+  // rel tipo "media/renzo11-010.jpg"
+  // se rel è già assoluto lo restituiamo
+  if(!rel) return "";
+  if(/^https?:\/\//i.test(rel)) return rel;
+  return rel.replace(/^\/+/,'');
+}
+
+/* ===================== THEME ===================== */
+const THEME_KEY = "sercuctech_theme"; // "dark" | "light"
+function applyTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem(THEME_KEY, theme);
+  // aggiorna meta theme-color per status bar
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta){
+    meta.setAttribute("content", theme === "light" ? "#f3f6fb" : "#0b1220");
+  }
+}
+function initTheme(){
+  const saved = localStorage.getItem(THEME_KEY);
+  if(saved === "light" || saved === "dark"){
+    applyTheme(saved);
+  }else{
+    // default: dark
+    applyTheme("dark");
+  }
+}
+
+/* ===================== KIOSK ===================== */
+const KIOSK_KEY = "sercuctech_kiosk";
+function setKiosk(on){
+  localStorage.setItem(KIOSK_KEY, on ? "1":"0");
+  document.body.classList.toggle("kiosk", !!on);
+}
+function initKiosk(){
+  setKiosk(localStorage.getItem(KIOSK_KEY)==="1");
+}
+
+/* ===================== FULLSCREEN ===================== */
+async function goFull(){
+  try{
+    const el = document.documentElement;
+    if(!document.fullscreenElement){
+      await el.requestFullscreen();
+    }else{
+      await document.exitFullscreen();
     }
-    function cycleTheme(){
-      const t = getTheme();
-      if(t === "auto") setTheme("dark");
-      else if(t === "dark") setTheme("light");
-      else setTheme("auto");
-      toastTheme();
+  }catch(e){
+    // ignora
+  }
+}
+
+/* ===================== SPEECH ===================== */
+let lastSpokenText = "";
+let autoSpokenOnceKey = ""; // per id vetrina
+function stopSpeech(){
+  try{ speechSynthesis.cancel(); }catch(e){}
+}
+
+function speakText(text, lang){
+  if(!text) return false;
+  if(!("speechSynthesis" in window)) return false;
+
+  try{
+    stopSpeech();
+
+    const u = new SpeechSynthesisUtterance(text);
+
+    // lingua
+    u.lang = lang || navigator.language || "it-IT";
+
+    // piccoli tweak per scorrevolezza
+    u.rate = 1.12;   // un filo più veloce = meno “pause”
+    u.pitch = 1.0;
+    u.volume = 1.0;
+
+    speechSynthesis.speak(u);
+    lastSpokenText = text;
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+// Prova autoplay: se fallisce (alcuni Android), mostra “audioGate”
+function tryAutoSpeakOnce(text, lang, uniqueKey){
+  const already = localStorage.getItem(uniqueKey)==="1";
+  if(already) return;
+
+  // tenta subito
+  const ok = speakText(text, lang);
+  if(ok){
+    localStorage.setItem(uniqueKey,"1");
+    return;
+  }
+
+  // fallback: mostra pulsante
+  const gate = document.getElementById("audioGate");
+  gate.hidden = false;
+
+  document.getElementById("btnEnableAudio").onclick = ()=>{
+    gate.hidden = true;
+    const ok2 = speakText(text, lang);
+    if(ok2) localStorage.setItem(uniqueKey,"1");
+  };
+}
+
+/* ===================== RENDER ===================== */
+function renderMediaGrid(media){
+  const grid = document.getElementById("mediaGrid");
+  grid.innerHTML = "";
+
+  if(!Array.isArray(media) || media.length===0){
+    grid.innerHTML = `<div class="muted">Nessun media</div>`;
+    return;
+  }
+
+  for(const m of media){
+    const type = m.type || "image";
+    const url  = joinUrl(m.url || "");
+    const label = m.label || "";
+
+    if(type === "image"){
+      const card = document.createElement("button");
+      card.className = "mediaCard";
+      card.type = "button";
+      card.innerHTML = `
+        <img class="mediaThumb" src="${esc(url)}" alt="${esc(label||'immagine')}" loading="lazy">
+        <div class="mediaLabel">${esc(label)}</div>
+      `;
+      card.onclick = ()=>{
+        // quando clicchi, mette l'immagine in HERO (prima pagina) e scrolla su
+        const heroImg = document.getElementById("heroImg");
+        const heroEmpty = document.getElementById("heroEmpty");
+        heroImg.src = url;
+        heroImg.style.display = "block";
+        heroEmpty.style.display = "none";
+        window.scrollTo({top:0, behavior:"smooth"});
+      };
+      grid.appendChild(card);
+    }else{
+      const box = document.createElement("div");
+      box.className = "fileRow";
+      box.innerHTML = `
+        <div class="fileIcon">📎</div>
+        <div class="fileInfo">
+          <div class="fileName">${esc(label || type)}</div>
+          <div class="fileSub">${esc(url)}</div>
+        </div>
+        <a class="fileOpen" href="${esc(url)}" target="_blank" rel="noopener">Apri</a>
+      `;
+      grid.appendChild(box);
     }
-    function toastTheme(){
-      const t = getTheme();
-      const msg = t === "auto" ? "Tema: Auto (sistema)" : (t === "dark" ? "Tema: Scuro" : "Tema: Chiaro");
-      quickToast(msg);
-    }
-    function syncThemeColors(){
-      // Aggiorna theme-color in base al tema attivo (utile su Android)
-      const meta = document.querySelector('meta[name="theme-color"]');
-      if(!meta) return;
-      const t = getTheme();
-      if(t === "light") meta.setAttribute("content", "#f6f8ff");
-      else meta.setAttribute("content", "#0b1220");
-    }
+  }
+}
 
-    /* ===================== KIOSK ===================== */
-    const KIOSK_KEY = "sercuctech_kiosk";
-    let wakeLock = null;
+function renderFiles(files){
+  const list = document.getElementById("filesList");
+  list.innerHTML = "";
 
-    function isKiosk(){ return localStorage.getItem(KIOSK_KEY) === "1"; }
-    async function setKiosk(on){
-      localStorage.setItem(KIOSK_KEY, on ? "1" : "0");
-      document.body.classList.toggle("kiosk", !!on);
+  if(!Array.isArray(files) || files.length===0){
+    list.innerHTML = `<div class="muted">Nessun file</div>`;
+    return;
+  }
 
-      // In kiosk: prova fullscreen + wake lock
-      if(on){
-        await tryFullscreen();
-        await tryWakeLock();
-        quickToast("Kiosk: ON");
-      }else{
-        await releaseWakeLock();
-        quickToast("Kiosk: OFF");
-      }
-    }
-    async function toggleKiosk(){ await setKiosk(!isKiosk()); }
+  for(const f of files){
+    const url = joinUrl(f.url || "");
+    const label = f.label || "File";
+    const row = document.createElement("div");
+    row.className = "fileRow";
+    row.innerHTML = `
+      <div class="fileIcon">📄</div>
+      <div class="fileInfo">
+        <div class="fileName">${esc(label)}</div>
+        <div class="fileSub">${esc(url)}</div>
+      </div>
+      <a class="fileOpen" href="${esc(url)}" target="_blank" rel="noopener">Apri</a>
+    `;
+    list.appendChild(row);
+  }
+}
 
-    async function tryFullscreen(){
-      try{
-        if(!document.fullscreenElement && document.documentElement.requestFullscreen){
-          await document.documentElement.requestFullscreen();
-        }
-      }catch(e){}
-    }
-    async function tryWakeLock(){
-      try{
-        if("wakeLock" in navigator){
-          wakeLock = await navigator.wakeLock.request("screen");
-        }
-      }catch(e){}
-    }
-    async function releaseWakeLock(){
-      try{
-        if(wakeLock){
-          await wakeLock.release();
-          wakeLock = null;
-        }
-      }catch(e){}
-    }
+/* ===================== LOAD VETRINA ===================== */
+async function loadVetrina(){
+  const id = (qs("id") || "").trim();
+  const idPill = document.getElementById("idPill");
+  idPill.textContent = id ? `id: ${id}` : "id: —";
 
-    document.addEventListener("visibilitychange", ()=>{
-      // se torna visibile in kiosk, riattiva wake lock
-      if(document.visibilityState === "visible" && isKiosk()){
-        tryWakeLock();
-      }
-    });
+  if(!id){
+    document.getElementById("heroTitle").textContent = "Manca id";
+    document.getElementById("heroSub").textContent = "Apri così: vetrina.html?id=renzo11";
+    return;
+  }
 
-    /* ===================== QUICK TOAST ===================== */
-    let toastT = null;
-    function quickToast(text){
-      let t = document.getElementById("quickToast");
-      if(!t){
-        t = document.createElement("div");
-        t.id = "quickToast";
-        t.className = "toast";
-        document.body.appendChild(t);
-      }
-      t.textContent = text;
-      t.classList.add("show");
-      clearTimeout(toastT);
-      toastT = setTimeout(()=>t.classList.remove("show"), 1300);
-    }
+  // carico JSON
+  const url = `data/${encodeURIComponent(id)}.json?ts=${Date.now()}`;
+  let data;
+  try{
+    const r = await fetch(url, {cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    data = await r.json();
+  }catch(e){
+    document.getElementById("heroTitle").textContent = "Errore caricamento";
+    document.getElementById("heroSub").textContent = `Non riesco a leggere ${url}`;
+    return;
+  }
 
-    /* ===================== BIND UI ===================== */
-    function bindBars(){
-      // top buttons
-      const btnThemeTop = document.getElementById("btnThemeTop");
-      const btnKioskTop = document.getElementById("btnKioskTop");
-      if(btnThemeTop) btnThemeTop.onclick = cycleTheme;
-      if(btnKioskTop) btnKioskTop.onclick = toggleKiosk;
+  // Titolo centrale richiesto
+  // Se vuoi “sempre fisso”, lasciamo così. Altrimenti potresti usare: `${data.title} con SerCucTech`
+  const title = (id === "renzo11")
+    ? "Bazar di Bostone con SerCucTech"
+    : `${data.title || id} con SerCucTech`;
 
-      // bottom bar
-      document.getElementById("bbHome").onclick = ()=> location.href = "index.html";
-      document.getElementById("bbSpeak").onclick = ()=> document.getElementById("speakBtn").click();
-      document.getElementById("bbStop").onclick  = ()=> document.getElementById("stopBtn").click();
-      document.getElementById("bbTheme").onclick = cycleTheme;
-      document.getElementById("bbKiosk").onclick = toggleKiosk;
-      document.getElementById("bbFull").onclick  = tryFullscreen;
-    }
+  document.getElementById("heroTitle").textContent = title;
+  document.getElementById("heroSub").textContent = data.description || "";
 
-    /* ===================== INIT ===================== */
-    (function initLocalUI(){
-      // theme init
-      document.documentElement.setAttribute("data-theme", getTheme());
-      syncThemeColors();
+  // HERO IMAGE = prima immagine del media
+  const heroImg = document.getElementById("heroImg");
+  const heroEmpty = document.getElementById("heroEmpty");
 
-      // kiosk init
-      document.body.classList.toggle("kiosk", isKiosk());
-      if(isKiosk()){
-        // prova subito (non sempre concesso senza tap, ma ci proviamo)
-        tryWakeLock();
-      }
+  const firstImg = Array.isArray(data.media) ? data.media.find(x => (x.type||"image")==="image" && x.url) : null;
+  if(firstImg){
+    heroImg.src = joinUrl(firstImg.url);
+    heroImg.style.display = "block";
+    heroEmpty.style.display = "none";
+  }else{
+    heroImg.style.display = "none";
+    heroEmpty.style.display = "grid";
+  }
 
-      bindBars();
-    })();
+  renderMediaGrid(data.media || []);
+  renderFiles(data.files || []);
 
-    /* Aggiorna pill ID quando carica la vetrina */
-    const origBoot = window.boot;
-    // Non tocchiamo app.js; il suo boot() parte su DOMContentLoaded.
-    // Qui facciamo un piccolo "watch" del parametro id:
-    const vid = (new URLSearchParams(location.search).get("id") || "").trim();
-    if(vid){
-      const pill = document.getElementById("vIdPill");
-      if(pill) pill.textContent = "id: " + vid;
-    }
-  </script>
+  // AUDIO: testo voce + anti-pause consigliato
+  const voice = data.voice || {};
+  const voiceLang = voice.lang || "it-IT";
+  const voiceText = (voice.text || "").trim();
+
+  // autoplay solo la prima volta per questa vetrina (salvato in localStorage)
+  autoSpokenOnceKey = `sercuctech_autovoice_${id}`;
+  if(voiceText){
+    tryAutoSpeakOnce(voiceText, voiceLang, autoSpokenOnceKey);
+  }
+
+  // bottoni
+  document.getElementById("btnVoice").onclick = ()=>{
+    if(voiceText) speakText(voiceText, voiceLang);
+  };
+  document.getElementById("btnStop").onclick = ()=>stopSpeech();
+}
+
+(function init(){
+  initTheme();
+  initKiosk();
+
+  document.getElementById("btnTheme").onclick = ()=>{
+    const cur = document.documentElement.getAttribute("data-theme") || "dark";
+    applyTheme(cur === "dark" ? "light" : "dark");
+  };
+
+  document.getElementById("btnFull").onclick = ()=>goFull();
+
+  document.getElementById("btnKiosk").onclick = ()=>{
+    const now = localStorage.getItem(KIOSK_KEY)==="1";
+    setKiosk(!now);
+  };
+
+  loadVetrina();
+})();
+</script>
 </body>
 </html>
