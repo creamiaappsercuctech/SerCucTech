@@ -1,16 +1,14 @@
 {
   "id": "renzo11",
-  "title": "Bazzar di Bostone",
-  "tags": [
-    "commercio"
-  ],
-  "media": [],
-  "files": [],
-  "description": "",
+  "title": "Bazar di Bostone",
+  "description": "Vetrina commerciale del Bazar di Bostone.",
   "voice": {
     "lang": "it-IT",
-    "text": ""
+    "text": "Benvenuto nella vetrina del Bazar di Bostone."
   },
-  "createdAt": "2025-12-19T15:07:43+01:00",
-  "updatedAt": "2025-12-19T15:07:43+01:00"
+  "tags": ["commercio"],
+  "media": [],
+  "files": [],
+  "createdAt": "2025-12-19T07:00:00+01:00",
+  "updatedAt": "2025-12-19T07:03:00+01:00"
 }
