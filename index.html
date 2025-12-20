@@ -1,92 +1,617 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SerCucTech – Vetrine</title>
-
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#0b1220">
-  <link rel="apple-touch-icon" href="icon-192.png">
-
-  <link rel="stylesheet" href="stile.css" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>SerCucTech — Contatore manuale oggetti su foto (media/)</title>
   <style>
-    .topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-    .search{flex:1;min-width:220px}
-    .search input{width:100%;padding:10px 12px;border-radius:12px;border:1px solid #22345f;background:#0f1b33;color:#e8eefc}
-    .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;border:1px solid #22345f;background:#0f1b33}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    :root{
+      --bg:#0b1220; --panel:rgba(255,255,255,.06); --panel2:rgba(255,255,255,.10);
+      --txt:#eaf0ff; --muted:rgba(234,240,255,.72); --line:rgba(255,255,255,.12);
+      --ok:#25D366; --warn:#ffb020; --bad:#ff4d4d; --r:18px;
+
+      --pinSize: 34px; /* controllato dallo slider */
+      --pinFont: 14px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:
+        radial-gradient(1100px 700px at 30% -20%, rgba(130,170,255,.25), transparent 60%),
+        radial-gradient(1000px 700px at 90% 20%, rgba(120,255,210,.10), transparent 60%),
+        var(--bg);
+      color:var(--txt);
+    }
+    header{
+      position:sticky; top:0; z-index:50;
+      padding:12px 12px;
+      background: rgba(0,0,0,.28);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--line);
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+    }
+    .title{font-weight:950; letter-spacing:.2px}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      font-weight:900; font-size:12px;
+      color: var(--muted);
+    }
+    .wrap{max-width:1100px; margin:0 auto; padding:12px}
+    .grid{display:grid; gap:12px; grid-template-columns: 1fr;}
+    @media(min-width:980px){ .grid{grid-template-columns: 1.35fr .65fr;} }
+    .card{
+      border:1px solid var(--line);
+      background: var(--panel);
+      border-radius: var(--r);
+      overflow:hidden;
+      box-shadow: 0 14px 40px rgba(0,0,0,.35);
+    }
+    .card h2{
+      margin:0; padding:12px 14px;
+      font-size:15px;
+      background: var(--panel2);
+      border-bottom:1px solid var(--line);
+    }
+    .card .content{ padding:12px 14px; }
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      color:var(--txt);
+      padding:10px 12px;
+      border-radius:14px;
+      font-weight:900;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn:active{transform:scale(.99)}
+    .btn.ok{background:rgba(37,211,102,.16); border-color:rgba(37,211,102,.35)}
+    .btn.warn{background:rgba(255,176,32,.14); border-color:rgba(255,176,32,.30)}
+    .btn.bad{background:rgba(255,77,77,.14); border-color:rgba(255,77,77,.30)}
+    .small{font-size:12px; color:var(--muted); font-weight:800}
+    .hint{color:var(--muted); font-weight:800; font-size:12px; line-height:1.35}
+    textarea, input[type="text"], select, input[type="range"]{
+      width:100%;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.22);
+      color:var(--txt);
+      border-radius:14px;
+      padding:10px 12px;
+      font-weight:800;
+      outline:none;
+    }
+    textarea{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight:700;
+      min-height:150px;
+      resize:vertical;
+    }
+    .hr{height:1px; background:var(--line); margin:12px 0}
+
+    /* Stage */
+    .stage{
+      position:relative;
+      width:100%;
+      border-radius: 18px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.20);
+      overflow:hidden;
+      min-height: 320px;
+      display:grid;
+      place-items:center;
+      touch-action: none; /* drag su mobile */
+    }
+    #photo{
+      max-width:100%;
+      max-height: 78vh;
+      display:none;
+      user-select:none;
+      -webkit-user-drag:none;
+    }
+
+    /* Pin con dimensione variabile */
+    .pin{
+      position:absolute;
+      transform: translate(-50%,-50%);
+      width: var(--pinSize);
+      height: var(--pinSize);
+      border-radius:999px;
+      background: rgba(0,0,0,.74);
+      border:2px solid rgba(255,255,255,.9);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:1000;
+      font-size: var(--pinFont);
+      z-index:30;
+      user-select:none;
+      cursor:grab;
+      box-shadow: 0 10px 18px rgba(0,0,0,.35);
+    }
+    .pin:active{ cursor:grabbing; }
+    .pin.selected{
+      outline: 3px solid rgba(130,170,255,.55);
+      box-shadow: 0 12px 24px rgba(0,0,0,.45);
+    }
+    .chip{
+      display:inline-flex;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      font-weight:900;
+      font-size:12px;
+      color: var(--muted);
+    }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div class="topbar">
+<header>
+  <div class="title">SerCucTech • Contatore manuale oggetti su foto</div>
+  <div class="pill" id="status">Carica una foto o usa media/</div>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+
+    <!-- LEFT -->
+    <section class="card">
+      <h2>1) Foto + numeri</h2>
+      <div class="content">
+
+        <!-- SOURCE: upload OR media url -->
+        <div class="row">
+          <label class="btn">
+            📷 Carica JPG/PNG (telefono)
+            <input id="fileInput" type="file" accept="image/*" style="display:none">
+          </label>
+          <button class="btn warn" id="btnLoadUrl" type="button">🌐 Apri da URL / media/</button>
+          <span class="chip" id="imgName">—</span>
+        </div>
+
+        <div class="hr"></div>
+
         <div>
-          <h1 style="margin:0">SerCucTech – Vetrine</h1>
-          <div class="mut">Lista pubblica letta da <span class="mono">data/index.json</span></div>
+          <label class="small">URL immagine (può essere relativo):</label>
+          <input id="imgUrl" type="text" placeholder='Esempio: media/renzo11-001.jpg  (o URL completo https://...)'>
+          <div class="hint">
+            Suggerimento: se questo file sta nella tua repo SerCucTech, usa: <b>media/nomefile.jpg</b>
+          </div>
         </div>
 
-        <div class="pill">
-          <a class="btn sec" href="admin.html">🔐 Admin</a>
-          <a class="btn sec" href="pubblica.html">📣 Pubblica</a>
+        <div style="margin-top:10px">
+          <label class="small">Menu rapido (lista file → dropdown)</label>
+          <select id="imgSelect">
+            <option value="">— (incolla URL oppure crea lista file sotto) —</option>
+          </select>
+
+          <div class="hint" style="margin-top:6px">
+            Metti sotto una lista di file (uno per riga), poi premi “Carica lista”.
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <button class="btn" id="btnLoadList" type="button">📄 Carica lista</button>
+            <button class="btn bad" id="btnClearList" type="button">🗑️ Svuota lista</button>
+          </div>
+
+          <textarea id="fileList" placeholder="Esempio:
+renzo11-001.jpg
+renzo11-002.jpg
+renzo11-003.jpg"></textarea>
+
+          <div class="hint">
+            Se metti solo i nomi (renzo11-001.jpg), lui userà automaticamente <b>media/</b> davanti.
+          </div>
         </div>
+
+        <div class="hr"></div>
+
+        <!-- CONTROLS -->
+        <div class="row">
+          <button class="btn warn" id="btnUndo" type="button">↩️ Undo</button>
+          <button class="btn" id="btnRenumber" type="button">🔢 Rinumera</button>
+          <button class="btn bad" id="btnClearPins" type="button">🧹 Svuota numeri</button>
+          <span class="pill" id="count">0</span>
+        </div>
+
+        <!-- SIZE SLIDER -->
+        <div style="margin-top:10px">
+          <div class="row" style="align-items:center">
+            <span class="pill">🔠 Grandezza numero</span>
+            <input id="sizeSlider" type="range" min="14" max="90" value="34" style="flex:1">
+            <span class="pill" id="sizeVal">34px</span>
+          </div>
+          <div class="hint">
+            Sposta per rendere i numeri più piccoli o più grandi (utile per oggetti piccolissimi).
+          </div>
+        </div>
+
+        <div class="hint" style="margin:10px 0">
+          • Tocca la foto sull’oggetto → crea numero (1,2,3…).<br>
+          • Trascina il numero per posizionarlo.<br>
+          • <b>Doppio tap</b> su un numero = cancella.<br>
+        </div>
+
+        <div class="stage" id="stage">
+          <img id="photo" alt="">
+        </div>
+
       </div>
+    </section>
 
-      <div style="height:10px"></div>
+    <!-- RIGHT -->
+    <section class="card">
+      <h2>2) Export JSON (pins)</h2>
+      <div class="content">
 
-      <div class="search">
-        <input id="q" type="search" placeholder="Cerca per titolo, id o tag… (es: scalvini, casa, manuale)" autocomplete="off">
+        <div class="row">
+          <button class="btn ok" id="btnExport" type="button">⬇️ Export pins</button>
+          <button class="btn" id="btnCopy" type="button">📋 Copia</button>
+        </div>
+
+        <div class="hint" style="margin:10px 0">
+          Output compatibile vetrina: <code>[{"n":1,"x":12.3,"y":45.6},...]</code><br>
+          x,y sono percentuali (0–100) relative all’immagine.
+        </div>
+
+        <textarea id="out" placeholder="Qui appare il JSON…"></textarea>
+
+        <div class="hr"></div>
+
+        <div class="hint">
+          Se vuoi, posso aggiungere anche: prezzo/testo per ogni numero + export “media item” completo.
+        </div>
+
       </div>
+    </section>
 
-      <div class="mut" style="margin-top:10px" id="status"></div>
-    </div>
-
-    <div class="card">
-      <h2 style="margin:0 0 8px 0">Vetrine</h2>
-      <div id="list"></div>
-    </div>
-
-    <div class="mut" style="margin-top:14px">
-      Suggerimento: apri una vetrina con <span class="mono">vetrina.html?id=scalvini10</span> oppure un gruppo con <span class="mono">vetrina.html?group=scalvini</span>.
-    </div>
   </div>
+</div>
 
-  <script src="app.js"></script>
-  <script>
-    // PWA
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./service-worker.js").catch(console.error);
-    }
+<script>
+/* ===================== STATE ===================== */
+const statusEl = document.getElementById("status");
+const fileInput = document.getElementById("fileInput");
+const stage = document.getElementById("stage");
+const photo = document.getElementById("photo");
 
-    // Filtro ricerca (usa il DOM già renderizzato da app.js)
-    (function(){
-      const q = document.getElementById("q");
-      const status = document.getElementById("status");
-      const list = document.getElementById("list");
+const btnUndo = document.getElementById("btnUndo");
+const btnRenumber = document.getElementById("btnRenumber");
+const btnClearPins = document.getElementById("btnClearPins");
+const btnExport = document.getElementById("btnExport");
+const btnCopy = document.getElementById("btnCopy");
+const countEl = document.getElementById("count");
+const outEl = document.getElementById("out");
 
-      function norm(s){ return String(s||"").toLowerCase(); }
+const imgNameEl = document.getElementById("imgName");
+const imgUrlEl = document.getElementById("imgUrl");
+const btnLoadUrl = document.getElementById("btnLoadUrl");
 
-      function applyFilter(){
-        const term = norm(q.value).trim();
-        if(!term){
-          status.textContent = "";
-          Array.from(list.querySelectorAll(".item")).forEach(it=>it.style.display="");
-          return;
-        }
-        let shown = 0;
-        Array.from(list.querySelectorAll(".item")).forEach(it=>{
-          const txt = norm(it.textContent);
-          const ok = txt.includes(term);
-          it.style.display = ok ? "" : "none";
-          if(ok) shown++;
-        });
-        status.textContent = `Filtro attivo: ${shown} risultati per “${term}”`;
+const imgSelect = document.getElementById("imgSelect");
+const fileListEl = document.getElementById("fileList");
+const btnLoadList = document.getElementById("btnLoadList");
+const btnClearList = document.getElementById("btnClearList");
+
+const sizeSlider = document.getElementById("sizeSlider");
+const sizeVal = document.getElementById("sizeVal");
+
+let pins = []; // {id,n,x,y} x/y in %
+let selectedId = null;
+let lastTap = { id:null, t:0 };
+
+function uid(){
+  return "p_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+}
+function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
+function round1(n){ return Math.round(n*10)/10; }
+function setStatus(t){ statusEl.textContent = t; }
+
+function applyPinSize(px){
+  const size = Math.max(14, Math.min(90, Number(px)||34));
+  document.documentElement.style.setProperty("--pinSize", size + "px");
+  const font = Math.max(9, Math.round(size * 0.42));
+  document.documentElement.style.setProperty("--pinFont", font + "px");
+  sizeVal.textContent = size + "px";
+}
+applyPinSize(sizeSlider.value);
+sizeSlider.addEventListener("input", ()=>applyPinSize(sizeSlider.value));
+
+function updateCount(){
+  countEl.textContent = `${pins.length} numeri`;
+}
+
+function imageRect(){
+  return photo.getBoundingClientRect();
+}
+function stageRect(){
+  return stage.getBoundingClientRect();
+}
+
+function clientToPercent(clientX, clientY){
+  const r = imageRect();
+  const x = ((clientX - r.left) / r.width) * 100;
+  const y = ((clientY - r.top) / r.height) * 100;
+  return { x: round1(clamp(x,0,100)), y: round1(clamp(y,0,100)) };
+}
+
+function percentToStagePx(xPct, yPct){
+  const imgR = imageRect();
+  const stR = stageRect();
+  const x = (imgR.left - stR.left) + (xPct/100) * imgR.width;
+  const y = (imgR.top  - stR.top ) + (yPct/100) * imgR.height;
+  return { x, y };
+}
+
+function nextNumber(){
+  const max = pins.reduce((m,p)=>Math.max(m, p.n||0), 0);
+  return max + 1;
+}
+
+/* ===================== RENDER ===================== */
+function clearPinEls(){
+  stage.querySelectorAll(".pin").forEach(el=>el.remove());
+}
+function renderPins(){
+  clearPinEls();
+  pins.forEach(p=>{
+    const el = document.createElement("div");
+    el.className = "pin" + (p.id===selectedId ? " selected" : "");
+    el.dataset.id = p.id;
+    el.textContent = p.n;
+
+    const pos = percentToStagePx(p.x, p.y);
+    el.style.left = pos.x + "px";
+    el.style.top  = pos.y + "px";
+
+    el.addEventListener("pointerdown", (e)=>{
+      e.stopPropagation();
+      selectPin(p.id);
+
+      const now = Date.now();
+      if(lastTap.id === p.id && (now - lastTap.t) < 350){
+        deletePin(p.id);
+        lastTap = { id:null, t:0 };
+        return;
       }
+      lastTap = { id:p.id, t:now };
+    });
 
-      q.addEventListener("input", applyFilter);
-    })();
-  </script>
+    makeDraggable(el);
+    stage.appendChild(el);
+  });
+  updateCount();
+}
+
+function selectPin(id){
+  selectedId = id;
+  renderPins();
+}
+
+function deletePin(id){
+  pins = pins.filter(p=>p.id!==id);
+  if(selectedId===id) selectedId=null;
+  renderPins();
+}
+
+/* ===================== DRAG ===================== */
+function makeDraggable(el){
+  let dragging = false;
+  let pid = null;
+
+  el.addEventListener("pointerdown", (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    dragging = true;
+    pid = e.pointerId;
+    el.setPointerCapture?.(pid);
+  });
+
+  el.addEventListener("pointermove", (e)=>{
+    if(!dragging || e.pointerId!==pid) return;
+    const imgR = imageRect();
+    const cx = clamp(e.clientX, imgR.left, imgR.right);
+    const cy = clamp(e.clientY, imgR.top,  imgR.bottom);
+    const {x,y} = clientToPercent(cx, cy);
+
+    const id = el.dataset.id;
+    const p = pins.find(pp=>pp.id===id);
+    if(!p) return;
+    p.x = x; p.y = y;
+
+    const pos = percentToStagePx(x,y);
+    el.style.left = pos.x + "px";
+    el.style.top  = pos.y + "px";
+  });
+
+  const end = (e)=>{
+    if(e.pointerId!==pid) return;
+    dragging = false;
+    pid = null;
+    renderPins();
+  };
+
+  el.addEventListener("pointerup", end);
+  el.addEventListener("pointercancel", end);
+}
+
+/* ===================== ADD PIN ON TAP ===================== */
+stage.addEventListener("click", (e)=>{
+  if(photo.style.display==="none") return;
+  if(e.target.classList.contains("pin")) return;
+
+  const imgR = imageRect();
+  if(e.clientX < imgR.left || e.clientX > imgR.right || e.clientY < imgR.top || e.clientY > imgR.bottom){
+    return;
+  }
+
+  const {x,y} = clientToPercent(e.clientX, e.clientY);
+  const p = { id: uid(), n: nextNumber(), x, y };
+  pins.push(p);
+  selectedId = p.id;
+  renderPins();
+});
+
+/* ===================== LOAD IMAGE FROM UPLOAD ===================== */
+fileInput.addEventListener("change", (e)=>{
+  const f = e.target.files?.[0];
+  if(!f) return;
+  const url = URL.createObjectURL(f);
+  loadImage(url, f.name || "upload");
+});
+
+/* ===================== LOAD IMAGE FROM URL / media ===================== */
+function normalizeUrl(u){
+  u = String(u||"").trim();
+  if(!u) return "";
+  // se è già http/https, lascialo
+  if(/^https?:\/\//i.test(u)) return u;
+  // se inizia con /, relativo al dominio
+  if(u.startsWith("/")) return u;
+  // altrimenti relativo alla cartella corrente (es: media/xxx.jpg)
+  return u;
+}
+
+async function loadImage(url, nameLabel="URL"){
+  pins = [];
+  selectedId = null;
+  outEl.value = "";
+  updateCount();
+
+  const finalUrl = normalizeUrl(url);
+  if(!finalUrl){
+    alert("Inserisci un URL immagine (es: media/renzo11-001.jpg).");
+    return;
+  }
+
+  setStatus("Carico immagine…");
+  imgNameEl.textContent = nameLabel;
+
+  // usa Image per gestire errori di rete
+  const test = new Image();
+  test.crossOrigin = "anonymous"; // se l'immagine è sullo stesso dominio OK; se esterna potrebbe non permettere
+  test.onload = ()=>{
+    photo.src = finalUrl;
+    photo.style.display = "block";
+    photo.onload = ()=>{
+      setStatus("Foto pronta: tocca sugli oggetti per numerare");
+      renderPins();
+      // salva l’ultimo URL
+      try{ localStorage.setItem("sct_last_img_url", finalUrl); }catch(e){}
+    };
+  };
+  test.onerror = ()=>{
+    setStatus("Errore caricamento immagine");
+    alert("Non riesco a caricare questa immagine.\nControlla percorso e nome file.\nEsempio corretto: media/renzo11-001.jpg");
+  };
+  test.src = finalUrl;
+}
+
+btnLoadUrl.addEventListener("click", ()=>{
+  const u = imgUrlEl.value.trim();
+  loadImage(u, u.split("/").pop() || "media");
+});
+
+imgSelect.addEventListener("change", ()=>{
+  const v = imgSelect.value;
+  if(!v) return;
+  imgUrlEl.value = v;
+  loadImage(v, v.split("/").pop() || "media");
+});
+
+/* ===================== FILE LIST -> DROPDOWN ===================== */
+function buildSelectFromList(){
+  const raw = fileListEl.value || "";
+  const lines = raw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+
+  imgSelect.innerHTML = `<option value="">— scegli immagine —</option>`;
+
+  lines.forEach(line=>{
+    // se è solo nome file, prefix media/
+    const url = /^https?:\/\//i.test(line) ? line : (line.includes("/") ? line : ("media/" + line));
+    const opt = document.createElement("option");
+    opt.value = url;
+    opt.textContent = url;
+    imgSelect.appendChild(opt);
+  });
+
+  try{ localStorage.setItem("sct_file_list", raw); }catch(e){}
+  setStatus(`Lista caricata: ${lines.length} file`);
+}
+
+btnLoadList.addEventListener("click", buildSelectFromList);
+
+btnClearList.addEventListener("click", ()=>{
+  fileListEl.value = "";
+  imgSelect.innerHTML = `<option value="">—</option>`;
+  try{ localStorage.removeItem("sct_file_list"); }catch(e){}
+  setStatus("Lista svuotata");
+});
+
+/* ===================== BUTTONS PINS ===================== */
+btnUndo.addEventListener("click", ()=>{
+  if(!pins.length) return;
+  const last = pins[pins.length-1];
+  pins.pop();
+  if(selectedId===last.id) selectedId=null;
+  renderPins();
+});
+
+btnRenumber.addEventListener("click", ()=>{
+  // rinumera in ordine di creazione
+  pins.forEach((p,i)=> p.n = i+1);
+  renderPins();
+});
+
+btnClearPins.addEventListener("click", ()=>{
+  if(!confirm("Vuoi eliminare tutti i numeri?")) return;
+  pins = [];
+  selectedId = null;
+  outEl.value = "";
+  renderPins();
+});
+
+/* ===================== EXPORT ===================== */
+btnExport.addEventListener("click", ()=>{
+  const exp = pins.map(p=>({ n:p.n, x:p.x, y:p.y }));
+  outEl.value = JSON.stringify(exp, null, 2);
+});
+
+btnCopy.addEventListener("click", async ()=>{
+  const txt = (outEl.value||"").trim();
+  if(!txt){ alert("Prima fai Export."); return; }
+  try{
+    await navigator.clipboard.writeText(txt);
+    alert("Copiato!");
+  }catch(e){
+    alert("Copia non riuscita: seleziona e copia manualmente.");
+  }
+});
+
+/* rerender on resize */
+window.addEventListener("resize", ()=>renderPins());
+
+/* restore saved list/url */
+(function restore(){
+  try{
+    const savedList = localStorage.getItem("sct_file_list");
+    if(savedList){
+      fileListEl.value = savedList;
+      buildSelectFromList();
+    }
+    const lastUrl = localStorage.getItem("sct_last_img_url");
+    if(lastUrl){
+      imgUrlEl.value = lastUrl;
+      // non auto-carico per evitare errori se offline; ma puoi premere "Apri da URL"
+    }
+  }catch(e){}
+})();
+
+updateCount();
+</script>
 </body>
 </html>
