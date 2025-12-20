@@ -189,11 +189,69 @@
     return window.SerCucTech || null;
   }
 
-  async function loadIndexSmart(){
+  /* ===================== LOAD INDEX (fallback) ===================== */
+async function loadIndexSmart(){
+  // 1) prova API da app.js (se esiste)
+  try{
     const api = getApi();
-    if(!api || !api.loadIndexSmart) throw new Error("app.js non caricato. Assicurati che admin.html includa app.js prima di admin.js");
-    return await api.loadIndexSmart();
+    if(api && typeof api.loadIndexSmart === "function"){
+      return await api.loadIndexSmart();
+    }
+  }catch(e){}
+
+  // 2) fallback: prova data/index.json
+  try{
+    const r = await fetch("data/index.json?t=" + Date.now(), { cache:"no-store" });
+    if(r.ok){
+      const j = await r.json();
+      // deve contenere j.vetrine
+      if(j && typeof j === "object" && j.vetrine) return j;
+    }
+  }catch(e){}
+
+  // 3) fallback: prova data/vetrine.json (il tuo link)
+  try{
+    const r = await fetch("data/vetrine.json?t=" + Date.now(), { cache:"no-store" });
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+
+    // accetta 2 formati:
+    // A) { "vetrine": { "renzo11": {...}, ... } }
+    if(j && j.vetrine) return j;
+
+    // B) [ {id:"renzo11", ...}, {id:"scalvini10", ...} ]
+    if(Array.isArray(j)){
+      const vetrine = {};
+      for(const it of j){
+        if(it && it.id){
+          vetrine[it.id] = {
+            title: it.title || it.name || it.id,
+            file: it.file || ("data/" + it.id + ".json")
+          };
+        }
+      }
+      return { vetrine };
+    }
+
+    // C) { "renzo11": {...}, "scalvini10": {...} }
+    if(j && typeof j === "object"){
+      const vetrine = {};
+      for(const [id,val] of Object.entries(j)){
+        if(!id) continue;
+        vetrine[id] = {
+          title: val?.title || val?.name || id,
+          file: val?.file || ("data/" + id + ".json")
+        };
+      }
+      return { vetrine };
+    }
+
+    throw new Error("Formato vetrine.json non riconosciuto");
+  }catch(e){
+    console.error(e);
+    return { vetrine: {} };
   }
+}
 
   async function loadVetrinaById(id){
     const api = getApi();
