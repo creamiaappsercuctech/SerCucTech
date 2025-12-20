@@ -7,30 +7,25 @@
   <title>SerCucTech — Vetrina</title>
 
   <link rel="stylesheet" href="stile.css" />
-
-  <!-- PWA (non rompe se mancano i file) -->
-  <link rel="manifest" href="manifest.webmanifest" />
 </head>
 
 <body>
   <header class="topBar">
-    <a class="chipBtn" href="index.html" aria-label="Home">🏠 Home</a>
-    <div class="topTitle" id="topTitle">SerCucTech</div>
-    <div class="topRight">
-      <span class="chip" id="chipId">id: —</span>
-    </div>
+    <a class="chipBtn" href="index.html">🏠 Home</a>
+    <div class="topTitle">SerCucTech</div>
+    <span class="chip" id="chipId">id: —</span>
   </header>
 
   <main class="page">
     <section class="hero">
       <h1 class="heroTitle" id="heroTitle">Caricamento…</h1>
-      <p class="heroDesc" id="heroDesc">Attendi…</p>
+      <p class="heroDesc" id="heroDesc"></p>
     </section>
 
-    <!-- GALLERY (scorrevole) -->
+    <!-- GALLERY -->
     <section class="galleryWrap" id="galleryWrap" hidden>
       <div class="gallery" id="gallery"></div>
-      <div class="galleryDots" id="galleryDots" aria-hidden="true"></div>
+      <div class="galleryDots" id="galleryDots"></div>
     </section>
 
     <!-- FILES -->
@@ -38,389 +33,215 @@
       <div class="cardTitle">File</div>
       <div class="list" id="filesList"></div>
     </section>
-
-    <section class="card" id="infoCard" hidden>
-      <div class="cardTitle">Info</div>
-      <div class="muted" id="infoMeta"></div>
-    </section>
   </main>
 
-  <!-- SHARE WHATSAPP (sopra barra inferiore) -->
+  <!-- SHARE WHATSAPP -->
   <div class="shareWhatsApp" id="shareWhatsApp" hidden>
-    <button id="btnShareWA" type="button">📲 Condividi questa vetrina su WhatsApp</button>
+    <button id="btnShareWA">📲 Condividi questa vetrina su WhatsApp</button>
   </div>
 
-  <!-- AUDIO BLOCKED OVERLAY -->
+  <!-- AUDIO GATE -->
   <div class="audioGate" id="audioGate" hidden>
     <div class="audioGateCard">
-      <div class="audioGateTitle">Audio bloccato dal telefono</div>
-      <div class="audioGateText">Tocca qui per attivare la voce (poi partirà in automatico).</div>
-      <button id="btnEnableAudio" type="button">Attiva audio</button>
-      <button id="btnSkipAudio" type="button" class="ghost">Non ora</button>
+      <div class="audioGateTitle">Audio bloccato</div>
+      <div class="audioGateText">
+        Tocca per attivare la voce (poi partirà automaticamente).
+      </div>
+      <button id="btnEnableAudio">Attiva audio</button>
+      <button id="btnSkipAudio" class="ghost">Non ora</button>
     </div>
   </div>
 
   <!-- BOTTOM BAR -->
-  <nav class="bottomBar" aria-label="Azioni">
-    <button class="navBtn" id="btnVoice" type="button">🔊<span>Voce</span></button>
-    <button class="navBtn" id="btnStop" type="button">⏹️<span>Stop</span></button>
-    <button class="navBtn" id="btnFull" type="button">⛶<span>Full</span></button>
-    <button class="navBtn" id="btnTheme" type="button">🌓<span>Tema</span></button>
-    <button class="navBtn" id="btnKiosk" type="button">📌<span>Kiosk</span></button>
+  <nav class="bottomBar">
+    <button class="navBtn" id="btnVoice">🔊<span>Voce</span></button>
+    <button class="navBtn" id="btnStop">⏹️<span>Stop</span></button>
+    <button class="navBtn" id="btnFull">⛶<span>Full</span></button>
+    <button class="navBtn" id="btnTheme">🌓<span>Tema</span></button>
+    <button class="navBtn" id="btnKiosk">📌<span>Kiosk</span></button>
   </nav>
 
 <script>
 /* ===================== UTIL ===================== */
-function qs(name){
-  const u = new URL(location.href);
-  return u.searchParams.get(name);
-}
-function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
-function escapeHtml(s){
-  return String(s||"")
-    .replaceAll("&","&amp;").replaceAll("<","&lt;")
-    .replaceAll(">","&gt;").replaceAll('"',"&quot;");
-}
-function nowIso(){
-  try{ return new Date().toISOString(); }catch(e){ return ""; }
-}
+function qs(n){ return new URL(location.href).searchParams.get(n); }
+function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
 
 /* ===================== THEME ===================== */
-const THEME_KEY = "sercuctech_theme";
-function applyTheme(mode){
-  document.documentElement.setAttribute("data-theme", mode);
-  localStorage.setItem(THEME_KEY, mode);
+const THEME_KEY="sercuctech_theme";
+function applyTheme(t){
+  document.documentElement.setAttribute("data-theme",t);
+  localStorage.setItem(THEME_KEY,t);
 }
-(function initTheme(){
-  const saved = localStorage.getItem(THEME_KEY);
-  if(saved === "light" || saved === "dark") applyTheme(saved);
-  else {
-    const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    applyTheme(prefersDark ? "dark" : "light");
-  }
+(function(){
+  const s=localStorage.getItem(THEME_KEY);
+  applyTheme(s==="light"||s==="dark"?s:"dark");
 })();
 
-/* ===================== SPEECH (1 UTTERANCE = NO PAUSE) ===================== */
-let voiceUnlocked = false;
-let isSpeaking = false;
-
-function speechAvailable(){
-  return ("speechSynthesis" in window) && ("SpeechSynthesisUtterance" in window);
-}
+/* ===================== SPEECH ===================== */
+let isSpeaking=false;
 
 function stopSpeech(){
   try{ speechSynthesis.cancel(); }catch(e){}
-  isSpeaking = false;
+  isSpeaking=false;
+}
+
+/* formatta numeri telefono:
+   - pausa prima del numero
+   - lettura cifra per cifra */
+function formatPhonesForSpeech(txt){
+  return String(txt||"").replace(/\b\d{7,12}\b/g, m => {
+    return " . " + m.split("").join(" ");
+  });
 }
 
 function speakOnce(text, lang){
-  if(!speechAvailable()) return false;
-  if(!text) return false;
+  if(!("speechSynthesis" in window)) return false;
   try{
     stopSpeech();
-    const u = new SpeechSynthesisUtterance(String(text));
-    u.lang = lang || (navigator.language || "it-IT");
-    u.rate = 1.03;   // leggermente più veloce, meno “pause”
-    u.pitch = 1.0;
-    u.volume = 1.0;
-    u.onend = ()=>{ isSpeaking = false; };
-    u.onerror = ()=>{ isSpeaking = false; };
-    isSpeaking = true;
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang=lang||"it-IT";
+    u.rate=1.02;
+    u.pitch=1;
+    u.volume=1;
+    u.onend=()=>isSpeaking=false;
+    isSpeaking=true;
     speechSynthesis.speak(u);
     return true;
-  }catch(e){
-    return false;
-  }
+  }catch(e){ return false; }
 }
 
-/* ===================== FULLSCREEN + KIOSK ===================== */
-let kioskOn = false;
-let wakeLockObj = null;
-
-async function requestWakeLock(){
-  try{
-    if("wakeLock" in navigator && !wakeLockObj){
-      wakeLockObj = await navigator.wakeLock.request("screen");
-      wakeLockObj.addEventListener("release", ()=>{ wakeLockObj = null; });
-    }
-  }catch(e){}
-}
-async function releaseWakeLock(){
-  try{
-    if(wakeLockObj){
-      await wakeLockObj.release();
-      wakeLockObj = null;
-    }
-  }catch(e){}
-}
-
-async function enterFullscreen(){
-  const el = document.documentElement;
-  try{
-    if(el.requestFullscreen) await el.requestFullscreen();
-  }catch(e){}
-}
-async function exitFullscreen(){
-  try{
-    if(document.exitFullscreen) await document.exitFullscreen();
-  }catch(e){}
-}
-function isFullscreen(){
-  return !!document.fullscreenElement;
+/* ===================== FULLSCREEN / KIOSK ===================== */
+let kiosk=false;
+async function toggleFull(){
+  if(document.fullscreenElement) await document.exitFullscreen();
+  else await document.documentElement.requestFullscreen();
 }
 
 /* ===================== SHARE ===================== */
-function setupShareButton(title){
-  const shareWrap = document.getElementById("shareWhatsApp");
-  const btnShareWA = document.getElementById("btnShareWA");
-  if(!shareWrap || !btnShareWA) return;
-
-  shareWrap.hidden = false;
-
-  btnShareWA.onclick = () => {
-    const url = location.href;
-    const msg = `${title}\nGuarda la vetrina:\n${url}`;
-    const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-    window.open(waUrl, "_blank", "noopener");
+function setupShare(title){
+  const w=document.getElementById("shareWhatsApp");
+  const b=document.getElementById("btnShareWA");
+  w.hidden=false;
+  b.onclick=()=>{
+    const url=location.href;
+    const msg=`${title}\nGuarda la vetrina:\n${url}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,"_blank");
   };
 }
 
-/* ===================== GALLERY ===================== */
-function buildGallery(mediaList){
-  const wrap = document.getElementById("galleryWrap");
-  const g = document.getElementById("gallery");
-  const dots = document.getElementById("galleryDots");
-  g.innerHTML = "";
-  dots.innerHTML = "";
+/* ===================== GALLERY (ULTIMA VISTA) ===================== */
+function buildGallery(media){
+  const wrap=document.getElementById("galleryWrap");
+  const g=document.getElementById("gallery");
+  const d=document.getElementById("galleryDots");
+  g.innerHTML=""; d.innerHTML="";
 
-  const images = (mediaList || []).filter(x => (x && (x.type==="image" || !x.type) && x.url));
+  const imgs=(media||[]).filter(x=>x&&x.url);
+  if(!imgs.length){ wrap.hidden=true; return; }
+  wrap.hidden=false;
 
-  if(images.length === 0){
-    wrap.hidden = true;
-    return;
-  }
+  const vid=qs("id")||"vetrina";
+  const KEY="sercuctech_last_"+vid;
 
-  wrap.hidden = false;
+  imgs.forEach((m,i)=>{
+    const it=document.createElement("div");
+    it.className="gItem";
+    const im=document.createElement("img");
+    im.src=m.url; im.loading=i? "lazy":"eager";
+    it.appendChild(im);
+    g.appendChild(it);
 
-  images.forEach((m, idx)=>{
-    const card = document.createElement("div");
-    card.className = "gItem";
-
-    const img = document.createElement("img");
-    img.loading = idx===0 ? "eager" : "lazy";
-    img.decoding = "async";
-    img.alt = m.label ? String(m.label) : ("Foto " + (idx+1));
-    img.src = m.url; // es: media/renzo11-010.jpg
-    card.appendChild(img);
-
-    if(m.label){
-      const cap = document.createElement("div");
-      cap.className = "gCap";
-      cap.textContent = m.label;
-      card.appendChild(cap);
-    }
-
-    g.appendChild(card);
-
-    const dot = document.createElement("span");
-    dot.className = "dot" + (idx===0 ? " on" : "");
-    dot.onclick = ()=> {
-      const w = g.clientWidth;
-      g.scrollTo({ left: idx * w, behavior: "smooth" });
-    };
-    dots.appendChild(dot);
+    const dot=document.createElement("span");
+    dot.className="dot";
+    dot.onclick=()=>{ g.scrollTo({left:i*g.clientWidth,behavior:"smooth"}); };
+    d.appendChild(dot);
   });
 
-  // update dots on scroll
-  g.addEventListener("scroll", ()=>{
-    const w = g.clientWidth || 1;
-    const idx = clamp(Math.round(g.scrollLeft / w), 0, images.length-1);
-    [...dots.children].forEach((d,i)=> d.classList.toggle("on", i===idx));
-  }, { passive:true });
+  function setDot(i){
+    [...d.children].forEach((x,k)=>x.classList.toggle("on",k===i));
+    localStorage.setItem(KEY,String(i));
+  }
+
+  g.addEventListener("scroll",()=>{
+    const i=clamp(Math.round(g.scrollLeft/g.clientWidth),0,imgs.length-1);
+    setDot(i);
+  },{passive:true});
+
+  requestAnimationFrame(()=>{
+    const last=clamp(parseInt(localStorage.getItem(KEY)||"0",10),0,imgs.length-1);
+    g.scrollLeft=last*g.clientWidth;
+    setDot(last);
+  });
 }
 
-/* ===================== FILE LIST ===================== */
-function buildFiles(filesList){
-  const card = document.getElementById("filesCard");
-  const list = document.getElementById("filesList");
-  list.innerHTML = "";
-
-  const files = (filesList || []).filter(x => x && x.url);
-  if(files.length === 0){
-    card.hidden = true;
-    return;
-  }
-  card.hidden = false;
-
+/* ===================== FILES ===================== */
+function buildFiles(files){
+  const c=document.getElementById("filesCard");
+  const l=document.getElementById("filesList");
+  l.innerHTML="";
+  if(!files||!files.length){ c.hidden=true; return; }
+  c.hidden=false;
   files.forEach(f=>{
-    const a = document.createElement("a");
-    a.className = "fileRow";
-    a.href = f.url;
-    a.target = "_blank";
-    a.rel = "noopener";
-    a.innerHTML = `<span class="fileIcon">📄</span><span class="fileName">${escapeHtml(f.label || f.url)}</span><span class="fileGo">Apri</span>`;
-    list.appendChild(a);
+    const a=document.createElement("a");
+    a.className="fileRow";
+    a.href=f.url; a.target="_blank";
+    a.textContent=f.label||f.url;
+    l.appendChild(a);
   });
 }
 
-/* ===================== LOAD DATA ===================== */
-async function loadVetrina(){
-  const id = (qs("id") || "").trim();
-  const chip = document.getElementById("chipId");
-  chip.textContent = "id: " + (id || "—");
+/* ===================== LOAD ===================== */
+async function load(){
+  const id=qs("id");
+  document.getElementById("chipId").textContent="id: "+id;
+  const r=await fetch(`data/${id}.json`,{cache:"no-store"});
+  const data=await r.json();
 
-  if(!id){
-    document.getElementById("heroTitle").textContent = "Manca id";
-    document.getElementById("heroDesc").textContent = "Apri così: vetrina.html?id=renzo11";
-    return null;
-  }
+  const title=`${data.title} con SerCucTech`;
+  document.title=title;
+  document.getElementById("heroTitle").textContent=title;
+  document.getElementById("heroDesc").textContent=data.description||"";
 
-  const url = `data/${encodeURIComponent(id)}.json`;
-  try{
-    const res = await fetch(url, { cache: "no-store" });
-    if(!res.ok) throw new Error("HTTP " + res.status);
-    const data = await res.json();
-    return data;
-  }catch(e){
-    document.getElementById("heroTitle").textContent = "Errore caricamento";
-    document.getElementById("heroDesc").textContent = `Non riesco a leggere ${url}`;
-    return null;
-  }
-}
+  buildGallery(data.media||[]);
+  buildFiles(data.files||[]);
+  setupShare(title);
 
-/* ===================== AUDIO AUTOSTART (FIRST TIME) ===================== */
-function shouldAutoPlay(id){
-  // autoplay SOLO la prima volta per quella vetrina, poi non disturba più
-  const key = "sercuctech_autoplay_done_" + id;
-  if(localStorage.getItem(key) === "1") return false;
-  localStorage.setItem(key, "1");
-  return true;
-}
+  const voiceText=formatPhonesForSpeech(
+    [data.description||"", data.voice?.text||""].join(" ")
+  );
 
-function showAudioGate(onEnable){
-  const gate = document.getElementById("audioGate");
-  const btn = document.getElementById("btnEnableAudio");
-  const skip = document.getElementById("btnSkipAudio");
-  gate.hidden = false;
-
-  btn.onclick = async ()=>{
-    gate.hidden = true;
-    voiceUnlocked = true;
-    try{ await enterFullscreen(); }catch(e){}
-    onEnable && onEnable();
-  };
-  skip.onclick = ()=>{
-    gate.hidden = true;
-  };
-}
-
-/* ===================== MAIN ===================== */
-(async function init(){
-  // service worker (se esiste)
-  try{
-    if("serviceWorker" in navigator){
-      navigator.serviceWorker.register("sw.js").catch(()=>{});
-    }
-  }catch(e){}
-
-  const data = await loadVetrina();
-  if(!data) return;
-
-  // TITOLO CENTRALE richiesto:
-  const titleNice = `${data.title || data.id || "Vetrina"} con SerCucTech`;
-  document.title = titleNice;
-  document.getElementById("topTitle").textContent = "SerCucTech";
-  document.getElementById("heroTitle").textContent = titleNice;
-  document.getElementById("heroDesc").textContent = data.description || "";
-
-  // Gallery + files
-  buildGallery(data.media || []);
-  buildFiles(data.files || []);
-
-  // info
-  const infoCard = document.getElementById("infoCard");
-  const infoMeta = document.getElementById("infoMeta");
-  infoCard.hidden = false;
-  infoMeta.textContent = `Aggiornato: ${(data.updatedAt || data.createdAt || nowIso())}`;
-
-  // Share button
-  setupShareButton(titleNice);
-
-  // ===== Buttons bottom bar =====
-  const btnVoice = document.getElementById("btnVoice");
-  const btnStop  = document.getElementById("btnStop");
-  const btnFull  = document.getElementById("btnFull");
-  const btnTheme = document.getElementById("btnTheme");
-  const btnKiosk = document.getElementById("btnKiosk");
-
-  // testo audio: 1 sola frase lunga = meno pause
-  const voiceLang = (data.voice && data.voice.lang) ? data.voice.lang : (navigator.language || "it-IT");
-  const voiceText = (data.voice && data.voice.text) ? String(data.voice.text) : "";
-  const combinedText = [data.description || "", voiceText].filter(Boolean).join(" ").replace(/\s+/g," ").trim();
-
-  function playVoice(){
-    if(!combinedText) return;
-    const ok = speakOnce(combinedText, voiceLang);
+  const autoKey="autoplay_"+id;
+  if(!localStorage.getItem(autoKey)){
+    localStorage.setItem(autoKey,"1");
+    const ok=speakOnce(voiceText,data.voice?.lang);
     if(!ok){
-      alert("Sintesi vocale non disponibile su questo browser.");
+      document.getElementById("audioGate").hidden=false;
     }
   }
 
-  btnVoice.onclick = () => {
-    // su mobile, spesso serve un gesto utente: questo è un gesto valido
-    voiceUnlocked = true;
-    playVoice();
+  document.getElementById("btnVoice").onclick=()=>speakOnce(voiceText,data.voice?.lang);
+  document.getElementById("btnStop").onclick=()=>stopSpeech();
+  document.getElementById("btnFull").onclick=()=>toggleFull();
+  document.getElementById("btnTheme").onclick=()=>{
+    const c=document.documentElement.getAttribute("data-theme");
+    applyTheme(c==="dark"?"light":"dark");
+  };
+  document.getElementById("btnKiosk").onclick=async()=>{
+    kiosk=!kiosk;
+    document.body.classList.toggle("kioskOn",kiosk);
+    if(kiosk) await document.documentElement.requestFullscreen();
   };
 
-  btnStop.onclick = () => stopSpeech();
-
-  btnFull.onclick = async () => {
-    if(isFullscreen()) await exitFullscreen();
-    else await enterFullscreen();
+  document.getElementById("btnEnableAudio").onclick=()=>{
+    document.getElementById("audioGate").hidden=true;
+    speakOnce(voiceText,data.voice?.lang);
   };
-
-  btnTheme.onclick = () => {
-    const cur = document.documentElement.getAttribute("data-theme") || "dark";
-    applyTheme(cur === "dark" ? "light" : "dark");
+  document.getElementById("btnSkipAudio").onclick=()=>{
+    document.getElementById("audioGate").hidden=true;
   };
+}
 
-  btnKiosk.onclick = async () => {
-    kioskOn = !kioskOn;
-    document.body.classList.toggle("kioskOn", kioskOn);
-
-    if(kioskOn){
-      await enterFullscreen();
-      await requestWakeLock();
-      btnKiosk.classList.add("active");
-    }else{
-      await releaseWakeLock();
-      btnKiosk.classList.remove("active");
-    }
-  };
-
-  // ===== AUTO AUDIO on open (first time) =====
-  // Nota: su Android Chrome spesso NON parte senza click: allora mostriamo popup.
-  const vid = (data.id || qs("id") || "vetrina").trim();
-  const wantAutoplay = combinedText && shouldAutoPlay(vid);
-
-  if(wantAutoplay){
-    // prova autoplay
-    const ok = speakOnce(combinedText, voiceLang);
-    if(!ok){
-      // speech non disponibile: niente
-    } else {
-      // se il browser blocca, in genere non parte: mostriamo gate
-      // (non possiamo rilevarlo al 100%, quindi mettiamo gate “intelligente”)
-      setTimeout(()=>{
-        // se dopo 700ms non sta parlando -> mostra gate
-        if(!isSpeaking){
-          showAudioGate(()=>playVoice());
-        }
-      }, 700);
-    }
-  }
-
-})();
+load();
 </script>
 </body>
 </html>
