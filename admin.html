@@ -1,603 +1,1203 @@
-m<!doctype html>
+<!doctype html>
 <html lang="it">
 <head>
-  <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0b1220">
-<link rel="apple-touch-icon" href="icon-192.png">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SerCucTech - Admin</title>
-  <script src="./guide.js"></script>
+  <title>SerCucTech – Admin Vetrine</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0b1220">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
   <style>
-    :root{--bg:#0b1220;--card:rgba(27,46,92,.55);--txt:#e8eefc;--mut:#a9b8dd;--ok:#5ee1a2;}
-    body{margin:0;font-family:system-ui;background:var(--bg);color:var(--txt);}
-    .wrap{max-width:980px;margin:0 auto;padding:18px;}
-    .card{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:16px;}
-    h1{margin:0 0 10px 0;}
-    label{display:block;font-weight:900;margin-top:10px;}
-    input,textarea,select{width:100%;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);color:var(--txt);font:600 14px system-ui;}
-    textarea{min-height:88px;resize:vertical;}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
-    .btn{cursor:pointer;border:0;padding:10px 14px;border-radius:12px;font-weight:900;}
-    .a{background:var(--ok);color:#082016;}
-    .b{background:#22345f;color:var(--txt);}
-    .mut{color:var(--mut);font-size:13px;}
-    .mini{font-size:12px;opacity:.9}
-    .filesRow{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:8px;}
-    .box{background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;margin-top:10px;}
-    .code{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.35}
-    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
-    .chip{border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.18);color:var(--txt);border-radius:999px;padding:6px 10px;font:900 12px system-ui;cursor:pointer;}
-    .chip:hover{background:rgba(255,255,255,.08);}
+    :root{
+      --bg:#0b1220; --card:#111b2e; --txt:#e8eefc; --mut:#a9b8dd;
+      --acc:#5ee1a2; --warn:#ffcc66; --danger:#ff6b6b; --b:#22345f;
+    }
+    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:linear-gradient(180deg,#081024,#0b1220); color:var(--txt); }
+    .wrap{ max-width:1180px; margin:0 auto; padding:16px; }
+    .top{ display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+    .brand{ font-weight:900; letter-spacing:.2px; }
+    .pill{ display:inline-flex; gap:8px; align-items:center; padding:8px 12px; border-radius:999px; background:#0f1a31; border:1px solid #1b2a4f; color:var(--mut); font-size:13px; }
+    .grid{ display:grid; grid-template-columns:1fr; gap:14px; margin-top:14px; }
+    @media(min-width:980px){ .grid{ grid-template-columns: 1fr 1fr; } }
+    .card{ background:rgba(17,27,46,.92); border:1px solid #1b2a4f; border-radius:16px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,.22); }
+    h2{ margin:0 0 10px 0; font-size:18px; }
+    h3{ margin:14px 0 8px 0; font-size:14px; color:var(--mut); font-weight:900; }
+    label{ display:block; margin:10px 0 6px; color:var(--mut); font-size:13px; }
+    input, textarea, select{
+      width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px;
+      border:1px solid var(--b); background:#0f1830; color:var(--txt); outline:none;
+    }
+    textarea{ min-height:88px; resize:vertical; }
+    .row{ display:grid; gap:10px; grid-template-columns:1fr; }
+    @media(min-width:650px){ .row{ grid-template-columns: 1fr 1fr; } }
+    .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    button, a.btn{
+      cursor:pointer; border:0; padding:10px 14px; border-radius:12px; font-weight:900;
+      text-decoration:none; display:inline-flex; align-items:center; justify-content:center;
+    }
+    .ok{ background:var(--acc); color:#052014; }
+    .sec{ background:#22345f; color:var(--txt); }
+    .warn{ background:var(--warn); color:#231a06; }
+    .danger{ background:var(--danger); color:#2b0909; }
+    .mini{ font-size:12px; color:var(--mut); line-height:1.35; }
+    .hr{ height:1px; background:#1b2a4f; margin:14px 0; }
+    .hidden{ display:none !important; }
+    .kbd{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas; background:#0f1a31; border:1px solid #22345f; padding:2px 8px; border-radius:10px; color:var(--mut); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas; }
+    .list{ display:grid; gap:8px; margin-top:10px; }
+    .item{ display:flex; gap:10px; align-items:flex-start; justify-content:space-between; padding:10px; border-radius:14px; border:1px solid var(--b); background:#0c1530; }
+    .drag{ cursor:grab; user-select:none; padding:2px 8px; border-radius:10px; border:1px dashed #34508a; color:var(--mut); }
+    .dropHint{ outline: 2px dashed var(--acc); outline-offset: 6px; }
+    .smallbtn{ padding:8px 10px; border-radius:10px; font-weight:900; }
+    img.preview, video.preview, iframe.preview{
+      width:100%; border-radius:14px; border:1px solid var(--b); background:#0f1830;
+    }
+    iframe.preview{ height:420px; border:0; }
+    .bar{ height:10px; border:1px solid var(--b); border-radius:999px; overflow:hidden; background:#0f1830; }
+    .bar > div{ height:100%; width:0%; background:var(--acc); }
   </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
+
 <body>
 <div class="wrap">
-
-  <!-- ===== HEADER + TOGGLES ===== -->
-  <div class="card">
-    <h1>🧰 Admin — Vetrine</h1>
-
-    <div class="row">
-      <label style="display:flex;gap:10px;align-items:center;">
-        <input type="checkbox" id="gAdmin" style="width:auto;"> Guida in Admin
-      </label>
-      <label style="display:flex;gap:10px;align-items:center;">
-        <input type="checkbox" id="gVetrina" style="width:auto;"> Guida in Vetrina
-      </label>
-      <label style="display:flex;gap:10px;align-items:center;">
-        <input type="checkbox" id="gAsk" style="width:auto;"> Chiedi al primo accesso
-      </label>
-      <label style="display:flex;gap:10px;align-items:center;">
-        <input type="checkbox" id="gVoice" style="width:auto;"> Voce telefono
-      </label>
-    </div>
-
-    <div class="mut" style="margin-top:8px;">
-      La guida è interattiva: quando tocchi una casella vuota, ti spiega cosa scrivere e qual è il prossimo passo.
-      Debug: aggiungi <b>?debug=1</b> all’URL per vedere errori e test voce.
+  <div class="top">
+    <div class="brand">SerCucTech – Admin Vetrine</div>
+    <div class="pill"><span>Stato:</span><b id="status">🔒 Bloccato</b></div>
+    <div class="btns">
+      <a class="btn sec" href="index.html">🏠 Home</a>
+      <a class="btn sec" href="pubblica.html">📣 Pubblica</a>
     </div>
   </div>
 
-  <!-- ===== SELECT VETRINA + DUPLICA ===== -->
-  <div class="card" style="margin-top:14px;">
-    <div class="row" style="justify-content:space-between;">
-      <div style="font-weight:1000;">Seleziona vetrina</div>
-      <a class="mini" id="editIndex" target="_blank" rel="noopener">Apri index.json su GitHub</a>
+  <!-- LOCK -->
+  <div class="card" id="lockCard">
+    <h2>Accesso</h2>
+    <div class="mini">
+      Tocca 2 parole *in sequenza* dentro la frase per sbloccare.<br>
+      Frase: <span id="secretSentence"></span>
     </div>
-
-    <select id="vetrinaSelect"></select>
-    <div class="mut">Se non vedi una vetrina, aggiungila in <b>data/index.json</b>.</div>
-
-    <div class="row" style="margin-top:12px;">
-      <button class="btn b" id="dupBtn">🧬 Duplica vetrina</button>
+    <div class="mini" style="margin-top:10px;">
+      Sequenza: <span class="kbd">LUCE</span> poi <span class="kbd">PORTA</span>
     </div>
+    <div class="btns">
+      <button class="sec" onclick="resetLock()">Reset</button>
+    </div>
+  </div>
 
-    <div class="box" id="dupBox" style="display:none;">
-      <div style="font-weight:1000;margin-bottom:6px;">Duplica vetrina</div>
+  <div class="grid hidden" id="adminUI">
 
-      <div class="mut">Da: <b id="dupFrom"></b></div>
-
-      <label>Nuovo ID (es: scalvini11)</label>
-      <input id="dupTo" placeholder="scalvini11">
-
-      <label>Titolo nuovo (opzionale)</label>
-      <input id="dupTitle" placeholder="Lascia vuoto = titolo originale con numero aggiornato">
-
-      <div class="row" style="margin-top:10px;">
-        <button class="btn a" id="dupMake">✅ Crea duplicato (copia negli appunti)</button>
-        <button class="btn b" id="dupOpenNewFile">🧾 Crea file su GitHub</button>
-        <button class="btn b" id="dupOpenIndex">🧩 Apri index.json</button>
-        <button class="btn b" id="dupClose">Chiudi</button>
+    <!-- INDEX -->
+    <div class="card">
+      <h2>Index (data/index.json)</h2>
+      <div class="mini">
+        File indice: <span class="kbd">data/index.json</span><br>
+        Vetrine: <span class="kbd">data/&lt;id&gt;.json</span> (es: <span class="kbd">data/scalvini10.json</span>)
       </div>
 
-      <div class="mut" style="margin-top:10px;">
-        Ordine giusto:
-        <ol>
-          <li>Scrivi nuovo ID</li>
-          <li>Premi “Crea duplicato”</li>
-          <li>Premi “Crea file su GitHub” → incolla → salva</li>
-          <li>Premi “Apri index.json” → aggiungi riga → salva</li>
-          <li>Apri subito i link pronti</li>
-        </ol>
+      <div class="btns">
+        <button class="sec" onclick="loadIndexFromRepo()">📥 Carica index dal repo</button>
+        <button class="sec" onclick="document.getElementById('importIndex').click()">📂 Importa index.json</button>
+        <button class="ok" onclick="downloadIndex()">⬇️ Scarica index.json</button>
       </div>
 
-      <div class="box">
-        <div class="mut" style="margin-bottom:6px;">Anteprima (copiata negli appunti):</div>
-        <div class="code" id="dupPreview"></div>
+      <input id="importIndex" type="file" accept="application/json" class="hidden" />
+
+      <div class="hr"></div>
+      <div class="mini">
+        Aggiornato: <b id="indexUpdated">—</b><br>
+        Vetrine: <b id="indexCountV">0</b> • Gruppi: <b id="indexCountG">0</b>
       </div>
     </div>
+
+    <!-- VETRINA -->
+    <div class="card">
+      <h2>Vetrina (data/&lt;id&gt;.json)</h2>
+
+      <label>Seleziona vetrina</label>
+      <select id="vSelect" onchange="loadSelectedVetrinaFile()">
+        <option value="">— scegli —</option>
+      </select>
+
+      <div class="btns">
+        <button class="sec" onclick="loadSelectedVetrinaFile()">📥 Carica file vetrina</button>
+        <button class="ok" onclick="downloadVetrina()">⬇️ Scarica &lt;id&gt;.json</button>
+        <button class="warn" onclick="downloadBackupZip()">🧳 Backup ZIP (JSON+media+files)</button>
+        <button class="sec" onclick="openDuplicatePanel()">🧬 Duplica (es: scalvini10 → scalvini11)</button>
+        <button class="danger" onclick="deleteVetrina()">🗑️ Elimina (da index)</button>
+      </div>
+
+      <div id="dupPanel" class="hidden" style="margin-top:12px; padding:10px; border:1px solid var(--b); border-radius:14px; background:#0c1530;">
+        <div class="mini">
+          Duplica crea un nuovo file <span class="kbd">data/&lt;nuovoId&gt;.json</span> e aggiorna anche <span class="kbd">data/index.json</span>.
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <div>
+            <label>Nuovo ID (solo lettere/numeri -)</label>
+            <input id="dupNewId" placeholder="es: scalvini11" />
+          </div>
+          <div>
+            <label>Nuovo Titolo (opzionale)</label>
+            <input id="dupNewTitle" placeholder="es: Vetrina Scalvini 11" />
+          </div>
+        </div>
+        <div class="btns">
+          <button class="ok" onclick="duplicateCurrentVetrina()">✅ Crea clone (in memoria)</button>
+          <button class="sec" onclick="closeDuplicatePanel()">Chiudi</button>
+        </div>
+        <div class="mini" style="margin-top:8px;">
+          Poi: scarica <b>index.json</b> e <b>&lt;nuovoId&gt;.json</b> e caricali su GitHub in <span class="kbd">/data/</span>.
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <h3>Crea nuova vetrina</h3>
+      <label>ID (unico) – esempio</label>
+      <div class="mini">Esempio: <span class="kbd">scalvini10</span> → file: <span class="kbd">data/scalvini10.json</span></div>
+      <input id="newId" placeholder="es: scalvini10" />
+      <label>Titolo</label>
+      <input id="newTitle" placeholder="Titolo vetrina" />
+      <label>Tags (virgola)</label>
+      <input id="newTags" placeholder="casa, documenti, video" />
+      <div class="btns">
+        <button class="ok" onclick="createVetrina()">➕ Crea vetrina</button>
+      </div>
+
+      <div class="hr"></div>
+
+      <h3>Editor</h3>
+      <div class="pill">Vetrina attiva: <b id="activeId">—</b></div>
+
+      <label>Titolo</label>
+      <input id="eTitle" />
+      <label>Descrizione</label>
+      <textarea id="eDesc"></textarea>
+
+      <div class="row">
+        <div>
+          <label>Voce (lang)</label>
+          <input id="eVoiceLang" value="it-IT" />
+        </div>
+        <div>
+          <label>Voce (testo)</label>
+          <input id="eVoiceText" placeholder="Testo letto dal telefono…" />
+        </div>
+      </div>
+
+      <label>Tags (virgola)</label>
+      <input id="eTags" />
+
+      <div class="btns">
+        <button class="ok" onclick="saveEdits()">💾 Salva modifiche (in memoria)</button>
+        <button class="warn" onclick="syncIndexFromVetrina()">🔁 Aggiorna index (titolo/tags)</button>
+      </div>
+    </div>
+
+    <!-- MEDIA -->
+    <div class="card">
+      <h2>Media (foto/video) — URL + Upload multiplo + Riordino</h2>
+      <div class="mini">
+        Esempi validi: <span class="kbd">media/foto1.jpg</span> • <span class="kbd">media/tour.mp4</span><br>
+        Riordino: trascina (⇅) o usa ↑ ↓.
+      </div>
+
+      <h3>A) Aggiungi tramite URL</h3>
+      <div class="row">
+        <div>
+          <label>Tipo</label>
+          <select id="mType">
+            <option value="image">Immagine (.jpg/.png)</option>
+            <option value="video">Video (.mp4)</option>
+          </select>
+        </div>
+        <div>
+          <label>Titolo</label>
+          <input id="mTitle" placeholder="Foto entrata / Tour" />
+        </div>
+      </div>
+
+      <label>URL (con estensione)</label>
+      <input id="mUrl" placeholder="media/foto-entrata.jpg" />
+      <label>Nota</label>
+      <input id="mNote" placeholder="" />
+
+      <div class="btns">
+        <button class="ok" onclick="addMediaByUrl()">➕ Aggiungi URL</button>
+        <button class="sec" onclick="renderMediaList()">🔄 Aggiorna lista</button>
+      </div>
+
+      <div class="hr"></div>
+
+      <h3>B) Upload multiplo (foto + video)</h3>
+      <label>Seleziona file (MULTIPLO)</label>
+      <input id="mFiles" type="file" multiple accept="image/*,video/*" />
+
+      <div class="btns">
+        <button class="ok" onclick="addMediaFromFiles()">➕ Aggiungi al JSON</button>
+        <button class="warn" onclick="downloadMediaZip()">⬇️ Scarica ZIP media/…</button>
+        <button class="sec" onclick="clearMediaQueue()">🧹 Svuota selezione</button>
+      </div>
+
+      <div class="list" id="mediaQueue"></div>
+
+      <div class="hr"></div>
+
+      <h3>Media presenti nella vetrina</h3>
+      <div class="list" id="mediaList"></div>
+    </div>
+
+    <!-- FILES -->
+    <div class="card">
+      <h2>Files (PDF/TXT/ZIP) — URL + Riordino</h2>
+      <div class="mini">
+        Esempi: <span class="kbd">files/manuale.pdf</span> • <span class="kbd">files/ocr-scalvini10.txt</span><br>
+        Riordino: trascina (⇅) o usa ↑ ↓. Anteprima solo PDF.
+      </div>
+
+      <h3>A) Aggiungi file tramite URL</h3>
+      <label>Label</label>
+      <input id="fLabel" placeholder="Manuale / Documento / Guida…" />
+      <label>URL (con estensione)</label>
+      <input id="fUrl" placeholder="files/manuale.pdf" />
+
+      <div class="btns">
+        <button class="ok" onclick="addFileByUrl()">➕ Aggiungi file</button>
+        <button class="sec" onclick="renderFilesList()">🔄 Aggiorna lista</button>
+      </div>
+
+      <div class="hr"></div>
+
+      <h3>Files presenti nella vetrina</h3>
+      <div class="list" id="filesList"></div>
+    </div>
+
+    <!-- OCR -->
+    <div class="card">
+      <h2>OCR (solo Admin)</h2>
+      <div class="mini">
+        Estrai testo da immagine. Puoi scaricare un TXT e poi aggiungerlo in <span class="kbd">files[]</span>.
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Lingua OCR</label>
+          <select id="ocrLang">
+            <option value="ita">Italiano (ita)</option>
+            <option value="eng">Inglese (eng)</option>
+            <option value="ukr">Ucraino (ukr)</option>
+            <option value="deu">Tedesco (deu)</option>
+            <option value="spa">Spagnolo (spa)</option>
+            <option value="fra">Francese (fra)</option>
+          </select>
+        </div>
+        <div>
+          <label>Immagine per OCR</label>
+          <input id="ocrFile" type="file" accept="image/*" />
+        </div>
+      </div>
+
+      <div class="btns">
+        <button class="ok" onclick="runOCR()">🧠 Avvia OCR</button>
+        <button class="sec" onclick="copyOCR()">📋 Copia testo</button>
+        <button class="sec" onclick="speakOCR()">🔊 Leggi testo</button>
+        <button class="warn" onclick="downloadOCRtxt()">⬇️ Scarica TXT</button>
+        <button class="warn" onclick="addOCRtoFiles()">➕ Aggiungi TXT in files[]</button>
+        <button class="danger" onclick="clearOCR()">🧹 Pulisci</button>
+      </div>
+
+      <div style="margin-top:10px;">
+        <div class="pill">Stato: <b id="ocrStatus">Pronto</b></div>
+        <div style="margin-top:10px;" class="bar"><div id="ocrBar"></div></div>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <div>
+          <div class="mini" style="margin-bottom:6px;">Anteprima</div>
+          <img id="ocrPreview" class="preview" style="display:none;" alt="OCR preview">
+          <div id="ocrNoPreview" class="mini">Nessuna immagine caricata.</div>
+        </div>
+        <div>
+          <div class="mini" style="margin-bottom:6px;">Testo OCR</div>
+          <textarea id="ocrText" placeholder="Testo estratto..." spellcheck="false"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- GROUPS -->
+    <div class="card">
+      <h2>Gruppi (opzionale)</h2>
+      <label>Seleziona gruppo</label>
+      <select id="gSelect" onchange="loadGroupIntoEditor()">
+        <option value="">— scegli —</option>
+      </select>
+
+      <label>Key gruppo (es: scalvini)</label>
+      <input id="gKey" placeholder="scalvini" />
+      <label>Titolo gruppo</label>
+      <input id="gTitle" />
+      <label>Descrizione gruppo</label>
+      <textarea id="gDesc"></textarea>
+      <label>IDs vetrine (virgola)</label>
+      <input id="gItems" placeholder="scalvini10, scalvini11" />
+
+      <div class="btns">
+        <button class="ok" onclick="saveGroup()">💾 Salva gruppo</button>
+        <button class="danger" onclick="deleteGroup()">🗑️ Elimina gruppo</button>
+        <button class="ok" onclick="downloadIndex()">⬇️ Scarica index.json</button>
+      </div>
+
+      <div class="mini" style="margin-top:10px;">
+        Link pubblico gruppo: <span class="kbd">vetrina.html?group=scalvini</span>
+      </div>
+    </div>
+
   </div>
-
-  <!-- ===== EDIT VETRINA ===== -->
-  <div class="card" style="margin-top:14px;">
-    <div class="row" style="justify-content:space-between;">
-      <div style="font-weight:1000;">Dati vetrina</div>
-      <a class="mini" id="editJson" target="_blank" rel="noopener">Apri JSON su GitHub</a>
-    </div>
-
-    <label>ID</label>
-    <input id="id" disabled>
-
-    <label>Titolo</label>
-    <input id="title" placeholder="Es: Scalvini 10">
-
-    <label>Descrizione</label>
-    <textarea id="description" placeholder="Es: Qui trovi manuale, foto e documenti."></textarea>
-
-    <label>Voce (testo)</label>
-    <textarea id="voiceText" placeholder="Es: Benvenuto nella vetrina Scalvini 10. Qui trovi i file disponibili."></textarea>
-
-    <label>Mostra pulsante “Guida” al pubblico (showGuide)</label>
-    <select id="showGuide">
-      <option value="true">Sì</option>
-      <option value="false">No</option>
-    </select>
-
-    <div style="margin-top:12px;font-weight:1000;">Files (PDF / TXT / ZIP)</div>
-    <div class="mut">URL consigliati: <b>files/manuale.pdf</b></div>
-    <div id="filesBox"></div>
-
-    <div class="row" style="margin-top:12px;">
-      <button class="btn b" id="addFile">➕ Aggiungi file</button>
-      <button class="btn a" id="copyJson">📋 Copia JSON pronto</button>
-      <button class="btn b" id="openVetrina">🌍 Apri Vetrina</button>
-      <button class="btn b" id="openChecklist">📘 Apri Checklist</button>
-      <button class="btn b" id="openCards">📚 Guida</button>
-    </div>
-
-    <div class="mut" style="margin-top:8px;">
-      Dopo “Copia JSON pronto” devi incollare su GitHub in <b>data/&lt;id&gt;.json</b> e salvare.
-    </div>
-  </div>
-
-  <!-- ===== GUIDA TESTUALE LIVE ===== -->
-  <div class="card" style="margin-top:14px;">
-    <div style="font-weight:1000;">📌 Guida istruttiva (Admin)</div>
-    <div class="mut" id="guideText">
-      Tocca una casella vuota per sentire cosa scrivere e qual è il prossimo passo.
-    </div>
-
-    <div class="chips">
-      <div class="chip" data-chip="titolo">Titolo</div>
-      <div class="chip" data-chip="descrizione">Descrizione</div>
-      <div class="chip" data-chip="voce">Voce</div>
-      <div class="chip" data-chip="showguide">showGuide</div>
-      <div class="chip" data-chip="files">Files</div>
-      <div class="chip" data-chip="duplica">Duplica</div>
-      <div class="chip" data-chip="github">GitHub</div>
-    </div>
-  </div>
-
-  <!-- ======= PANEL GUIDA A SCHEDE ======= -->
-  <div class="box" id="cardsGuide" style="display:none;">
-    <div class="row" style="justify-content:space-between;">
-      <div style="font-weight:1000;">📚 Guida a schede</div>
-      <button class="btn b" id="closeCards">Chiudi</button>
-    </div>
-
-    <div class="mut" style="margin-top:6px;">Tocca una scheda: la guida spiega e ti dice il prossimo passo.</div>
-
-    <div style="display:grid;gap:10px;margin-top:10px;">
-      <button class="btn b" data-card="c1">1) Titolo</button>
-      <button class="btn b" data-card="c2">2) Descrizione</button>
-      <button class="btn b" data-card="c3">3) Voce</button>
-      <button class="btn b" data-card="c4">4) showGuide (Sì/No)</button>
-      <button class="btn b" data-card="c5">5) Files (Label + URL)</button>
-      <button class="btn b" data-card="c6">6) Copia JSON → GitHub</button>
-      <button class="btn b" data-card="c7">7) Duplica vetrina</button>
-    </div>
-  </div>
-
 </div>
 
 <script>
-  // Ensure first-run prompt exists (from guide.js)
-  try { if (window.SCTGuide && SCTGuide.firstRunPrompt) SCTGuide.firstRunPrompt(); } catch(e) {}
+/* PWA register */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./service-worker.js").catch(console.error);
+}
 
-  // === Repo links
-  const baseRepo = "https://github.com/creamiaappsercuctech/SerCucTech";
-  const editIndex = document.getElementById("editIndex");
-  editIndex.href = baseRepo + "/edit/main/data/index.json";
+/* ================= CONFIG ================= */
+const INDEX_PATH = "data/index.json";
+const SECRET_WORDS = ["LUCE","PORTA"];
+const SENTENCE = "Per entrare nell'area tecnica tocca LUCE poi PORTA in sequenza.";
 
-  // === Toggles
-  const gAdmin = document.getElementById("gAdmin");
-  const gVetrina = document.getElementById("gVetrina");
-  const gAsk = document.getElementById("gAsk");
-  const gVoice = document.getElementById("gVoice");
+/* ================= STATE ================= */
+let unlocked = false;
+let secretProgress = 0;
 
-  // default ON if missing
-  gAdmin.checked = SCTGuide.getBool(SCTGuide.LS.guideAdmin,true);
-  gVetrina.checked = SCTGuide.getBool(SCTGuide.LS.guideVetrina,true);
-  gAsk.checked = SCTGuide.getBool(SCTGuide.LS.askOnFirstRun,true);
-  gVoice.checked = SCTGuide.getBool(SCTGuide.LS.voiceEnabled,true);
+let indexDB = { meta:{version:1, updatedAt:null}, groups:{}, vetrine:{} };
+let activeId = "";
+let activeVetrina = null;
 
-  gAdmin.onchange = ()=>SCTGuide.setBool(SCTGuide.LS.guideAdmin,gAdmin.checked);
-  gVetrina.onchange = ()=>SCTGuide.setBool(SCTGuide.LS.guideVetrina,gVetrina.checked);
-  gAsk.onchange = ()=>SCTGuide.setBool(SCTGuide.LS.askOnFirstRun,gAsk.checked);
-  gVoice.onchange = ()=>SCTGuide.setBool(SCTGuide.LS.voiceEnabled,gVoice.checked);
+let mediaQueue = [];
+let ocrImage = null;
+let ocrLastTxtFilename = "";
 
-  const select = document.getElementById("vetrinaSelect");
-  const editJson = document.getElementById("editJson");
+/* ================= UTILS ================= */
+function nowISO(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2,"0");
+  const offMin = -d.getTimezoneOffset();
+  const sign = offMin >= 0 ? "+" : "-";
+  const hh = pad(Math.floor(Math.abs(offMin)/60));
+  const mm = pad(Math.abs(offMin)%60);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}${sign}${hh}:${mm}`;
+}
+function sanitizeId(s){
+  return (s||"").trim().toLowerCase().replace(/\s+/g,"").replace(/[^a-z0-9_-]/g,"");
+}
+function splitCSV(s){
+  return (s||"").split(",").map(x=>x.trim()).filter(Boolean);
+}
+function dlJSON(obj, filename){
+  const blob = new Blob([JSON.stringify(obj,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+function escapeHTML(s){
+  return String(s||"")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+function escapeAttr(s){ return escapeHTML(s).replaceAll("`","&#096;"); }
+function isRelativeRepoPath(p){
+  if(!p) return false;
+  const s = String(p).trim();
+  if(s.startsWith("http://") || s.startsWith("https://")) return false;
+  return s.startsWith("data/") || s.startsWith("media/") || s.startsWith("files/");
+}
+function isPdf(url){
+  return String(url||"").toLowerCase().split("?")[0].endsWith(".pdf");
+}
+function stopTTS(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }
+function speak(text, lang){
+  stopTTS();
+  if(!('speechSynthesis' in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang || "it-IT";
+  window.speechSynthesis.speak(u);
+}
 
-  const idEl = document.getElementById("id");
-  const titleEl = document.getElementById("title");
-  const descEl = document.getElementById("description");
-  const voiceEl = document.getElementById("voiceText");
-  const showGuideEl = document.getElementById("showGuide");
-  const filesBox = document.getElementById("filesBox");
-
-  function guideSay(t){
-    document.getElementById("guideText").textContent = t;
-    if(SCTGuide.getBool(SCTGuide.LS.guideAdmin,true)) SCTGuide.speak(t);
+/* ================= LOCK ================= */
+function normalizeWord(w){ return (w||"").toUpperCase().replace(/[^\p{L}]/gu,""); }
+function renderSecretSentence(){
+  const el = document.getElementById("secretSentence");
+  el.innerHTML = "";
+  const parts = SENTENCE.split(" ");
+  parts.forEach((w,i)=>{
+    const span = document.createElement("span");
+    span.textContent = w + (i===parts.length-1 ? "" : " ");
+    span.style.cursor = "pointer";
+    span.style.userSelect = "none";
+    const clean = normalizeWord(w);
+    span.style.fontWeight = (clean==="LUCE" || clean==="PORTA") ? "900" : "600";
+    span.onclick = ()=> secretClick(w);
+    el.appendChild(span);
+  });
+}
+function secretClick(w){
+  if(unlocked) return;
+  const clean = normalizeWord(w);
+  const expected = SECRET_WORDS[secretProgress];
+  if(clean === expected){
+    secretProgress++;
+    if(secretProgress >= SECRET_WORDS.length) unlockAdmin();
+  } else {
+    secretProgress = 0;
   }
+}
+function resetLock(){ secretProgress=0; document.getElementById("status").textContent="🔒 Bloccato"; }
+function unlockAdmin(){
+  unlocked = true;
+  document.getElementById("status").textContent="✅ Sbloccato";
+  document.getElementById("lockCard").classList.add("hidden");
+  document.getElementById("adminUI").classList.remove("hidden");
+}
 
-  // ====================== GUIDA PER CAMPI (FOCUS) ======================
-  let __lastFocusKey = "";
+/* ================= INDEX ================= */
+function normalizeIndex(data){
+  indexDB = (data && typeof data==="object") ? data : {};
+  indexDB.meta = indexDB.meta || {version:1, updatedAt:null};
+  indexDB.groups = indexDB.groups || {};
+  indexDB.vetrine = indexDB.vetrine || {};
+  indexDB.meta.version = 1;
+}
+function refreshIndexUI(){
+  document.getElementById("indexUpdated").textContent = indexDB.meta.updatedAt || "—";
+  document.getElementById("indexCountV").textContent = Object.keys(indexDB.vetrine).length;
+  document.getElementById("indexCountG").textContent = Object.keys(indexDB.groups).length;
+}
+function refreshSelects(){
+  const vSel = document.getElementById("vSelect");
+  const gSel = document.getElementById("gSelect");
+  const prevV = vSel.value;
+  const prevG = gSel.value;
 
-  function speakIfAdminGuide(text){
-    if (!SCTGuide.getBool(SCTGuide.LS.guideAdmin, true)) return;
-    if (__lastFocusKey === text) return;
-    __lastFocusKey = text;
-    guideSay(text);
-  }
+  vSel.innerHTML = `<option value="">— scegli —</option>`;
+  Object.keys(indexDB.vetrine).sort().forEach(id=>{
+    const rec = indexDB.vetrine[id];
+    const opt = document.createElement("option");
+    opt.value = id;
+    opt.textContent = `${id} — ${rec.title || ""}`;
+    vSel.appendChild(opt);
+  });
 
-  function onFocusEmpty(el, messageBuilder){
-    if (!el) return;
-    el.addEventListener("focus", () => {
-      const v = (el.value || "").trim();
-      if (v.length === 0) speakIfAdminGuide(messageBuilder());
-    });
-    el.addEventListener("click", () => {
-      const v = (el.value || "").trim();
-      if (v.length === 0) speakIfAdminGuide(messageBuilder());
-    });
-  }
+  gSel.innerHTML = `<option value="">— scegli —</option>`;
+  Object.keys(indexDB.groups).sort().forEach(k=>{
+    const g = indexDB.groups[k];
+    const opt = document.createElement("option");
+    opt.value = k;
+    opt.textContent = `${k} — ${g.title || ""}`;
+    gSel.appendChild(opt);
+  });
 
-  function attachFileRowGuide(rowEl){
-    if (!rowEl) return;
-    const ins = rowEl.querySelectorAll("input");
-    const labelInput = ins[0];
-    const urlInput = ins[1];
+  if(prevV && indexDB.vetrine[prevV]) vSel.value = prevV;
+  if(prevG && indexDB.groups[prevG]) gSel.value = prevG;
+}
+async function loadIndexFromRepo(){
+  try{
+    const res = await fetch(INDEX_PATH + "?t=" + Date.now(), {cache:"no-store"});
+    if(!res.ok) throw new Error(res.status);
+    normalizeIndex(await res.json());
+    refreshIndexUI();
+    refreshSelects();
+    alert("✅ Index caricato");
+  }catch(e){
+    console.error(e);
+    alert("❌ Non trovo data/index.json (controlla che esista).");
+  }
+}
+function downloadIndex(){
+  indexDB.meta.updatedAt = nowISO();
+  refreshIndexUI();
+  dlJSON(indexDB, "index.json");
+}
 
-    onFocusEmpty(labelInput, () =>
-      "Campo etichetta. Qui scrivi il nome che vede l'utente. Esempio: Manuale, Prezzi, Catalogo. Poi passa al campo URL."
-    );
+document.getElementById("importIndex").addEventListener("change", async (ev)=>{
+  const f = ev.target.files && ev.target.files[0];
+  if(!f) return;
+  try{
+    normalizeIndex(JSON.parse(await f.text()));
+    refreshIndexUI();
+    refreshSelects();
+    alert("✅ Index importato");
+  }catch(e){
+    console.error(e);
+    alert("❌ index.json non valido");
+  }finally{
+    ev.target.value = "";
+  }
+});
 
-    onFocusEmpty(urlInput, () =>
-      "Campo URL del file. Qui metti il percorso del file. Esempio: files manuale punto pdf. Se il file è online, incolla il link completo. Poi premi Copia JSON pronto."
-    );
+/* ================= VETRINA ================= */
+function normalizeVetrina(v, id){
+  const o = (v && typeof v==="object") ? v : {};
+  o.id = o.id || id;
+  o.title = o.title || "";
+  o.description = o.description || "";
+  o.voice = o.voice || {lang:"it-IT", text:""};
+  o.tags = Array.isArray(o.tags) ? o.tags : [];
+  o.media = Array.isArray(o.media) ? o.media : [];
+  o.files = Array.isArray(o.files) ? o.files : [];
+  o.createdAt = o.createdAt || nowISO();
+  o.updatedAt = o.updatedAt || nowISO();
+  return o;
+}
+function fillEditor(){
+  document.getElementById("activeId").textContent = activeId || "—";
+  if(!activeVetrina) return;
+  document.getElementById("eTitle").value = activeVetrina.title || "";
+  document.getElementById("eDesc").value = activeVetrina.description || "";
+  document.getElementById("eVoiceLang").value = (activeVetrina.voice && activeVetrina.voice.lang) ? activeVetrina.voice.lang : "it-IT";
+  document.getElementById("eVoiceText").value = (activeVetrina.voice && activeVetrina.voice.text) ? activeVetrina.voice.text : "";
+  document.getElementById("eTags").value = (activeVetrina.tags || []).join(", ");
+}
+async function loadSelectedVetrinaFile(){
+  const id = document.getElementById("vSelect").value;
+  if(!id){ alert("Seleziona una vetrina"); return; }
+  const rec = indexDB.vetrine[id];
+  if(!rec || !rec.file){ alert("Index: manca 'file'"); return; }
+  try{
+    const res = await fetch(rec.file + "?t=" + Date.now(), {cache:"no-store"});
+    if(!res.ok) throw new Error(res.status);
+    activeId = id;
+    activeVetrina = normalizeVetrina(await res.json(), id);
+    fillEditor();
+    renderMediaList();
+    renderFilesList();
+    clearMediaQueue();
+    alert("✅ Vetrina caricata");
+  }catch(e){
+    console.error(e);
+    alert("❌ Non riesco a caricare " + rec.file);
   }
+}
+function saveEdits(){
+  if(!activeVetrina){ alert("Carica una vetrina"); return; }
+  activeVetrina.title = (document.getElementById("eTitle").value||"").trim();
+  activeVetrina.description = (document.getElementById("eDesc").value||"").trim();
+  activeVetrina.voice = activeVetrina.voice || {lang:"it-IT", text:""};
+  activeVetrina.voice.lang = (document.getElementById("eVoiceLang").value||"it-IT").trim();
+  activeVetrina.voice.text = (document.getElementById("eVoiceText").value||"").trim();
+  activeVetrina.tags = splitCSV(document.getElementById("eTags").value);
+  activeVetrina.updatedAt = nowISO();
+  alert("✅ Salvato in memoria. Ora scarica " + activeId + ".json");
+}
+function syncIndexFromVetrina(){
+  if(!activeVetrina || !activeId){ alert("Carica una vetrina"); return; }
+  if(!indexDB.vetrine[activeId]){ alert("Non presente in index"); return; }
+  indexDB.vetrine[activeId].title = activeVetrina.title || activeId;
+  indexDB.vetrine[activeId].tags = activeVetrina.tags || [];
+  indexDB.vetrine[activeId].updatedAt = nowISO();
+  indexDB.meta.updatedAt = nowISO();
+  refreshIndexUI();
+  refreshSelects();
+  alert("✅ Index aggiornato. Scarica index.json");
+}
+function downloadVetrina(){
+  if(!activeVetrina || !activeId){ alert("Carica una vetrina"); return; }
+  dlJSON(activeVetrina, `${activeId}.json`);
+}
+function createVetrina(){
+  const id = sanitizeId(document.getElementById("newId").value);
+  if(!id){ alert("ID non valido"); return; }
+  if(indexDB.vetrine[id]){ alert("ID già esistente"); return; }
 
-  function attachSelectGuide(sel, msg){
-    if (!sel) return;
-    sel.addEventListener("focus", () => speakIfAdminGuide(msg));
-    sel.addEventListener("click", () => speakIfAdminGuide(msg));
-  }
+  const title = (document.getElementById("newTitle").value||"").trim() || id;
+  const tags = splitCSV(document.getElementById("newTags").value);
 
-  function msgTitolo(){
-    return "Campo Titolo. Scrivi il nome della vetrina, per esempio: Scalvini 10. Poi vai su Descrizione.";
-  }
-  function msgDescrizione(){
-    return "Campo Descrizione. Scrivi una o due frasi su cosa contiene la vetrina. Esempio: Qui trovi manuale, foto e documenti. Poi vai su Voce.";
-  }
-  function msgVoce(){
-    return "Campo Voce. Scrivi la frase che il telefono leggerà quando l'utente apre la vetrina. Esempio: Benvenuto nella vetrina Scalvini 10. Ora vai su Mostra guida al pubblico.";
-  }
-  function msgShowGuide(){
-    return "Opzione Mostra guida al pubblico. Se scegli Sì, in vetrina appare il pulsante Guida e l'utente può aprire la checklist. Se scegli No, la checklist resta solo per te. Poi vai su Files.";
-  }
-  function msgFiles(){
-    return "Sezione Files. Premi Aggiungi file, poi compila Label e URL. Esempio Label: Manuale. Esempio URL: files manuale punto pdf. Poi premi Copia JSON pronto.";
-  }
-  function msgGitHub(){
-    return "GitHub: dopo Copia JSON, apri Apri JSON su GitHub, incolla dentro data slash id punto json e salva. Se hai creato una nuova vetrina, aggiorna anche index.json.";
-  }
-  function msgDuplica(){
-    return "Duplica vetrina. Passi: scrivi nuovo ID, premi Crea duplicato, poi Crea file su GitHub, incolla e salva, poi Apri index.json e aggiungi la riga. Infine apri i link pronti.";
-  }
+  indexDB.vetrine[id] = { id, title, file:`data/${id}.json`, tags, updatedAt: nowISO() };
+  indexDB.meta.updatedAt = nowISO();
+  refreshIndexUI();
+  refreshSelects();
 
-  // ====== GUIDA AUTOMATICA SUI CAMPI (quando sono vuoti) ======
-  onFocusEmpty(titleEl, msgTitolo);
-  onFocusEmpty(descEl, msgDescrizione);
-  onFocusEmpty(voiceEl, msgVoce);
-  attachSelectGuide(showGuideEl, msgShowGuide());
+  activeId = id;
+  activeVetrina = normalizeVetrina({ id, title, tags, media:[], files:[] }, id);
+  fillEditor();
+  renderMediaList();
+  renderFilesList();
+  clearMediaQueue();
 
-  // ====================== FILE ROWS ======================
-  function fileRow(label="", url=""){
-    const wrap = document.createElement("div");
-    wrap.className = "filesRow";
-    wrap.innerHTML = `
-      <input placeholder="Label (es: Manuale)" value="${String(label).replaceAll('"','&quot;')}">
-      <input placeholder="URL (es: files/manuale.pdf)" value="${String(url).replaceAll('"','&quot;')}">
-      <button class="btn b">✖</button>
+  alert("✅ Creata. Ora scarica: index.json e " + id + ".json e caricali su GitHub in /data/");
+}
+function deleteVetrina(){
+  const id = document.getElementById("vSelect").value || activeId;
+  if(!id){ alert("Seleziona una vetrina"); return; }
+  if(!indexDB.vetrine[id]){ alert("Non trovata in index"); return; }
+  if(!confirm("Eliminare vetrina " + id + " ? (poi devi cancellare anche data/"+id+".json dal repo)")) return;
+
+  Object.keys(indexDB.groups).forEach(gk=>{
+    const g = indexDB.groups[gk];
+    if(Array.isArray(g.items)) g.items = g.items.filter(x => x !== id);
+  });
+
+  delete indexDB.vetrine[id];
+  indexDB.meta.updatedAt = nowISO();
+  refreshIndexUI();
+  refreshSelects();
+
+  if(activeId === id){
+    activeId = "";
+    activeVetrina = null;
+    fillEditor();
+    document.getElementById("mediaList").innerHTML = "";
+    document.getElementById("filesList").innerHTML = "";
+    clearMediaQueue();
+  }
+  alert("🗑️ Rimossa da index. Scarica index.json e caricalo su GitHub. Poi cancella data/"+id+".json manualmente.");
+}
+
+/* ================= DUPLICA ================= */
+function openDuplicatePanel(){
+  if(!activeVetrina || !activeId){ alert("Carica una vetrina prima."); return; }
+  document.getElementById("dupNewId").value = "";
+  document.getElementById("dupNewTitle").value = "";
+  document.getElementById("dupPanel").classList.remove("hidden");
+}
+function closeDuplicatePanel(){ document.getElementById("dupPanel").classList.add("hidden"); }
+function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+function duplicateCurrentVetrina(){
+  if(!activeVetrina || !activeId){ alert("Carica una vetrina prima."); return; }
+  const newId = sanitizeId(document.getElementById("dupNewId").value);
+  if(!newId){ alert("Nuovo ID non valido"); return; }
+  if(indexDB.vetrine[newId]){ alert("ID già esistente in index"); return; }
+  const newTitle = (document.getElementById("dupNewTitle").value||"").trim();
+
+  const cloned = deepClone(activeVetrina);
+  cloned.id = newId;
+  if(newTitle) cloned.title = newTitle;
+  cloned.createdAt = nowISO();
+  cloned.updatedAt = nowISO();
+
+  indexDB.vetrine[newId] = {
+    id: newId,
+    title: cloned.title || newId,
+    file: `data/${newId}.json`,
+    tags: cloned.tags || [],
+    updatedAt: nowISO()
+  };
+  indexDB.meta.updatedAt = nowISO();
+
+  activeId = newId;
+  activeVetrina = cloned;
+
+  refreshIndexUI();
+  refreshSelects();
+  fillEditor();
+  renderMediaList();
+  renderFilesList();
+  closeDuplicatePanel();
+
+  alert("✅ Clone creato IN MEMORIA. Ora scarica: index.json e " + newId + ".json e caricali su GitHub in /data/");
+}
+
+/* ================= MEDIA (URL + MULTI) ================= */
+function addMediaByUrl(){
+  if(!activeVetrina){ alert("Carica una vetrina"); return; }
+  const type = document.getElementById("mType").value;
+  const url = (document.getElementById("mUrl").value||"").trim();
+  const title = (document.getElementById("mTitle").value||"").trim();
+  const note = (document.getElementById("mNote").value||"").trim();
+  if(!url){ alert("Inserisci URL"); return; }
+
+  activeVetrina.media.push({type, url, title, note});
+  activeVetrina.updatedAt = nowISO();
+  renderMediaList();
+
+  document.getElementById("mUrl").value="";
+  document.getElementById("mTitle").value="";
+  document.getElementById("mNote").value="";
+}
+
+document.getElementById("mFiles").addEventListener("change", ()=>{
+  const files = Array.from(document.getElementById("mFiles").files || []);
+  mediaQueue = files.map(f=>{
+    const isVideo = f.type.startsWith("video/");
+    const type = isVideo ? "video" : "image";
+    const objectUrl = URL.createObjectURL(f);
+    return { file:f, type, url:`media/${f.name}`, title:f.name, note:"", objectUrl };
+  });
+  renderMediaQueue();
+});
+
+function renderMediaQueue(){
+  const box = document.getElementById("mediaQueue");
+  box.innerHTML = "";
+  if(mediaQueue.length === 0){
+    box.innerHTML = `<div class="mini">Nessun file selezionato.</div>`;
+    return;
+  }
+  mediaQueue.forEach((m, idx)=>{
+    const row = document.createElement("div");
+    row.className = "item";
+    row.innerHTML = `
+      <div style="flex:1">
+        <b>${m.type==="video" ? "🎬 Video" : "🖼️ Immagine"} — ${escapeHTML(m.file.name)}</b>
+        <div class="mini">URL nel JSON: <span class="kbd">${escapeHTML(m.url)}</span></div>
+        <label style="margin-top:8px;">Titolo</label>
+        <input id="qTitle_${idx}" value="${escapeAttr(m.title)}" />
+        <label>Nota</label>
+        <input id="qNote_${idx}" value="${escapeAttr(m.note)}" />
+        <div style="margin-top:10px;">
+          ${m.type==="video"
+            ? `<video class="preview" controls src="${m.objectUrl}"></video>`
+            : `<img class="preview" src="${m.objectUrl}" alt="preview">`
+          }
+        </div>
+      </div>
+      <div>
+        <button class="danger smallbtn" onclick="removeQueued(${idx})">Rimuovi</button>
+      </div>
     `;
-    wrap.querySelector("button").onclick = () => wrap.remove();
+    box.appendChild(row);
+  });
+}
+function removeQueued(idx){
+  const it = mediaQueue[idx];
+  if(it && it.objectUrl) URL.revokeObjectURL(it.objectUrl);
+  mediaQueue.splice(idx,1);
+  renderMediaQueue();
+}
+function clearMediaQueue(){
+  mediaQueue.forEach(it=>{ if(it.objectUrl) URL.revokeObjectURL(it.objectUrl); });
+  mediaQueue = [];
+  document.getElementById("mFiles").value = "";
+  renderMediaQueue();
+}
+function addMediaFromFiles(){
+  if(!activeVetrina){ alert("Carica una vetrina"); return; }
+  if(mediaQueue.length === 0){ alert("Seleziona file"); return; }
 
-    // guida su label/url (quando vuoti)
-    attachFileRowGuide(wrap);
+  mediaQueue.forEach((m, idx)=>{
+    const title = (document.getElementById(`qTitle_${idx}`)?.value || m.title || "").trim();
+    const note = (document.getElementById(`qNote_${idx}`)?.value || m.note || "").trim();
+    activeVetrina.media.push({ type:m.type, url:m.url, title, note });
+  });
 
-    return wrap;
-  }
+  activeVetrina.updatedAt = nowISO();
+  renderMediaList();
 
-  async function loadIndex(){
-    const r = await fetch("./data/index.json", {cache:"no-store"});
-    const idx = r.ok ? await r.json() : {vetrine:{}};
-    const list = idx.vetrine ? Object.values(idx.vetrine) : [];
+  alert("✅ Aggiunti al JSON. Ora: scarica ZIP e carica i file in /media/, poi scarica " + activeId + ".json e caricalo in /data/.");
+}
+async function downloadMediaZip(){
+  if(mediaQueue.length === 0){ alert("Seleziona file prima."); return; }
+  const zip = new JSZip();
+  const folder = zip.folder("media");
+  for(const m of mediaQueue){ folder.file(m.file.name, m.file); }
+  const blob = await zip.generateAsync({type:"blob"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `media_upload_${activeId || "vetrina"}.zip`;
+  a.click();
+}
+function moveInArray(arr, from, to){
+  if(from === to) return;
+  const item = arr.splice(from, 1)[0];
+  arr.splice(to, 0, item);
+}
+function swapInArray(arr, i, j){
+  const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+}
+function removeMedia(idx){
+  activeVetrina.media.splice(idx,1);
+  activeVetrina.updatedAt = nowISO();
+  renderMediaList();
+}
+function applyMediaEdits(idx){
+  activeVetrina.media[idx].title = String(document.getElementById(`mt_${idx}`)?.value || "").trim();
+  activeVetrina.media[idx].note  = String(document.getElementById(`mn_${idx}`)?.value || "").trim();
+  activeVetrina.updatedAt = nowISO();
+  alert("✅ Modifiche media applicate (scarica poi il JSON).");
+}
+function previewMedia(idx){
+  const m = activeVetrina.media[idx];
+  const box = document.getElementById(`prevM_${idx}`);
+  if(!box) return;
+  if(m.type==="video") box.innerHTML = `<video class="preview" controls src="${escapeAttr(m.url)}"></video>`;
+  else box.innerHTML = `<img class="preview" src="${escapeAttr(m.url)}" alt="preview">`;
+}
+function moveMediaUp(idx){
+  if(idx<=0) return;
+  swapInArray(activeVetrina.media, idx, idx-1);
+  activeVetrina.updatedAt = nowISO();
+  renderMediaList();
+}
+function moveMediaDown(idx){
+  if(idx >= activeVetrina.media.length-1) return;
+  swapInArray(activeVetrina.media, idx, idx+1);
+  activeVetrina.updatedAt = nowISO();
+  renderMediaList();
+}
+function renderMediaList(){
+  const list = document.getElementById("mediaList");
+  list.innerHTML = "";
+  if(!activeVetrina){ list.innerHTML = `<div class="mini">Carica una vetrina.</div>`; return; }
+  const media = activeVetrina.media || [];
+  if(media.length === 0){ list.innerHTML = `<div class="mini">Nessun media.</div>`; return; }
 
-    select.innerHTML = "";
-    list.forEach(v=>{
-      const opt = document.createElement("option");
-      opt.value = v.id;
-      opt.textContent = v.title || v.id;
-      select.appendChild(opt);
+  media.forEach((m, idx)=>{
+    const row = document.createElement("div");
+    row.className = "item";
+    row.draggable = true;
+    row.dataset.index = String(idx);
+
+    row.addEventListener("dragstart", (ev)=>{
+      ev.dataTransfer.setData("text/plain", String(idx));
+      ev.dataTransfer.effectAllowed = "move";
     });
-
-    const appId = new URL(location.href).searchParams.get("id") || "";
-    if(appId && list.some(v=>v.id===appId)) select.value = appId;
-    else if(list[0]) select.value = list[0].id;
-
-    select.onchange = () => loadVetrina(select.value);
-    if(select.value) loadVetrina(select.value);
-  }
-
-  async function loadVetrina(id){
-    const r = await fetch("./data/"+id+".json", {cache:"no-store"});
-    const data = r.ok ? await r.json() : {id, files:[]};
-
-    idEl.value = id;
-    titleEl.value = data.title || "";
-    descEl.value = data.description || "";
-    voiceEl.value = (data.voice && data.voice.text) ? data.voice.text : "";
-    showGuideEl.value = (data.showGuide === false) ? "false" : "true";
-
-    filesBox.innerHTML = "";
-    (data.files || []).forEach(f => filesBox.appendChild(fileRow(f.label||"", f.url||"")));
-
-    editJson.href = baseRepo + "/edit/main/data/" + id + ".json";
-    guideSay("Vetrina caricata. Tocca un campo vuoto per sapere cosa scrivere. Se vuoi creare una nuova vetrina, premi Duplica vetrina.");
-  }
-
-  function makeJson(id, title, description, voiceText, showGuide, files){
-    return {
-      id,
-      title: title || id,
-      description: description || "",
-      voice: { lang: navigator.language || "it-IT", text: voiceText || ("Benvenuto nella vetrina " + (title||id)) },
-      showGuide: !!showGuide,
-      tags: [],
-      media: [],
-      files: files || [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-  }
-
-  // ===== Buttons
-  document.getElementById("addFile").addEventListener("click", () => {
-    filesBox.appendChild(fileRow("Manuale", "files/manuale.pdf"));
-    if (SCTGuide.getBool(SCTGuide.LS.guideAdmin,true)) {
-      guideSay("Hai aggiunto una riga file. Ora compila Etichetta e URL. Poi premi Copia JSON pronto.");
-    }
-  });
-
-  document.getElementById("copyJson").addEventListener("click", async () => {
-    const id = idEl.value.trim();
-    const files = [...filesBox.querySelectorAll(".filesRow")].map(r=>{
-      const ins = r.querySelectorAll("input");
-      return { label: ins[0].value.trim(), url: ins[1].value.trim() };
-    }).filter(x=>x.label && x.url);
-
-    const out = makeJson(
-      id,
-      titleEl.value.trim(),
-      descEl.value.trim(),
-      voiceEl.value.trim(),
-      showGuideEl.value==="true",
-      files
-    );
-
-    await navigator.clipboard.writeText(JSON.stringify(out, null, 2));
-    SCTGuide.toast("JSON copiato ✅");
-
-    if (SCTGuide.getBool(SCTGuide.LS.guideAdmin,true)) {
-      guideSay("JSON copiato. Ora apri GitHub con ‘Apri JSON su GitHub’, incolla dentro data slash " + id + " punto json, e salva.");
-    }
-  });
-
-  document.getElementById("openVetrina").onclick = () => {
-    location.href = "./vetrina.html?id=" + encodeURIComponent(idEl.value);
-  };
-  document.getElementById("openChecklist").onclick = () => {
-    location.href = "./checklist.html?id=" + encodeURIComponent(idEl.value);
-  };
-
-  // ===== Chips quick guide
-  document.querySelectorAll(".chip").forEach(ch=>{
-    ch.addEventListener("click", ()=>{
-      const k = ch.getAttribute("data-chip");
-      const map = {
-        titolo: msgTitolo(),
-        descrizione: msgDescrizione(),
-        voce: msgVoce(),
-        showguide: msgShowGuide(),
-        files: msgFiles(),
-        duplica: msgDuplica(),
-        github: msgGitHub()
-      };
-      guideSay(map[k] || "Guida non trovata.");
+    row.addEventListener("dragover", (ev)=>{
+      ev.preventDefault();
+      row.classList.add("dropHint");
+      ev.dataTransfer.dropEffect = "move";
     });
-  });
-
-  // ================= DUPLICA =================
-  const dupBtn = document.getElementById("dupBtn");
-  const dupBox = document.getElementById("dupBox");
-  const dupFrom = document.getElementById("dupFrom");
-  const dupTo = document.getElementById("dupTo");
-  const dupTitle = document.getElementById("dupTitle");
-  const dupMake = document.getElementById("dupMake");
-  const dupClose = document.getElementById("dupClose");
-  const dupPreview = document.getElementById("dupPreview");
-
-  const dupOpenNewFile = document.getElementById("dupOpenNewFile");
-  const dupOpenIndex = document.getElementById("dupOpenIndex");
-
-  onFocusEmpty(dupTo, () => "Campo nuovo ID. Scrivi per esempio scalvini undici. Poi premi Crea duplicato.");
-  onFocusEmpty(dupTitle, () => "Campo titolo nuovo. Se lo lasci vuoto, io aggiorno automaticamente il numero nel titolo.");
-
-  dupBtn.addEventListener("click", () => {
-    dupBox.style.display = "block";
-    dupFrom.textContent = idEl.value || select.value || "";
-    dupTo.value = "";
-    dupTitle.value = "";
-    dupPreview.textContent = "";
-    if (SCTGuide.getBool(SCTGuide.LS.guideAdmin,true)) guideSay("Ora stai duplicando una vetrina. Passo uno: scrivi il nuovo ID. Passo due: premi Crea duplicato. Poi creerai il file su GitHub e aggiornerai index.json.");
-  });
-
-  dupClose.onclick = () => dupBox.style.display = "none";
-  dupOpenIndex.onclick = () => window.open(baseRepo + "/edit/main/data/index.json", "_blank");
-
-  dupOpenNewFile.onclick = () => {
-    const toId = dupTo.value.trim();
-    if(!toId){ SCTGuide.toast("Inserisci nuovo ID"); return; }
-    const url = baseRepo + "/new/main/data?filename=" + encodeURIComponent(toId + ".json");
-    window.open(url, "_blank");
-    if (SCTGuide.getBool(SCTGuide.LS.guideAdmin,true)) guideSay("Si è aperta la pagina GitHub per creare data/" + toId + ".json. Incolla il JSON che hai copiato e salva.");
-  };
-
-  // Duplica: cambia id ovunque + cambia numero nel titolo + aggiunge link pronti
-  dupMake.onclick = async () => {
-    const fromId = (idEl.value || select.value || "").trim();
-    const toId = dupTo.value.trim();
-    if(!fromId || !toId){ SCTGuide.toast("Inserisci nuovo ID"); return; }
-
-    const r = await fetch("./data/"+fromId+".json", {cache:"no-store"});
-    const src = r.ok ? await r.json() : null;
-    if(!src){ SCTGuide.toast("Sorgente non trovata"); return; }
-
-    const toTitleInput = dupTitle.value.trim();
-
-    // auto title update number (10->11)
-    let autoTitle = (src.title || fromId);
-    const mFrom = fromId.match(/(\d+)\s*$/);
-    const mTo = toId.match(/(\d+)\s*$/);
-    if (mFrom && mTo) {
-      const fromNum = mFrom[1];
-      const toNum = mTo[1];
-      autoTitle = autoTitle
-        .replace(new RegExp(`\\b${fromNum}\\b`, "g"), toNum)
-        .replace(new RegExp(`\\b${fromNum}$`), toNum);
-    }
-    const newTitle = toTitleInput || autoTitle;
-
-    let out = {
-      ...src,
-      id: toId,
-      title: newTitle,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    // replace fromId -> toId everywhere inside JSON (text/links)
-    try {
-      const txt = JSON.stringify(out);
-      const replaced = txt.split(fromId).join(toId);
-      out = JSON.parse(replaced);
-    } catch(e) {}
-
-    const outJson = JSON.stringify(out, null, 2);
-    const indexLine = `"${toId}": { "id": "${toId}", "title": "${newTitle}" }`;
-
-    // ready links
-    const basePages = "https://creamiaappsercuctech.github.io/SerCucTech";
-    const linkApp = `${basePages}/app.html?id=${encodeURIComponent(toId)}`;
-    const linkVetrina = `${basePages}/vetrina.html?id=${encodeURIComponent(toId)}`;
-    const linkChecklist = `${basePages}/checklist.html?id=${encodeURIComponent(toId)}`;
-    const linkAdmin = `${basePages}/admin.html?id=${encodeURIComponent(toId)}`;
-
-    const all =
-`=== INCOLLA QUESTO IN data/${toId}.json ===
-${outJson}
-
-=== AGGIUNGI QUESTA RIGA IN data/index.json (dentro vetrine) ===
-${indexLine}
-
-=== LINK PRONTI (NUOVA VETRINA) ===
-APP (unica): ${linkApp}
-Vetrina: ${linkVetrina}
-Checklist: ${linkChecklist}
-Admin: ${linkAdmin}
-`;
-
-    await navigator.clipboard.writeText(all);
-    dupPreview.textContent = all;
-
-    SCTGuide.toast("Duplicato copiato ✅");
-    guideSay("Perfetto. Ho creato la nuova vetrina, sostituito l'ID ovunque, aggiornato il titolo e aggiunto i link pronti. Ora premi Crea file su GitHub, incolla e salva. Poi premi Apri index.json e aggiungi la riga. Infine apri il link della nuova vetrina.");
-  };
-
-  // ====== GUIDA A SCHEDE (Admin) ======
-  const openCards = document.getElementById("openCards");
-  const cardsGuide = document.getElementById("cardsGuide");
-  const closeCards = document.getElementById("closeCards");
-
-  if(openCards && cardsGuide && closeCards){
-    openCards.onclick = () => {
-      cardsGuide.style.display = "block";
-      if(SCTGuide.getBool(SCTGuide.LS.guideAdmin,true)){
-        SCTGuide.speak("Guida a schede aperta. Tocca una scheda per ascoltare la spiegazione.");
+    row.addEventListener("dragleave", ()=> row.classList.remove("dropHint"));
+    row.addEventListener("drop", (ev)=>{
+      ev.preventDefault();
+      row.classList.remove("dropHint");
+      const from = Number(ev.dataTransfer.getData("text/plain"));
+      const to = Number(row.dataset.index);
+      if(Number.isFinite(from) && Number.isFinite(to)){
+        moveInArray(activeVetrina.media, from, to);
+        activeVetrina.updatedAt = nowISO();
+        renderMediaList();
       }
-    };
-    closeCards.onclick = () => cardsGuide.style.display = "none";
-
-    const texts = {
-      it: {
-        c1:"Titolo: scrivi il nome della vetrina, per esempio Scalvini 10. Poi vai su Descrizione.",
-        c2:"Descrizione: scrivi una o due frasi su cosa contiene la vetrina. Poi vai su Voce.",
-        c3:"Voce: scrivi la frase che il telefono leggerà all’apertura. Poi vai su showGuide.",
-        c4:"showGuide: Sì mostra la checklist al pubblico. No la tiene solo per te. Poi vai su Files.",
-        c5:"Files: premi Aggiungi file. Label è il nome visibile, URL è il percorso, esempio files/manuale.pdf. Poi premi Copia JSON.",
-        c6:"Copia JSON: copia il JSON e incollalo su GitHub dentro data/<id>.json e salva. Se hai creato una nuova vetrina, aggiorna anche index.json.",
-        c7:"Duplica: scrivi nuovo ID, premi Crea duplicato, poi Crea file su GitHub (incolla e salva), poi Apri index.json (aggiungi riga e salva). Infine usa i link pronti."
-      },
-      en: {
-        c1:"Title: type the showcase name. Then go to Description.",
-        c2:"Description: write 1–2 sentences about the content. Then go to Voice.",
-        c3:"Voice: text that the phone reads on open. Then go to showGuide.",
-        c4:"showGuide: Yes shows checklist to public, No keeps it private. Then go to Files.",
-        c5:"Files: press Add file. Label is visible name, URL is path like files/manuale.pdf. Then Copy JSON.",
-        c6:"Copy JSON: paste into GitHub data/<id>.json and save. If new showcase, update index.json.",
-        c7:"Duplicate: new ID → Create duplicate → Create file on GitHub (paste & save) → open index.json (add line & save)."
-      },
-      uk: {
-        c1:"Title: введи назву вітрини. Далі Description.",
-        c2:"Description: 1–2 речення про вміст. Далі Voice.",
-        c3:"Voice: текст, який телефон читає при відкритті. Далі showGuide.",
-        c4:"showGuide: Так показує checklist публічно, Ні — лише для тебе. Далі Files.",
-        c5:"Files: натисни Add file. Label — назва, URL — шлях, наприклад files/manuale.pdf. Далі Copy JSON.",
-        c6:"Copy JSON: встав у GitHub data/<id>.json і збережи. Якщо нова вітрина — онови index.json.",
-        c7:"Duplicate: новий ID → Create duplicate → Create file on GitHub (встав і збережи) → index.json (додай рядок і збережи)."
-      }
-    };
-
-    cardsGuide.querySelectorAll("button[data-card]").forEach(btn=>{
-      btn.onclick = () => {
-        const key = btn.getAttribute("data-card");
-        const pack = texts[SCTGuide.LANG] || texts.it;
-        const msg = pack[key] || "";
-        guideSay(msg);
-      };
     });
+
+    const typeIcon = m.type==="video" ? "🎬" : "🖼️";
+    row.innerHTML = `
+      <div style="flex:1">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <span class="drag">⇅</span>
+          <b>${typeIcon} ${escapeHTML(m.title||"(senza titolo)")}</b>
+        </div>
+        <div class="mini mono">${escapeHTML(m.url||"")}</div>
+        <div class="row">
+          <div>
+            <label style="margin-top:6px;">Titolo</label>
+            <input id="mt_${idx}" value="${escapeAttr(m.title||"")}" />
+          </div>
+          <div>
+            <label style="margin-top:6px;">Nota</label>
+            <input id="mn_${idx}" value="${escapeAttr(m.note||"")}" />
+          </div>
+        </div>
+        <div class="btns">
+          <button class="sec smallbtn" onclick="applyMediaEdits(${idx})">Applica</button>
+          <button class="sec smallbtn" onclick="previewMedia(${idx})">Anteprima</button>
+        </div>
+        <div id="prevM_${idx}" class="mini" style="margin-top:8px;"></div>
+      </div>
+      <div>
+        <div class="btns" style="justify-content:flex-end;">
+          <button class="sec smallbtn" onclick="moveMediaUp(${idx})">↑</button>
+          <button class="sec smallbtn" onclick="moveMediaDown(${idx})">↓</button>
+          <button class="danger smallbtn" onclick="removeMedia(${idx})">Rimuovi</button>
+        </div>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+/* ================= FILES ================= */
+function addFileByUrl(){
+  if(!activeVetrina){ alert("Carica una vetrina"); return; }
+  const label = (document.getElementById("fLabel").value||"").trim();
+  const url = (document.getElementById("fUrl").value||"").trim();
+  if(!label || !url){ alert("Inserisci Label e URL"); return; }
+  activeVetrina.files.push({label, url});
+  activeVetrina.updatedAt = nowISO();
+  renderFilesList();
+  document.getElementById("fLabel").value = "";
+  document.getElementById("fUrl").value = "";
+}
+function removeFile(idx){
+  activeVetrina.files.splice(idx,1);
+  activeVetrina.updatedAt = nowISO();
+  renderFilesList();
+}
+function applyFileEdits(idx){
+  activeVetrina.files[idx].label = String(document.getElementById(`fl_${idx}`)?.value || "").trim();
+  activeVetrina.files[idx].url   = String(document.getElementById(`fu_${idx}`)?.value || "").trim();
+  activeVetrina.updatedAt = nowISO();
+  alert("✅ Modifiche file applicate (scarica poi il JSON).");
+}
+function previewFile(idx){
+  const f = activeVetrina.files[idx];
+  const box = document.getElementById(`prevF_${idx}`);
+  if(!box) return;
+  if(isPdf(f.url)) box.innerHTML = `<iframe class="preview" src="${escapeAttr(f.url)}"></iframe>`;
+  else box.innerHTML = `<div class="mini">Anteprima solo PDF. Link: <span class="kbd">${escapeHTML(f.url)}</span></div>`;
+}
+function moveFileUp(idx){
+  if(idx<=0) return;
+  swapInArray(activeVetrina.files, idx, idx-1);
+  activeVetrina.updatedAt = nowISO();
+  renderFilesList();
+}
+function moveFileDown(idx){
+  if(idx >= activeVetrina.files.length-1) return;
+  swapInArray(activeVetrina.files, idx, idx+1);
+  activeVetrina.updatedAt = nowISO();
+  renderFilesList();
+}
+function renderFilesList(){
+  const list = document.getElementById("filesList");
+  list.innerHTML = "";
+  if(!activeVetrina){ list.innerHTML = `<div class="mini">Carica una vetrina.</div>`; return; }
+  const files = activeVetrina.files || [];
+  if(files.length === 0){ list.innerHTML = `<div class="mini">Nessun file.</div>`; return; }
+
+  files.forEach((f, idx)=>{
+    const row = document.createElement("div");
+    row.className = "item";
+    row.draggable = true;
+    row.dataset.index = String(idx);
+
+    row.addEventListener("dragstart", (ev)=>{
+      ev.dataTransfer.setData("text/plain", String(idx));
+      ev.dataTransfer.effectAllowed = "move";
+    });
+    row.addEventListener("dragover", (ev)=>{
+      ev.preventDefault();
+      row.classList.add("dropHint");
+      ev.dataTransfer.dropEffect = "move";
+    });
+    row.addEventListener("dragleave", ()=> row.classList.remove("dropHint"));
+    row.addEventListener("drop", (ev)=>{
+      ev.preventDefault();
+      row.classList.remove("dropHint");
+      const from = Number(ev.dataTransfer.getData("text/plain"));
+      const to = Number(row.dataset.index);
+      if(Number.isFinite(from) && Number.isFinite(to)){
+        moveInArray(activeVetrina.files, from, to);
+        activeVetrina.updatedAt = nowISO();
+        renderFilesList();
+      }
+    });
+
+    const ico = isPdf(f.url) ? "📄" : "📎";
+    row.innerHTML = `
+      <div style="flex:1">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <span class="drag">⇅</span>
+          <b>${ico} ${escapeHTML(f.label||"(senza label)")}</b>
+        </div>
+        <div class="mini mono">${escapeHTML(f.url||"")}</div>
+
+        <div class="row">
+          <div>
+            <label style="margin-top:6px;">Label</label>
+            <input id="fl_${idx}" value="${escapeAttr(f.label||"")}" />
+          </div>
+          <div>
+            <label style="margin-top:6px;">URL</label>
+            <input id="fu_${idx}" value="${escapeAttr(f.url||"")}" />
+          </div>
+        </div>
+
+        <div class="btns">
+          <button class="sec smallbtn" onclick="applyFileEdits(${idx})">Applica</button>
+          <button class="sec smallbtn" onclick="previewFile(${idx})">Anteprima</button>
+        </div>
+        <div id="prevF_${idx}" class="mini" style="margin-top:8px;"></div>
+      </div>
+
+      <div>
+        <div class="btns" style="justify-content:flex-end;">
+          <button class="sec smallbtn" onclick="moveFileUp(${idx})">↑</button>
+          <button class="sec smallbtn" onclick="moveFileDown(${idx})">↓</button>
+          <button class="danger smallbtn" onclick="removeFile(${idx})">Rimuovi</button>
+        </div>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+/* ================= BACKUP ZIP ================= */
+async function fetchAsBlob(path){
+  const res = await fetch(path + "?t=" + Date.now(), {cache:"no-store"});
+  if(!res.ok) throw new Error("Fetch failed: " + path);
+  return await res.blob();
+}
+async function downloadBackupZip(){
+  if(!activeVetrina || !activeId){ alert("Carica una vetrina prima."); return; }
+  const zip = new JSZip();
+  zip.folder("data").file(`${activeId}.json`, JSON.stringify(activeVetrina, null, 2));
+
+  const mediaFolder = zip.folder("media");
+  const filesFolder = zip.folder("files");
+  let okCount = 0, failCount = 0;
+
+  for(const m of (activeVetrina.media || [])){
+    if(!m?.url || !isRelativeRepoPath(m.url)) continue;
+    const name = m.url.replace(/^media\//, "");
+    try{ mediaFolder.file(name, await fetchAsBlob(m.url)); okCount++; }catch(e){ failCount++; }
+  }
+  for(const f of (activeVetrina.files || [])){
+    if(!f?.url || !isRelativeRepoPath(f.url)) continue;
+    const name = f.url.replace(/^files\//, "");
+    try{ filesFolder.file(name, await fetchAsBlob(f.url)); okCount++; }catch(e){ failCount++; }
   }
 
-  // init
-  loadIndex();
-</script>
-  <script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./service-worker.js").catch(console.error);
+  const blob = await zip.generateAsync({type:"blob"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `backup_${activeId}.zip`;
+  a.click();
+
+  alert(`✅ Backup creato. File inclusi: ${okCount} • Non trovati: ${failCount}`);
+}
+
+/* ================= OCR ================= */
+const ocrFile = document.getElementById("ocrFile");
+const ocrPreview = document.getElementById("ocrPreview");
+const ocrNoPreview = document.getElementById("ocrNoPreview");
+const ocrText = document.getElementById("ocrText");
+const ocrStatus = document.getElementById("ocrStatus");
+const ocrBar = document.getElementById("ocrBar");
+
+ocrFile.addEventListener("change", (e)=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f){ ocrImage=null; return; }
+  if(!f.type.startsWith("image/")){
+    alert("Carica un'immagine.");
+    e.target.value = "";
+    return;
   }
+  ocrImage = f;
+  ocrPreview.src = URL.createObjectURL(f);
+  ocrPreview.style.display = "block";
+  ocrNoPreview.style.display = "none";
+  ocrStatus.textContent = "Immagine caricata";
+  ocrBar.style.width = "0%";
+});
+
+async function runOCR(){
+  if(!ocrImage){ alert("Carica un'immagine"); return; }
+  const lang = document.getElementById("ocrLang").value;
+
+  ocrStatus.textContent = "OCR in corso…";
+  ocrBar.style.width = "0%";
+
+  try{
+    const { data } = await Tesseract.recognize(ocrImage, lang, {
+      logger: (m)=>{
+        if(m?.status) ocrStatus.textContent = m.status;
+        if(typeof m?.progress === "number") ocrBar.style.width = Math.round(m.progress*100) + "%";
+      }
+    });
+    const text = (data?.text ? data.text : "").trim();
+    ocrText.value = text;
+    ocrStatus.textContent = text ? "✅ OCR completato" : "✅ OCR completato (nessun testo)";
+    ocrBar.style.width = "100%";
+    const ts = new Date().toISOString().replaceAll(":","-");
+    ocrLastTxtFilename = `ocr-${activeId || "vetrina"}-${ts}.txt`;
+  }catch(err){
+    console.error(err);
+    ocrStatus.textContent = "❌ Errore OCR";
+    alert("Errore OCR: riprova con foto più nitida.");
+  }
+}
+
+async function copyOCR(){
+  const txt = (ocrText.value||"").trim();
+  if(!txt){ alert("Nessun testo"); return; }
+  try{ await navigator.clipboard.writeText(txt); ocrStatus.textContent = "📋 Copiato"; }
+  catch(e){ ocrText.select(); document.execCommand("copy"); ocrStatus.textContent = "📋 Copiato"; }
+}
+function speakOCR(){
+  const txt = (ocrText.value||"").trim();
+  if(!txt){ alert("Nessun testo"); return; }
+  const lang = document.getElementById("ocrLang").value;
+  const map = { ita:"it-IT", eng:"en-US", ukr:"uk-UA", deu:"de-DE", spa:"es-ES", fra:"fr-FR" };
+  speak(txt, map[lang] || "it-IT");
+}
+function downloadOCRtxt(){
+  const txt = (ocrText.value||"").trim();
+  if(!txt){ alert("Nessun testo"); return; }
+  const name = ocrLastTxtFilename || `ocr-${activeId || "vetrina"}.txt`;
+  const blob = new Blob([txt], {type:"text/plain;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+}
+function addOCRtoFiles(){
+  if(!activeVetrina){ alert("Carica una vetrina"); return; }
+  const txt = (ocrText.value||"").trim();
+  if(!txt){ alert("Nessun testo"); return; }
+  const name = ocrLastTxtFilename || `ocr-${activeId || "vetrina"}.txt`;
+  activeVetrina.files.push({ label: "Testo OCR", url: `files/${name}` });
+  activeVetrina.updatedAt = nowISO();
+  renderFilesList();
+  ocrStatus.textContent = "➕ Aggiunto in files[] (carica il TXT in /files/)";
+  alert("✅ Aggiunto. Ora: scarica il TXT e caricalo in /files/. Poi scarica " + activeId + ".json e caricalo in /data/.");
+}
+function clearOCR(){
+  document.getElementById("ocrFile").value = "";
+  ocrImage = null;
+  ocrPreview.src = "";
+  ocrPreview.style.display = "none";
+  ocrNoPreview.style.display = "block";
+  ocrText.value = "";
+  ocrStatus.textContent = "Pronto";
+  ocrBar.style.width = "0%";
+  ocrLastTxtFilename = "";
+}
+
+/* ================= GROUPS ================= */
+function loadGroupIntoEditor(){
+  const k = document.getElementById("gSelect").value;
+  if(!k) return;
+  const g = indexDB.groups[k];
+  if(!g) return;
+  document.getElementById("gKey").value = k;
+  document.getElementById("gTitle").value = g.title || "";
+  document.getElementById("gDesc").value = g.description || "";
+  document.getElementById("gItems").value = (g.items||[]).join(", ");
+}
+function saveGroup(){
+  const k = sanitizeId(document.getElementById("gKey").value);
+  if(!k){ alert("Key non valida"); return; }
+  indexDB.groups[k] = {
+    title: (document.getElementById("gTitle").value||"").trim(),
+    description: (document.getElementById("gDesc").value||"").trim(),
+    items: splitCSV(document.getElementById("gItems").value).map(sanitizeId).filter(Boolean)
+  };
+  indexDB.meta.updatedAt = nowISO();
+  refreshIndexUI();
+  refreshSelects();
+  alert("✅ Gruppo salvato. Scarica index.json");
+}
+function deleteGroup(){
+  const k = sanitizeId(document.getElementById("gKey").value);
+  if(!k || !indexDB.groups[k]){ alert("Gruppo non trovato"); return; }
+  if(!confirm("Eliminare gruppo " + k + " ?")) return;
+  delete indexDB.groups[k];
+  indexDB.meta.updatedAt = nowISO();
+  refreshIndexUI();
+  refreshSelects();
+  alert("🗑️ Gruppo eliminato. Scarica index.json");
+}
+
+/* ================= INIT ================= */
+renderSecretSentence();
+renderMediaQueue();
 </script>
 </body>
 </html>
-```0
