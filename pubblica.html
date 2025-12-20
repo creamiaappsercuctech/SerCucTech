@@ -3,164 +3,344 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SerCucTech – Pubblica Vetrina</title>
+  <title>SerCucTech – Pubblica</title>
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#0b1220">
   <link rel="apple-touch-icon" href="icon-192.png">
 
+  <link rel="stylesheet" href="stile.css" />
   <style>
-    :root{ --bg:#0b1220; --card:#111b2e; --txt:#e8eefc; --mut:#a9b8dd; --acc:#5ee1a2; --b:#22345f; }
-    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:linear-gradient(180deg,#081024,#0b1220); color:var(--txt); }
-    .wrap{ max-width:900px; margin:0 auto; padding:16px; }
-    .card{ background:rgba(17,27,46,.92); border:1px solid #1b2a4f; border-radius:16px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,.22); margin-top:14px; }
-    label{ display:block; margin:10px 0 6px; color:var(--mut); font-size:13px; }
-    input, textarea{ width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px; border:1px solid var(--b); background:#0f1830; color:var(--txt); outline:none; }
-    textarea{ min-height:84px; resize:vertical; }
-    .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
-    a.btn, button{ cursor:pointer; border:0; padding:10px 14px; border-radius:12px; font-weight:900; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
-    .sec{ background:#22345f; color:var(--txt); }
-    .ok{ background:var(--acc); color:#052014; }
-    .mini{ font-size:12px; color:var(--mut); line-height:1.35; }
-    .kbd{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas; background:#0f1a31; border:1px solid #22345f; padding:2px 8px; border-radius:10px; color:var(--mut); }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas; }
-    .hr{ height:1px; background:#1b2a4f; margin:14px 0; }
+    .top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;background:#0f1a31;border:1px solid #1b2a4f;color:var(--mut);font-size:13px}
+    .mono{font-family: var(--mono);}
+    .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+    @media(min-width:980px){.grid{grid-template-columns:1fr 1fr}}
+    .box{padding:10px;border-radius:14px;border:1px solid var(--b);background:#0c1530}
+    .okdot{color:var(--acc);font-weight:900}
+    .baddot{color:var(--danger);font-weight:900}
+    .warn{color:var(--warn);font-weight:900}
+    .smallbtn{ padding:8px 10px; border-radius:10px; font-weight:900; }
+    .list2{display:grid;gap:10px}
+    .row2{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .kbd{font-family: var(--mono); background:#0f1a31; border:1px solid #22345f; padding:2px 8px; border-radius:10px; color:var(--mut);}
   </style>
 </head>
+
 <body>
 <div class="wrap">
 
-  <div class="card">
-    <h2 style="margin:0 0 8px 0">📣 Pubblica una Vetrina</h2>
-    <div class="mini">
-      Questa pagina ti dice esattamente <b>che file caricare</b> e ti crea <b>i link pronti</b>.
-    </div>
+  <div class="top">
+    <div style="font-weight:900">SerCucTech – Pubblica</div>
+    <div class="pill">Repo: <b id="baseUrl">—</b></div>
     <div class="btns">
       <a class="btn sec" href="index.html">🏠 Home</a>
-      <a class="btn sec" href="admin.html">🔐 Admin</a>
-      <a class="btn sec" href="vetrina.html?id=scalvini10">🪟 Esempio scalvini10</a>
+      <a class="btn sec" href="admin.html">🛠️ Admin</a>
+      <button class="btn sec" id="installBtn" style="display:none;">📲 Installa App</button>
     </div>
   </div>
 
-  <div class="card">
-    <h2 style="margin:0 0 8px 0">1) Inserisci ID vetrina</h2>
-    <div class="mini">
-      Esempio: <span class="kbd">scalvini10</span> → file vetrina: <span class="kbd">data/scalvini10.json</span>
+  <div class="grid">
+
+    <!-- Selezione -->
+    <div class="card">
+      <h2>Seleziona cosa pubblicare</h2>
+      <div class="mut">
+        Questo pannello ti genera i link pronti e ti guida passo-passo (1,2,3…).
+      </div>
+
+      <div class="hr"></div>
+
+      <label>Vetrina</label>
+      <select id="vSelect">
+        <option value="">— scegli —</option>
+      </select>
+
+      <div class="btns" style="margin-top:10px">
+        <button class="btn sec" id="reloadBtn">🔄 Ricarica index</button>
+        <button class="btn ok" id="buildBtn">✅ Genera link</button>
+      </div>
+
+      <div class="hr"></div>
+
+      <label>Gruppo (opzionale)</label>
+      <div class="mut">Esempio: <span class="kbd">bazar</span> → link pubblico: <span class="kbd">vetrina.html?group=bazar</span></div>
+      <input id="groupKey" placeholder="es: bazar" />
+
+      <div class="btns" style="margin-top:10px">
+        <button class="btn ok" id="buildGroupBtn">✅ Genera link gruppo</button>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="mut" id="statusMsg">Pronto.</div>
     </div>
-    <label>ID</label>
-    <input id="vid" placeholder="es: scalvini10" autocomplete="off">
-    <div class="btns">
-      <button class="ok" onclick="build()">✅ Genera link</button>
-      <button class="sec" onclick="copyAll()">📋 Copia tutto</button>
+
+    <!-- Link + Copia -->
+    <div class="card">
+      <h2>Link pronti (copia 1 tap)</h2>
+
+      <div class="box">
+        <div class="mut"><b>Link pubblico vetrina</b></div>
+        <div class="mono" id="publicLink">—</div>
+        <div class="row2" style="margin-top:10px">
+          <button class="btn ok smallbtn" onclick="copyText('publicLink')">📋 Copia</button>
+          <button class="btn sec smallbtn" onclick="openLink('publicLink')">↗ Apri</button>
+        </div>
+      </div>
+
+      <div class="box" style="margin-top:12px">
+        <div class="mut"><b>Link JSON vetrina</b></div>
+        <div class="mono" id="jsonLink">—</div>
+        <div class="row2" style="margin-top:10px">
+          <button class="btn ok smallbtn" onclick="copyText('jsonLink')">📋 Copia</button>
+          <button class="btn sec smallbtn" onclick="openLink('jsonLink')">↗ Apri</button>
+        </div>
+      </div>
+
+      <div class="box" style="margin-top:12px">
+        <div class="mut"><b>Cartelle</b></div>
+        <div class="mut">Media: <span class="kbd">/media/</span> • Files: <span class="kbd">/files/</span></div>
+        <div class="mono" id="mediaFolder">—</div>
+        <div class="mono" id="filesFolder" style="margin-top:6px">—</div>
+        <div class="row2" style="margin-top:10px">
+          <button class="btn ok smallbtn" onclick="copyText('mediaFolder')">📋 Copia Media</button>
+          <button class="btn ok smallbtn" onclick="copyText('filesFolder')">📋 Copia Files</button>
+        </div>
+      </div>
+
+      <div class="box" style="margin-top:12px">
+        <div class="mut"><b>Link gruppo</b> (se usi gruppi)</div>
+        <div class="mono" id="groupLink">—</div>
+        <div class="row2" style="margin-top:10px">
+          <button class="btn ok smallbtn" onclick="copyText('groupLink')">📋 Copia</button>
+          <button class="btn sec smallbtn" onclick="openLink('groupLink')">↗ Apri</button>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="btns">
+        <button class="btn warn" id="copyAllBtn">📋 Copia TUTTI i link</button>
+        <button class="btn sec" id="testBtn">🧪 Test link</button>
+      </div>
+
+      <div class="mut mono" id="testOut" style="white-space:pre-wrap;margin-top:10px;"></div>
     </div>
+
+    <!-- Checklist -->
+    <div class="card">
+      <h2>Checklist pubblicazione (1,2,3…)</h2>
+
+      <div class="list2" id="checklist">
+        <div class="item"><div><b>1) Crea o modifica la vetrina in Admin</b><div class="mut">Compila titolo, descrizione, voce, media e files.</div></div></div>
+        <div class="item"><div><b>2) Scarica i JSON</b><div class="mut">Scarica <span class="kbd">index.json</span> e <span class="kbd">&lt;id&gt;.json</span>.</div></div></div>
+        <div class="item"><div><b>3) Carica i JSON su GitHub</b><div class="mut">Metti in <span class="kbd">/data/</span> → <span class="kbd">data/index.json</span> e <span class="kbd">data/&lt;id&gt;.json</span>.</div></div></div>
+        <div class="item"><div><b>4) Carica i file (se ci sono)</b><div class="mut">Metti foto/video in <span class="kbd">/media/</span> e pdf/txt in <span class="kbd">/files/</span>.</div></div></div>
+        <div class="item"><div><b>5) Controlla link</b><div class="mut">Usa “Test link” qui sopra (o apri i link) e verifica che non ci siano 404.</div></div></div>
+        <div class="item"><div><b>6) Pulisci cache se non si aggiorna</b><div class="mut">Android Chrome: 🔒 → Impostazioni sito → Archiviazione → Cancella dati.</div></div></div>
+        <div class="item"><div><b>7) Condividi il link pubblico</b><div class="mut">Condividi solo <span class="kbd">vetrina.html?id=...</span> (non Admin).</div></div></div>
+      </div>
+    </div>
+
+    <!-- Note -->
+    <div class="card">
+      <h2>Note veloci</h2>
+      <div class="mut">
+        • ID consigliato: solo lettere/numeri, senza spazi (es: <span class="kbd">renzo11</span>).<br>
+        • Esempio file: <span class="kbd">data/renzo11.json</span>.<br>
+        • Se un file non carica, quasi sempre è <b>percorso sbagliato</b> o <b>cache</b>.
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="btns">
+        <button class="btn sec" id="openIndexJsonBtn">Apri data/index.json</button>
+        <button class="btn sec" id="openHomeBtn">Apri Home</button>
+      </div>
+    </div>
+
   </div>
-
-  <div class="card" id="outCard" style="display:none;">
-    <h2 style="margin:0 0 8px 0">2) Risultato</h2>
-    <div class="mini">File e link pronti:</div>
-
-    <div class="hr"></div>
-
-    <div class="mini"><b>File da caricare su GitHub</b></div>
-    <div class="mini">
-      - <span class="kbd" id="fIndex"></span><br>
-      - <span class="kbd" id="fVetrina"></span><br>
-      - media: <span class="kbd">/media/</span> (es: <span class="kbd">media/foto1.jpg</span>, <span class="kbd">media/tour.mp4</span>)<br>
-      - files: <span class="kbd">/files/</span> (es: <span class="kbd">files/manuale.pdf</span>, <span class="kbd">files/ocr-...txt</span>)
-    </div>
-
-    <div class="hr"></div>
-
-    <div class="mini"><b>Link pubblici</b></div>
-    <div class="mini">
-      - Vetrina: <span class="mono" id="lVetrina"></span><br>
-      - JSON vetrina: <span class="mono" id="lJson"></span><br>
-      - Index JSON: <span class="mono" id="lIndex"></span>
-    </div>
-
-    <div class="btns" style="margin-top:12px">
-      <a class="btn sec" id="openV" target="_blank" rel="noopener">Apri vetrina</a>
-      <a class="btn sec" id="openJ" target="_blank" rel="noopener">Apri JSON</a>
-      <a class="btn sec" id="openI" target="_blank" rel="noopener">Apri Index</a>
-    </div>
-
-    <div class="hr"></div>
-
-    <div class="mini"><b>Riga pronta da mettere nel JSON</b></div>
-    <textarea id="snippet" readonly></textarea>
-  </div>
-
 </div>
 
+<script src="app.js"></script>
 <script>
+/* PWA register */
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./service-worker.js").catch(console.error);
 }
 
-function sanitizeId(s){
-  return (s||"").trim().toLowerCase().replace(/\s+/g,"").replace(/[^a-z0-9_-]/g,"");
-}
+/* Base URL */
+const base = location.origin + location.pathname.replace(/\/[^\/]*$/, "/");
+document.getElementById("baseUrl").textContent = base;
 
-function build(){
-  const id = sanitizeId(document.getElementById("vid").value);
-  if(!id){ alert("Inserisci un ID valido (es: scalvini10)"); return; }
+function setText(id, text){ document.getElementById(id).textContent = text || "—"; }
+function getText(id){ return (document.getElementById(id).textContent || "").trim(); }
 
-  const base = location.origin + location.pathname.replace(/\/[^\/]*$/, "/");
-
-  const fIndex = "data/index.json";
-  const fVetrina = `data/${id}.json`;
-
-  const lVetrina = `${base}vetrina.html?id=${encodeURIComponent(id)}`;
-  const lJson = `${base}data/${encodeURIComponent(id)}.json`;
-  const lIndex = `${base}data/index.json`;
-
-  document.getElementById("fIndex").textContent = fIndex;
-  document.getElementById("fVetrina").textContent = fVetrina;
-
-  document.getElementById("lVetrina").textContent = lVetrina;
-  document.getElementById("lJson").textContent = lJson;
-  document.getElementById("lIndex").textContent = lIndex;
-
-  document.getElementById("openV").href = lVetrina;
-  document.getElementById("openJ").href = lJson;
-  document.getElementById("openI").href = lIndex;
-
-  document.getElementById("snippet").value =
-`// Dentro data/${id}.json (esempio files[]):
-{ "label": "Manuale", "url": "files/manuale.pdf" }
-// Esempio media[]:
-{ "type": "image", "url": "media/foto1.jpg", "title": "Foto", "note": "" }`;
-
-  document.getElementById("outCard").style.display = "block";
-}
-
-async function copyAll(){
-  const id = sanitizeId(document.getElementById("vid").value);
-  if(!id){ alert("Prima genera i link"); return; }
-  const base = location.origin + location.pathname.replace(/\/[^\/]*$/, "/");
-  const txt =
-`PUBBLICA VETRINA
-ID: ${id}
-
-FILE DA CARICARE:
-- data/index.json
-- data/${id}.json
-- media/ (es: media/foto1.jpg, media/tour.mp4)
-- files/ (es: files/manuale.pdf, files/ocr-${id}.txt)
-
-LINK:
-- Vetrina: ${base}vetrina.html?id=${id}
-- JSON vetrina: ${base}data/${id}.json
-- Index JSON: ${base}data/index.json
-`;
+/* Clipboard */
+async function copyToClipboard(text){
   try{
-    await navigator.clipboard.writeText(txt);
-    alert("📋 Copiato!");
+    await navigator.clipboard.writeText(text);
+    return true;
   }catch(e){
-    alert("Non riesco a copiare automaticamente. Seleziona e copia manualmente.");
+    // fallback
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    return true;
   }
 }
+window.copyText = async (id)=>{
+  const t = getText(id);
+  if(!t || t==="—"){ alert("Niente da copiare."); return; }
+  await copyToClipboard(t);
+  alert("✅ Copiato");
+};
+window.openLink = (id)=>{
+  const t = getText(id);
+  if(!t || t==="—"){ alert("Niente da aprire."); return; }
+  window.open(t, "_blank", "noopener");
+};
+
+/* Load index */
+let indexDB = null;
+
+async function loadIndex(){
+  try{
+    indexDB = await window.SerCucTech.loadIndexSmart();
+    const vSel = document.getElementById("vSelect");
+    vSel.innerHTML = `<option value="">— scegli —</option>`;
+    Object.keys(indexDB.vetrine || {}).sort().forEach(id=>{
+      const rec = indexDB.vetrine[id] || {};
+      const opt = document.createElement("option");
+      opt.value = id;
+      opt.textContent = `${id} — ${rec.title || ""}`;
+      vSel.appendChild(opt);
+    });
+    document.getElementById("statusMsg").textContent = "✅ Index caricato.";
+  }catch(e){
+    console.error(e);
+    document.getElementById("statusMsg").textContent = "❌ Non riesco a caricare data/index.json";
+  }
+}
+document.getElementById("reloadBtn").onclick = loadIndex;
+
+/* Build links */
+function buildLinksForId(id){
+  const clean = window.SerCucTech.sanitizeId(id);
+  if(!clean) return null;
+
+  const publicLink = base + "vetrina.html?id=" + encodeURIComponent(clean);
+  const jsonLink   = base + "data/" + clean + ".json";
+  const mediaFolder = base + "media/";
+  const filesFolder = base + "files/";
+
+  setText("publicLink", publicLink);
+  setText("jsonLink", jsonLink);
+  setText("mediaFolder", mediaFolder);
+  setText("filesFolder", filesFolder);
+
+  return { publicLink, jsonLink, mediaFolder, filesFolder };
+}
+
+document.getElementById("buildBtn").onclick = ()=>{
+  const id = document.getElementById("vSelect").value;
+  if(!id){ alert("Seleziona una vetrina"); return; }
+  buildLinksForId(id);
+  document.getElementById("statusMsg").textContent = "✅ Link generati.";
+};
+
+/* Group link */
+document.getElementById("buildGroupBtn").onclick = ()=>{
+  const g = window.SerCucTech.sanitizeId(document.getElementById("groupKey").value);
+  if(!g){ alert("Inserisci key gruppo"); return; }
+  const link = base + "vetrina.html?group=" + encodeURIComponent(g);
+  setText("groupLink", link);
+  document.getElementById("statusMsg").textContent = "✅ Link gruppo generato.";
+};
+
+/* Copy all */
+document.getElementById("copyAllBtn").onclick = async ()=>{
+  const pub = getText("publicLink");
+  const js  = getText("jsonLink");
+  const mf  = getText("mediaFolder");
+  const ff  = getText("filesFolder");
+  const gl  = getText("groupLink");
+
+  const parts = [];
+  if(pub && pub!=="—") parts.push("LINK PUBBLICO:\n" + pub);
+  if(js && js!=="—")  parts.push("JSON:\n" + js);
+  if(mf && mf!=="—")  parts.push("MEDIA:\n" + mf);
+  if(ff && ff!=="—")  parts.push("FILES:\n" + ff);
+  if(gl && gl!=="—")  parts.push("GRUPPO:\n" + gl);
+
+  if(parts.length===0){ alert("Prima genera i link."); return; }
+  await copyToClipboard(parts.join("\n\n"));
+  alert("✅ Copiati tutti i link");
+};
+
+/* Test links */
+async function headOk(url){
+  try{
+    const res = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now(), { method:"GET", cache:"no-store" });
+    return res.ok ? { ok:true, code:res.status } : { ok:false, code:res.status };
+  }catch(e){
+    return { ok:false, code:"ERR" };
+  }
+}
+
+document.getElementById("testBtn").onclick = async ()=>{
+  const out = document.getElementById("testOut");
+  out.textContent = "Test in corso...\n";
+
+  const pub = getText("publicLink");
+  const js  = getText("jsonLink");
+  if(!pub || pub==="—" || !js || js==="—"){
+    out.textContent = "❌ Prima genera link pubblico + json.\n";
+    return;
+  }
+
+  const t1 = await headOk(pub);
+  out.textContent += `${t1.ok ? "✅" : "❌"} Pagina vetrina: ${t1.code}\n`;
+
+  const t2 = await headOk(js);
+  out.textContent += `${t2.ok ? "✅" : "❌"} JSON vetrina: ${t2.code}\n`;
+
+  // test index.json
+  const idx = base + "data/index.json";
+  const t3 = await headOk(idx);
+  out.textContent += `${t3.ok ? "✅" : "❌"} data/index.json: ${t3.code}\n`;
+
+  out.textContent += "\nSe vedi ❌ 404 → file mancante o percorso sbagliato.\nSe vedi ERR → problema rete/cache.\n";
+};
+
+/* Quick open */
+document.getElementById("openIndexJsonBtn").onclick = ()=> window.open(base+"data/index.json", "_blank", "noopener");
+document.getElementById("openHomeBtn").onclick = ()=> location.href = "index.html";
+
+/* Install button */
+let deferredPrompt = null;
+window.addEventListener("beforeinstallprompt", (e)=>{
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById("installBtn");
+  btn.style.display = "inline-flex";
+  btn.onclick = async ()=>{
+    try{
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      btn.style.display = "none";
+    }catch(err){}
+  };
+});
+
+/* Init */
+loadIndex();
 </script>
 </body>
 </html>
