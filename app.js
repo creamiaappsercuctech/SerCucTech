@@ -4,6 +4,7 @@
    - IndexedDB cache
    - TTS
    - Admin Unlock 24h + Device Binding + Multi-device allowlist
+   - ✅ Auto-voce SOLO prima volta per vetrina (per dispositivo)
 ========================================================= */
 
 /* ===================== CONFIG ===================== */
@@ -68,6 +69,112 @@ function speakText(text, opts={}){
   }catch(e){
     return false;
   }
+}
+
+/* ===================== AUTO-VOICE (FIRST TIME ONLY) ===================== */
+/*
+  - Per ogni vetrina, tenta autoplay SOLO la prima volta su quel dispositivo.
+  - Se il browser blocca autoplay, mostriamo overlay "tap to play".
+  - Segniamo "già fatta" SOLO quando l'audio parte davvero (o l'utente preme Avvia).
+*/
+function autoVoiceKeyForVetrina(vetrinaId){
+  return `sercuctech_autovoice_done_${sanitizeId(vetrinaId)}`;
+}
+function hasAutoVoiceDone(vetrinaId){
+  return localStorage.getItem(autoVoiceKeyForVetrina(vetrinaId)) === "1";
+}
+function setAutoVoiceDone(vetrinaId){
+  localStorage.setItem(autoVoiceKeyForVetrina(vetrinaId), "1");
+}
+
+// tenta di capire se ha iniziato a parlare entro poco tempo
+function waitForSpeaking(timeoutMs=900){
+  return new Promise((resolve)=>{
+    const start = Date.now();
+    const tick = ()=>{
+      let speaking = false;
+      try{ speaking = !!window.speechSynthesis && window.speechSynthesis.speaking; }catch(e){}
+      if(speaking) return resolve(true);
+      if(Date.now() - start > timeoutMs) return resolve(false);
+      setTimeout(tick, 80);
+    };
+    tick();
+  });
+}
+
+async function autoSpeakFirstTime(v){
+  const vid = sanitizeId(v?.id);
+  if(!vid) return;
+
+  // SOLO prima volta
+  if(hasAutoVoiceDone(vid)) return;
+
+  const lang = (v.voice && v.voice.lang) ? v.voice.lang : "it-IT";
+  const text = (v.voice && v.voice.text) ? v.voice.text : (v.title || v.id || "");
+  if(!text) return;
+
+  // Tenta autoplay
+  const ok = speakText(text, { lang });
+  if(ok){
+    const started = await waitForSpeaking(900);
+    if(started){
+      setAutoVoiceDone(vid);
+      return;
+    }
+  }
+
+  // Autoplay bloccato → overlay 1 tap (non segniamo done finché non preme Avvia)
+  showAutoVoiceOverlay({ lang, text, vetrinaId: vid });
+}
+
+function showAutoVoiceOverlay({lang, text, vetrinaId}){
+  if(document.getElementById("autoSpeakOverlay")) return;
+
+  const overlay = document.createElement("div");
+  overlay.id = "autoSpeakOverlay";
+  overlay.style.position = "fixed";
+  overlay.style.left = "0";
+  overlay.style.top = "0";
+  overlay.style.right = "0";
+  overlay.style.bottom = "0";
+  overlay.style.background = "rgba(0,0,0,.55)";
+  overlay.style.display = "flex";
+  overlay.style.alignItems = "center";
+  overlay.style.justifyContent = "center";
+  overlay.style.zIndex = "99999";
+  overlay.style.padding = "18px";
+
+  overlay.innerHTML = `
+    <div style="max-width:520px;width:100%;background:rgba(17,27,46,.95);border:1px solid #22345f;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.22);">
+      <div style="font-weight:900;margin-bottom:6px;">Avvio audio</div>
+      <div style="opacity:.85;font-size:13px;line-height:1.4;margin-bottom:12px;">
+        Il browser può bloccare l’audio automatico. Tocca “Avvia audio” una volta.
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="autoSpeakBtn" style="border:0;padding:10px 14px;border-radius:12px;font-weight:900;cursor:pointer;background:#5ee1a2;color:#052014;">
+          🔊 Avvia audio
+        </button>
+        <button id="autoSpeakClose" style="border:0;padding:10px 14px;border-radius:12px;font-weight:900;cursor:pointer;background:#22345f;color:#e8eefc;">
+          Chiudi
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  document.getElementById("autoSpeakBtn").onclick = async ()=>{
+    const ok = speakText(text, { lang });
+    if(ok){
+      const started = await waitForSpeaking(900);
+      if(started){
+        setAutoVoiceDone(vetrinaId); // ✅ segna "prima volta fatta" solo se parte
+      }
+    }
+    overlay.remove();
+  };
+
+  document.getElementById("autoSpeakClose").onclick = ()=> overlay.remove();
 }
 
 /* ===================== ADMIN UNLOCK (24h + device) ===================== */
@@ -162,7 +269,7 @@ function parseDeviceShareCode(code){
 
 /* ===================== INDEXEDDB CACHE ===================== */
 const DB_NAME = "sercuctech_vetrine_db";
-const DB_VER  = 2; // ⬅️ aumentato per evitare errori store vecchi
+const DB_VER  = 2; // aggiornato
 const STORE_V = "vetrine";
 const STORE_M = "meta";
 
@@ -429,10 +536,15 @@ async function boot(){
   const id = qs("id");
   const group = qs("group");
 
+  // Pagina vetrina singola
   if(id){
     try{
       const { vetrina, source } = await loadVetrinaById(id);
       renderVetrina(vetrina, { source });
+
+      // ✅ AUTO VOCE: SOLO PRIMA VOLTA
+      autoSpeakFirstTime(vetrina);
+
       return;
     }catch(e){
       console.error(e);
@@ -442,6 +554,7 @@ async function boot(){
     }
   }
 
+  // Lista gruppo
   if(group && listEl){
     try{
       const idx = await loadIndexSmart();
@@ -454,6 +567,7 @@ async function boot(){
     }
   }
 
+  // Lista index
   if(listEl){
     try{
       const idx = await loadIndexSmart();
@@ -506,5 +620,9 @@ window.SerCucTech = {
   getMyDeviceShareCode,
   parseDeviceShareCode,
   addAllowedDevice,
-  loadAllowedDevices
+  loadAllowedDevices,
+
+  // auto voice helpers (se ti servono in futuro)
+  hasAutoVoiceDone,
+  setAutoVoiceDone
 };
