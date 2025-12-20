@@ -10,54 +10,22 @@
   <meta name="theme-color" content="#0b1220">
   <link rel="apple-touch-icon" href="icon-192.png">
 
+  <link rel="stylesheet" href="stile.css" />
+
   <style>
-    :root{
-      --bg:#0b1220; --card:#111b2e; --txt:#e8eefc; --mut:#a9b8dd;
-      --acc:#5ee1a2; --warn:#ffcc66; --danger:#ff6b6b; --b:#22345f;
-    }
-    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:linear-gradient(180deg,#081024,#0b1220); color:var(--txt); }
-    .wrap{ max-width:1180px; margin:0 auto; padding:16px; }
-    .top{ display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
-    .brand{ font-weight:900; letter-spacing:.2px; }
-    .pill{ display:inline-flex; gap:8px; align-items:center; padding:8px 12px; border-radius:999px; background:#0f1a31; border:1px solid #1b2a4f; color:var(--mut); font-size:13px; }
-    .grid{ display:grid; grid-template-columns:1fr; gap:14px; margin-top:14px; }
-    @media(min-width:980px){ .grid{ grid-template-columns: 1fr 1fr; } }
-    .card{ background:rgba(17,27,46,.92); border:1px solid #1b2a4f; border-radius:16px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,.22); }
-    h2{ margin:0 0 10px 0; font-size:18px; }
-    h3{ margin:14px 0 8px 0; font-size:14px; color:var(--mut); font-weight:900; }
-    label{ display:block; margin:10px 0 6px; color:var(--mut); font-size:13px; }
-    input, textarea, select{
-      width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px;
-      border:1px solid var(--b); background:#0f1830; color:var(--txt); outline:none;
-    }
-    textarea{ min-height:88px; resize:vertical; }
-    .row{ display:grid; gap:10px; grid-template-columns:1fr; }
-    @media(min-width:650px){ .row{ grid-template-columns: 1fr 1fr; } }
-    .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
-    button, a.btn{
-      cursor:pointer; border:0; padding:10px 14px; border-radius:12px; font-weight:900;
-      text-decoration:none; display:inline-flex; align-items:center; justify-content:center;
-    }
-    .ok{ background:var(--acc); color:#052014; }
-    .sec{ background:#22345f; color:var(--txt); }
-    .warn{ background:var(--warn); color:#231a06; }
-    .danger{ background:var(--danger); color:#2b0909; }
-    .mini{ font-size:12px; color:var(--mut); line-height:1.35; }
-    .hr{ height:1px; background:#1b2a4f; margin:14px 0; }
-    .hidden{ display:none !important; }
-    .kbd{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas; background:#0f1a31; border:1px solid #22345f; padding:2px 8px; border-radius:10px; color:var(--mut); }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas; }
-    .list{ display:grid; gap:8px; margin-top:10px; }
-    .item{ display:flex; gap:10px; align-items:flex-start; justify-content:space-between; padding:10px; border-radius:14px; border:1px solid var(--b); background:#0c1530; }
-    .drag{ cursor:grab; user-select:none; padding:2px 8px; border-radius:10px; border:1px dashed #34508a; color:var(--mut); }
+    .top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;background:#0f1a31;border:1px solid #1b2a4f;color:var(--mut);font-size:13px}
+    .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+    @media(min-width:980px){.grid{grid-template-columns:1fr 1fr}}
+    .kbd{font-family:var(--mono);background:#0f1a31;border:1px solid #22345f;padding:2px 8px;border-radius:10px;color:var(--mut)}
+    .mono{font-family:var(--mono)}
     .dropHint{ outline: 2px dashed var(--acc); outline-offset: 6px; }
+    .drag{ cursor:grab; user-select:none; padding:2px 8px; border-radius:10px; border:1px dashed #34508a; color:var(--mut); }
     .smallbtn{ padding:8px 10px; border-radius:10px; font-weight:900; }
-    img.preview, video.preview, iframe.preview{
-      width:100%; border-radius:14px; border:1px solid var(--b); background:#0f1830;
-    }
-    iframe.preview{ height:420px; border:0; }
     .bar{ height:10px; border:1px solid var(--b); border-radius:999px; overflow:hidden; background:#0f1830; }
     .bar > div{ height:100%; width:0%; background:var(--acc); }
+    img.preview, video.preview, iframe.preview{ width:100%; border-radius:14px; border:1px solid var(--b); background:#0f1830; }
+    iframe.preview{ height:420px; border:0; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -67,49 +35,86 @@
 <body>
 <div class="wrap">
   <div class="top">
-    <div class="brand">SerCucTech – Admin Vetrine</div>
+    <div class="brand" style="font-weight:900">SerCucTech – Admin</div>
     <div class="pill"><span>Stato:</span><b id="status">🔒 Bloccato</b></div>
     <div class="btns">
       <a class="btn sec" href="index.html">🏠 Home</a>
       <a class="btn sec" href="pubblica.html">📣 Pubblica</a>
+      <button class="btn sec" id="logoutBtn" style="display:none;">🚪 Esci</button>
     </div>
   </div>
 
-  <!-- LOCK -->
+  <!-- LOCK CARD -->
   <div class="card" id="lockCard">
-    <h2>Accesso</h2>
-    <div class="mini">
-      Tocca 2 parole *in sequenza* dentro la frase per sbloccare.<br>
-      Frase: <span id="secretSentence"></span>
+    <h2>Area riservata</h2>
+
+    <div class="mut" id="adminIntro">
+      <b>SerCucTech.</b><br>
+      Con i suoi servizi ti aiuta a gestire qualsiasi genere di problematiche in modo semplice,<br>
+      creando anche App personalizzate.
     </div>
-    <div class="mini" style="margin-top:10px;">
-      Sequenza: <span class="kbd">LUCE</span> poi <span class="kbd">PORTA</span>
+
+    <div class="hr"></div>
+
+    <div class="mut">
+      Tocca le parole nella frase per accedere (modalità riservata).
     </div>
-    <div class="btns">
-      <button class="sec" onclick="resetLock()">Reset</button>
+    <div class="btns" style="margin-top:10px">
+      <button class="btn sec" id="resetTapBtn">Reset</button>
     </div>
+
+    <div class="hr"></div>
+
+    <!-- DEVICE CODE ALWAYS VISIBLE (per aggiungere device) -->
+    <h3>Codice dispositivo</h3>
+    <div class="mut">Questo codice identifica questo telefono. Serve per autorizzarlo da un altro dispositivo già sbloccato.</div>
+    <div class="mono" id="myDeviceCodeBox" style="word-break:break-all;margin-top:8px;"></div>
+    <div class="btns" style="margin-top:10px">
+      <button class="btn sec" id="copyMyDeviceCodeBtn">📋 Copia codice</button>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="mut" id="lockInfo"></div>
   </div>
 
-  <div class="grid hidden" id="adminUI">
+  <!-- ADMIN UI -->
+  <div class="grid" id="adminUI" style="display:none;">
+
+    <!-- DEVICES (only unlocked) -->
+    <div class="card">
+      <h2>Dispositivi autorizzati</h2>
+      <div class="mut">Sblocco valido 24 ore su questo dispositivo. Puoi autorizzare altri dispositivi incollando il loro codice qui sotto.</div>
+
+      <div class="hr"></div>
+
+      <label>Incolla codice dispositivo da autorizzare</label>
+      <textarea id="addDeviceCodeInput" placeholder="Incolla qui il codice del nuovo telefono..."></textarea>
+      <div class="btns">
+        <button class="btn ok" id="addDeviceBtn">➕ Aggiungi dispositivo</button>
+        <button class="btn danger" id="listDevicesBtn">📄 Mostra lista</button>
+      </div>
+      <div class="mut mono" id="devicesListBox" style="white-space:pre-wrap;margin-top:10px;"></div>
+    </div>
 
     <!-- INDEX -->
     <div class="card">
       <h2>Index (data/index.json)</h2>
-      <div class="mini">
+      <div class="mut">
         File indice: <span class="kbd">data/index.json</span><br>
-        Vetrine: <span class="kbd">data/&lt;id&gt;.json</span> (es: <span class="kbd">data/scalvini10.json</span>)
+        Vetrine: <span class="kbd">data/&lt;id&gt;.json</span> (es: <span class="kbd">data/renzo11.json</span>)
       </div>
 
       <div class="btns">
-        <button class="sec" onclick="loadIndexFromRepo()">📥 Carica index dal repo</button>
-        <button class="sec" onclick="document.getElementById('importIndex').click()">📂 Importa index.json</button>
-        <button class="ok" onclick="downloadIndex()">⬇️ Scarica index.json</button>
+        <button class="btn sec" onclick="loadIndexFromRepo()">📥 Carica index dal repo</button>
+        <button class="btn sec" onclick="document.getElementById('importIndex').click()">📂 Importa index.json</button>
+        <button class="btn ok" onclick="downloadIndex()">⬇️ Scarica index.json</button>
       </div>
 
       <input id="importIndex" type="file" accept="application/json" class="hidden" />
 
       <div class="hr"></div>
-      <div class="mini">
+      <div class="mut">
         Aggiornato: <b id="indexUpdated">—</b><br>
         Vetrine: <b id="indexCountV">0</b> • Gruppi: <b id="indexCountG">0</b>
       </div>
@@ -125,32 +130,32 @@
       </select>
 
       <div class="btns">
-        <button class="sec" onclick="loadSelectedVetrinaFile()">📥 Carica file vetrina</button>
-        <button class="ok" onclick="downloadVetrina()">⬇️ Scarica &lt;id&gt;.json</button>
-        <button class="warn" onclick="downloadBackupZip()">🧳 Backup ZIP (JSON+media+files)</button>
-        <button class="sec" onclick="openDuplicatePanel()">🧬 Duplica (es: scalvini10 → scalvini11)</button>
-        <button class="danger" onclick="deleteVetrina()">🗑️ Elimina (da index)</button>
+        <button class="btn sec" onclick="loadSelectedVetrinaFile()">📥 Carica file vetrina</button>
+        <button class="btn ok" onclick="downloadVetrina()">⬇️ Scarica &lt;id&gt;.json</button>
+        <button class="btn warn" onclick="downloadBackupZip()">🧳 Backup ZIP (JSON+media+files)</button>
+        <button class="btn sec" onclick="openDuplicatePanel()">🧬 Duplica (es: renzo11 → renzo12)</button>
+        <button class="btn danger" onclick="deleteVetrina()">🗑️ Elimina (da index)</button>
       </div>
 
       <div id="dupPanel" class="hidden" style="margin-top:12px; padding:10px; border:1px solid var(--b); border-radius:14px; background:#0c1530;">
-        <div class="mini">
+        <div class="mut">
           Duplica crea un nuovo file <span class="kbd">data/&lt;nuovoId&gt;.json</span> e aggiorna anche <span class="kbd">data/index.json</span>.
         </div>
-        <div class="row" style="margin-top:10px;">
+        <div class="row" style="display:grid;gap:10px;grid-template-columns:1fr; margin-top:10px;">
           <div>
             <label>Nuovo ID (solo lettere/numeri -)</label>
-            <input id="dupNewId" placeholder="es: scalvini11" />
+            <input id="dupNewId" placeholder="es: renzo12" />
           </div>
           <div>
             <label>Nuovo Titolo (opzionale)</label>
-            <input id="dupNewTitle" placeholder="es: Vetrina Scalvini 11" />
+            <input id="dupNewTitle" placeholder="es: Vetrina Renzo 12" />
           </div>
         </div>
         <div class="btns">
-          <button class="ok" onclick="duplicateCurrentVetrina()">✅ Crea clone (in memoria)</button>
-          <button class="sec" onclick="closeDuplicatePanel()">Chiudi</button>
+          <button class="btn ok" onclick="duplicateCurrentVetrina()">✅ Crea clone (in memoria)</button>
+          <button class="btn sec" onclick="closeDuplicatePanel()">Chiudi</button>
         </div>
-        <div class="mini" style="margin-top:8px;">
+        <div class="mut" style="margin-top:8px;">
           Poi: scarica <b>index.json</b> e <b>&lt;nuovoId&gt;.json</b> e caricali su GitHub in <span class="kbd">/data/</span>.
         </div>
       </div>
@@ -158,15 +163,15 @@
       <div class="hr"></div>
 
       <h3>Crea nuova vetrina</h3>
-      <label>ID (unico) – esempio</label>
-      <div class="mini">Esempio: <span class="kbd">scalvini10</span> → file: <span class="kbd">data/scalvini10.json</span></div>
-      <input id="newId" placeholder="es: scalvini10" />
+      <label>ID (unico)</label>
+      <div class="mut">Esempio: <span class="kbd">renzo11</span> → file: <span class="kbd">data/renzo11.json</span></div>
+      <input id="newId" placeholder="es: renzo11" />
       <label>Titolo</label>
       <input id="newTitle" placeholder="Titolo vetrina" />
       <label>Tags (virgola)</label>
-      <input id="newTags" placeholder="casa, documenti, video" />
+      <input id="newTags" placeholder="commercio, documenti, video" />
       <div class="btns">
-        <button class="ok" onclick="createVetrina()">➕ Crea vetrina</button>
+        <button class="btn ok" onclick="createVetrina()">➕ Crea vetrina</button>
       </div>
 
       <div class="hr"></div>
@@ -179,7 +184,7 @@
       <label>Descrizione</label>
       <textarea id="eDesc"></textarea>
 
-      <div class="row">
+      <div class="row" style="display:grid;gap:10px;grid-template-columns:1fr;">
         <div>
           <label>Voce (lang)</label>
           <input id="eVoiceLang" value="it-IT" />
@@ -194,42 +199,34 @@
       <input id="eTags" />
 
       <div class="btns">
-        <button class="ok" onclick="saveEdits()">💾 Salva modifiche (in memoria)</button>
-        <button class="warn" onclick="syncIndexFromVetrina()">🔁 Aggiorna index (titolo/tags)</button>
+        <button class="btn ok" onclick="saveEdits()">💾 Salva modifiche (in memoria)</button>
+        <button class="btn warn" onclick="syncIndexFromVetrina()">🔁 Aggiorna index (titolo/tags)</button>
       </div>
     </div>
 
     <!-- MEDIA -->
     <div class="card">
       <h2>Media (foto/video) — URL + Upload multiplo + Riordino</h2>
-      <div class="mini">
-        Esempi validi: <span class="kbd">media/foto1.jpg</span> • <span class="kbd">media/tour.mp4</span><br>
-        Riordino: trascina (⇅) o usa ↑ ↓.
+      <div class="mut">
+        Esempi: <span class="kbd">media/foto1.jpg</span> • <span class="kbd">media/tour.mp4</span>
       </div>
 
       <h3>A) Aggiungi tramite URL</h3>
-      <div class="row">
-        <div>
-          <label>Tipo</label>
-          <select id="mType">
-            <option value="image">Immagine (.jpg/.png)</option>
-            <option value="video">Video (.mp4)</option>
-          </select>
-        </div>
-        <div>
-          <label>Titolo</label>
-          <input id="mTitle" placeholder="Foto entrata / Tour" />
-        </div>
-      </div>
-
+      <label>Tipo</label>
+      <select id="mType">
+        <option value="image">Immagine (.jpg/.png)</option>
+        <option value="video">Video (.mp4)</option>
+      </select>
+      <label>Titolo</label>
+      <input id="mTitle" placeholder="Foto entrata / Tour" />
       <label>URL (con estensione)</label>
       <input id="mUrl" placeholder="media/foto-entrata.jpg" />
       <label>Nota</label>
       <input id="mNote" placeholder="" />
 
       <div class="btns">
-        <button class="ok" onclick="addMediaByUrl()">➕ Aggiungi URL</button>
-        <button class="sec" onclick="renderMediaList()">🔄 Aggiorna lista</button>
+        <button class="btn ok" onclick="addMediaByUrl()">➕ Aggiungi URL</button>
+        <button class="btn sec" onclick="renderMediaList()">🔄 Aggiorna lista</button>
       </div>
 
       <div class="hr"></div>
@@ -239,9 +236,9 @@
       <input id="mFiles" type="file" multiple accept="image/*,video/*" />
 
       <div class="btns">
-        <button class="ok" onclick="addMediaFromFiles()">➕ Aggiungi al JSON</button>
-        <button class="warn" onclick="downloadMediaZip()">⬇️ Scarica ZIP media/…</button>
-        <button class="sec" onclick="clearMediaQueue()">🧹 Svuota selezione</button>
+        <button class="btn ok" onclick="addMediaFromFiles()">➕ Aggiungi al JSON</button>
+        <button class="btn warn" onclick="downloadMediaZip()">⬇️ Scarica ZIP media/…</button>
+        <button class="btn sec" onclick="clearMediaQueue()">🧹 Svuota selezione</button>
       </div>
 
       <div class="list" id="mediaQueue"></div>
@@ -255,9 +252,8 @@
     <!-- FILES -->
     <div class="card">
       <h2>Files (PDF/TXT/ZIP) — URL + Riordino</h2>
-      <div class="mini">
-        Esempi: <span class="kbd">files/manuale.pdf</span> • <span class="kbd">files/ocr-scalvini10.txt</span><br>
-        Riordino: trascina (⇅) o usa ↑ ↓. Anteprima solo PDF.
+      <div class="mut">
+        Esempi: <span class="kbd">files/manuale.pdf</span> • <span class="kbd">files/ocr-renzo11.txt</span>
       </div>
 
       <h3>A) Aggiungi file tramite URL</h3>
@@ -267,8 +263,8 @@
       <input id="fUrl" placeholder="files/manuale.pdf" />
 
       <div class="btns">
-        <button class="ok" onclick="addFileByUrl()">➕ Aggiungi file</button>
-        <button class="sec" onclick="renderFilesList()">🔄 Aggiorna lista</button>
+        <button class="btn ok" onclick="addFileByUrl()">➕ Aggiungi file</button>
+        <button class="btn sec" onclick="renderFilesList()">🔄 Aggiorna lista</button>
       </div>
 
       <div class="hr"></div>
@@ -280,35 +276,30 @@
     <!-- OCR -->
     <div class="card">
       <h2>OCR (solo Admin)</h2>
-      <div class="mini">
-        Estrai testo da immagine. Puoi scaricare un TXT e poi aggiungerlo in <span class="kbd">files[]</span>.
+      <div class="mut">
+        Estrai testo da immagine → scarica TXT → carica in <span class="kbd">/files/</span> → aggiungi al JSON.
       </div>
 
-      <div class="row">
-        <div>
-          <label>Lingua OCR</label>
-          <select id="ocrLang">
-            <option value="ita">Italiano (ita)</option>
-            <option value="eng">Inglese (eng)</option>
-            <option value="ukr">Ucraino (ukr)</option>
-            <option value="deu">Tedesco (deu)</option>
-            <option value="spa">Spagnolo (spa)</option>
-            <option value="fra">Francese (fra)</option>
-          </select>
-        </div>
-        <div>
-          <label>Immagine per OCR</label>
-          <input id="ocrFile" type="file" accept="image/*" />
-        </div>
-      </div>
+      <label>Lingua OCR</label>
+      <select id="ocrLang">
+        <option value="ita">Italiano (ita)</option>
+        <option value="eng">Inglese (eng)</option>
+        <option value="ukr">Ucraino (ukr)</option>
+        <option value="deu">Tedesco (deu)</option>
+        <option value="spa">Spagnolo (spa)</option>
+        <option value="fra">Francese (fra)</option>
+      </select>
+
+      <label>Immagine per OCR</label>
+      <input id="ocrFile" type="file" accept="image/*" />
 
       <div class="btns">
-        <button class="ok" onclick="runOCR()">🧠 Avvia OCR</button>
-        <button class="sec" onclick="copyOCR()">📋 Copia testo</button>
-        <button class="sec" onclick="speakOCR()">🔊 Leggi testo</button>
-        <button class="warn" onclick="downloadOCRtxt()">⬇️ Scarica TXT</button>
-        <button class="warn" onclick="addOCRtoFiles()">➕ Aggiungi TXT in files[]</button>
-        <button class="danger" onclick="clearOCR()">🧹 Pulisci</button>
+        <button class="btn ok" onclick="runOCR()">🧠 Avvia OCR</button>
+        <button class="btn sec" onclick="copyOCR()">📋 Copia testo</button>
+        <button class="btn sec" onclick="speakOCR()">🔊 Leggi testo</button>
+        <button class="btn warn" onclick="downloadOCRtxt()">⬇️ Scarica TXT</button>
+        <button class="btn warn" onclick="addOCRtoFiles()">➕ Aggiungi TXT in files[]</button>
+        <button class="btn danger" onclick="clearOCR()">🧹 Pulisci</button>
       </div>
 
       <div style="margin-top:10px;">
@@ -316,14 +307,14 @@
         <div style="margin-top:10px;" class="bar"><div id="ocrBar"></div></div>
       </div>
 
-      <div class="row" style="margin-top:12px;">
+      <div class="row" style="display:grid;gap:10px;grid-template-columns:1fr; margin-top:12px;">
         <div>
-          <div class="mini" style="margin-bottom:6px;">Anteprima</div>
+          <div class="mut" style="margin-bottom:6px;">Anteprima</div>
           <img id="ocrPreview" class="preview" style="display:none;" alt="OCR preview">
-          <div id="ocrNoPreview" class="mini">Nessuna immagine caricata.</div>
+          <div id="ocrNoPreview" class="mut">Nessuna immagine caricata.</div>
         </div>
         <div>
-          <div class="mini" style="margin-bottom:6px;">Testo OCR</div>
+          <div class="mut" style="margin-bottom:6px;">Testo OCR</div>
           <textarea id="ocrText" placeholder="Testo estratto..." spellcheck="false"></textarea>
         </div>
       </div>
@@ -337,136 +328,173 @@
         <option value="">— scegli —</option>
       </select>
 
-      <label>Key gruppo (es: scalvini)</label>
-      <input id="gKey" placeholder="scalvini" />
+      <label>Key gruppo (es: bazar)</label>
+      <input id="gKey" placeholder="bazar" />
       <label>Titolo gruppo</label>
       <input id="gTitle" />
       <label>Descrizione gruppo</label>
       <textarea id="gDesc"></textarea>
       <label>IDs vetrine (virgola)</label>
-      <input id="gItems" placeholder="scalvini10, scalvini11" />
+      <input id="gItems" placeholder="renzo11, renzo12" />
 
       <div class="btns">
-        <button class="ok" onclick="saveGroup()">💾 Salva gruppo</button>
-        <button class="danger" onclick="deleteGroup()">🗑️ Elimina gruppo</button>
-        <button class="ok" onclick="downloadIndex()">⬇️ Scarica index.json</button>
+        <button class="btn ok" onclick="saveGroup()">💾 Salva gruppo</button>
+        <button class="btn danger" onclick="deleteGroup()">🗑️ Elimina gruppo</button>
+        <button class="btn ok" onclick="downloadIndex()">⬇️ Scarica index.json</button>
       </div>
 
-      <div class="mini" style="margin-top:10px;">
-        Link pubblico gruppo: <span class="kbd">vetrina.html?group=scalvini</span>
+      <div class="mut" style="margin-top:10px;">
+        Link pubblico gruppo: <span class="kbd">vetrina.html?group=bazar</span>
       </div>
     </div>
 
   </div>
 </div>
 
+<script src="app.js"></script>
 <script>
 /* PWA register */
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./service-worker.js").catch(console.error);
 }
 
-/* ================= CONFIG ================= */
-const INDEX_PATH = "data/index.json";
-const SECRET_WORDS = ["LUCE","PORTA"];
-const SENTENCE = "Per entrare nell'area tecnica tocca LUCE poi PORTA in sequenza.";
-
 /* ================= STATE ================= */
-let unlocked = false;
 let secretProgress = 0;
+const SENTENCE = "SerCucTech. Con i suoi servizi ti aiuta a gestire qualsiasi genere di problematiche in modo semplice creando anche App personalizzate.";
 
+/* ====== Index/Vetrina admin state ====== */
 let indexDB = { meta:{version:1, updatedAt:null}, groups:{}, vetrine:{} };
 let activeId = "";
 let activeVetrina = null;
-
 let mediaQueue = [];
 let ocrImage = null;
 let ocrLastTxtFilename = "";
 
-/* ================= UTILS ================= */
-function nowISO(){
-  const d = new Date();
-  const pad = n => String(n).padStart(2,"0");
-  const offMin = -d.getTimezoneOffset();
-  const sign = offMin >= 0 ? "+" : "-";
-  const hh = pad(Math.floor(Math.abs(offMin)/60));
-  const mm = pad(Math.abs(offMin)%60);
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}${sign}${hh}:${mm}`;
-}
-function sanitizeId(s){
-  return (s||"").trim().toLowerCase().replace(/\s+/g,"").replace(/[^a-z0-9_-]/g,"");
-}
-function splitCSV(s){
-  return (s||"").split(",").map(x=>x.trim()).filter(Boolean);
-}
-function dlJSON(obj, filename){
-  const blob = new Blob([JSON.stringify(obj,null,2)], {type:"application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-}
-function escapeHTML(s){
-  return String(s||"")
-    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-}
-function escapeAttr(s){ return escapeHTML(s).replaceAll("`","&#096;"); }
-function isRelativeRepoPath(p){
-  if(!p) return false;
-  const s = String(p).trim();
-  if(s.startsWith("http://") || s.startsWith("https://")) return false;
-  return s.startsWith("data/") || s.startsWith("media/") || s.startsWith("files/");
-}
-function isPdf(url){
-  return String(url||"").toLowerCase().split("?")[0].endsWith(".pdf");
-}
-function stopTTS(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }
-function speak(text, lang){
-  stopTTS();
-  if(!('speechSynthesis' in window)) return;
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = lang || "it-IT";
-  window.speechSynthesis.speak(u);
+/* ================= LOCK UI ================= */
+function normalizeWord(w){
+  return (w||"").toLowerCase().replace(/[^a-zàèéìòù0-9_-]/g,"");
 }
 
-/* ================= LOCK ================= */
-function normalizeWord(w){ return (w||"").toUpperCase().replace(/[^\p{L}]/gu,""); }
-function renderSecretSentence(){
-  const el = document.getElementById("secretSentence");
-  el.innerHTML = "";
-  const parts = SENTENCE.split(" ");
-  parts.forEach((w,i)=>{
+function renderClickableSentence(){
+  const intro = document.getElementById("adminIntro");
+  // Manteniamo il testo “pulito” sopra; qui rendiamo cliccabile la stessa frase (senza dire quali parole)
+  const p = document.createElement("div");
+  p.className = "mut";
+  p.style.marginTop = "12px";
+  p.style.userSelect = "none";
+
+  const words = SENTENCE.split(/\s+/);
+  words.forEach((w, i)=>{
     const span = document.createElement("span");
-    span.textContent = w + (i===parts.length-1 ? "" : " ");
+    span.textContent = w + (i === words.length - 1 ? "" : " ");
     span.style.cursor = "pointer";
-    span.style.userSelect = "none";
-    const clean = normalizeWord(w);
-    span.style.fontWeight = (clean==="LUCE" || clean==="PORTA") ? "900" : "600";
-    span.onclick = ()=> secretClick(w);
-    el.appendChild(span);
+    span.onclick = ()=> onWordTap(w);
+    p.appendChild(span);
   });
+
+  // Inseriamo sotto al testo
+  intro.parentNode.insertBefore(p, intro.nextSibling);
 }
-function secretClick(w){
-  if(unlocked) return;
-  const clean = normalizeWord(w);
-  const expected = SECRET_WORDS[secretProgress];
-  if(clean === expected){
+
+function onWordTap(word){
+  if (window.SerCucTech.isAdminSessionValid()) return;
+
+  const clean = normalizeWord(word);
+
+  // Sequenza: prima sercuctech poi qualsiasi
+  const expected = window.SerCucTech.UNLOCK_WORDS[secretProgress];
+  if(clean.includes(expected)){
     secretProgress++;
-    if(secretProgress >= SECRET_WORDS.length) unlockAdmin();
+    if(secretProgress >= window.SerCucTech.UNLOCK_WORDS.length){
+      window.SerCucTech.adminUnlockSuccess();
+      showUnlockedUI();
+    }
   } else {
     secretProgress = 0;
   }
 }
-function resetLock(){ secretProgress=0; document.getElementById("status").textContent="🔒 Bloccato"; }
-function unlockAdmin(){
-  unlocked = true;
-  document.getElementById("status").textContent="✅ Sbloccato";
-  document.getElementById("lockCard").classList.add("hidden");
-  document.getElementById("adminUI").classList.remove("hidden");
+
+function showUnlockedUI(){
+  document.getElementById("status").textContent = "✅ Sbloccato (24h)";
+  document.getElementById("lockCard").style.display = "none";
+  document.getElementById("adminUI").style.display = "grid";
+  document.getElementById("logoutBtn").style.display = "inline-flex";
+  initDevicesUI();
+  // carica subito index dal repo per comodità
+  loadIndexFromRepo().catch(()=>{});
 }
 
-/* ================= INDEX ================= */
+function showLockedUI(){
+  document.getElementById("status").textContent = "🔒 Bloccato";
+  document.getElementById("lockCard").style.display = "block";
+  document.getElementById("adminUI").style.display = "none";
+  document.getElementById("logoutBtn").style.display = "none";
+
+  // info scadenza se esiste
+  try{
+    const raw = localStorage.getItem("sercuctech_admin_session_v1");
+    if(raw){
+      const s = JSON.parse(raw);
+      if(s && s.exp){
+        const d = new Date(s.exp);
+        document.getElementById("lockInfo").textContent = "Se eri già sbloccato, la sessione scade: " + d.toLocaleString();
+      }else{
+        document.getElementById("lockInfo").textContent = "";
+      }
+    }else{
+      document.getElementById("lockInfo").textContent = "";
+    }
+  }catch(e){
+    document.getElementById("lockInfo").textContent = "";
+  }
+}
+
+document.getElementById("resetTapBtn").onclick = ()=>{ secretProgress = 0; };
+document.getElementById("logoutBtn").onclick = ()=>{
+  window.SerCucTech.clearAdminSession();
+  secretProgress = 0;
+  showLockedUI();
+};
+
+/* ================= DEVICE CODE UI ================= */
+function initDeviceCodeBox(){
+  const myCode = window.SerCucTech.getMyDeviceShareCode();
+  document.getElementById("myDeviceCodeBox").textContent = myCode;
+
+  document.getElementById("copyMyDeviceCodeBtn").onclick = async ()=>{
+    try{
+      await navigator.clipboard.writeText(myCode);
+      alert("✅ Codice copiato");
+    }catch(e){
+      alert("⚠️ Copia non permessa: tieni premuto sul codice e copia manualmente.");
+    }
+  };
+}
+
+function initDevicesUI(){
+  const addBtn = document.getElementById("addDeviceBtn");
+  const addInput = document.getElementById("addDeviceCodeInput");
+  const listBtn = document.getElementById("listDevicesBtn");
+  const listBox = document.getElementById("devicesListBox");
+
+  addBtn.onclick = ()=>{
+    const obj = window.SerCucTech.parseDeviceShareCode(addInput.value);
+    if(!obj){
+      listBox.textContent = "❌ Codice non valido.";
+      return;
+    }
+    window.SerCucTech.addAllowedDevice(obj.deviceId);
+    listBox.textContent = "✅ Dispositivo aggiunto:\n- " + obj.deviceId;
+    addInput.value = "";
+  };
+
+  listBtn.onclick = ()=>{
+    const arr = window.SerCucTech.loadAllowedDevices();
+    listBox.textContent = "Dispositivi autorizzati:\n- " + arr.join("\n- ");
+  };
+}
+
+/* ================= INDEX helpers ================= */
 function normalizeIndex(data){
   indexDB = (data && typeof data==="object") ? data : {};
   indexDB.meta = indexDB.meta || {version:1, updatedAt:null};
@@ -507,24 +535,23 @@ function refreshSelects(){
   if(prevG && indexDB.groups[prevG]) gSel.value = prevG;
 }
 async function loadIndexFromRepo(){
-  try{
-    const res = await fetch(INDEX_PATH + "?t=" + Date.now(), {cache:"no-store"});
-    if(!res.ok) throw new Error(res.status);
-    normalizeIndex(await res.json());
-    refreshIndexUI();
-    refreshSelects();
-    alert("✅ Index caricato");
-  }catch(e){
-    console.error(e);
-    alert("❌ Non trovo data/index.json (controlla che esista).");
-  }
+  const idx = await window.SerCucTech.loadIndexSmart();
+  normalizeIndex(idx);
+  refreshIndexUI();
+  refreshSelects();
+}
+function dlJSON(obj, filename){
+  const blob = new Blob([JSON.stringify(obj,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
 }
 function downloadIndex(){
-  indexDB.meta.updatedAt = nowISO();
+  indexDB.meta.updatedAt = window.SerCucTech.nowISO();
   refreshIndexUI();
   dlJSON(indexDB, "index.json");
 }
-
 document.getElementById("importIndex").addEventListener("change", async (ev)=>{
   const f = ev.target.files && ev.target.files[0];
   if(!f) return;
@@ -534,14 +561,13 @@ document.getElementById("importIndex").addEventListener("change", async (ev)=>{
     refreshSelects();
     alert("✅ Index importato");
   }catch(e){
-    console.error(e);
     alert("❌ index.json non valido");
   }finally{
     ev.target.value = "";
   }
 });
 
-/* ================= VETRINA ================= */
+/* ================= VETRINA editing ================= */
 function normalizeVetrina(v, id){
   const o = (v && typeof v==="object") ? v : {};
   o.id = o.id || id;
@@ -551,8 +577,8 @@ function normalizeVetrina(v, id){
   o.tags = Array.isArray(o.tags) ? o.tags : [];
   o.media = Array.isArray(o.media) ? o.media : [];
   o.files = Array.isArray(o.files) ? o.files : [];
-  o.createdAt = o.createdAt || nowISO();
-  o.updatedAt = o.updatedAt || nowISO();
+  o.createdAt = o.createdAt || window.SerCucTech.nowISO();
+  o.updatedAt = o.updatedAt || window.SerCucTech.nowISO();
   return o;
 }
 function fillEditor(){
@@ -564,26 +590,26 @@ function fillEditor(){
   document.getElementById("eVoiceText").value = (activeVetrina.voice && activeVetrina.voice.text) ? activeVetrina.voice.text : "";
   document.getElementById("eTags").value = (activeVetrina.tags || []).join(", ");
 }
+
 async function loadSelectedVetrinaFile(){
   const id = document.getElementById("vSelect").value;
   if(!id){ alert("Seleziona una vetrina"); return; }
   const rec = indexDB.vetrine[id];
   if(!rec || !rec.file){ alert("Index: manca 'file'"); return; }
   try{
-    const res = await fetch(rec.file + "?t=" + Date.now(), {cache:"no-store"});
-    if(!res.ok) throw new Error(res.status);
+    const v = await (await fetch(rec.file + "?t=" + Date.now(), {cache:"no-store"})).json();
     activeId = id;
-    activeVetrina = normalizeVetrina(await res.json(), id);
+    activeVetrina = normalizeVetrina(v, id);
     fillEditor();
     renderMediaList();
     renderFilesList();
     clearMediaQueue();
     alert("✅ Vetrina caricata");
   }catch(e){
-    console.error(e);
     alert("❌ Non riesco a caricare " + rec.file);
   }
 }
+
 function saveEdits(){
   if(!activeVetrina){ alert("Carica una vetrina"); return; }
   activeVetrina.title = (document.getElementById("eTitle").value||"").trim();
@@ -591,35 +617,38 @@ function saveEdits(){
   activeVetrina.voice = activeVetrina.voice || {lang:"it-IT", text:""};
   activeVetrina.voice.lang = (document.getElementById("eVoiceLang").value||"it-IT").trim();
   activeVetrina.voice.text = (document.getElementById("eVoiceText").value||"").trim();
-  activeVetrina.tags = splitCSV(document.getElementById("eTags").value);
-  activeVetrina.updatedAt = nowISO();
+  activeVetrina.tags = window.SerCucTech.splitCSV(document.getElementById("eTags").value);
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
   alert("✅ Salvato in memoria. Ora scarica " + activeId + ".json");
 }
+
 function syncIndexFromVetrina(){
   if(!activeVetrina || !activeId){ alert("Carica una vetrina"); return; }
   if(!indexDB.vetrine[activeId]){ alert("Non presente in index"); return; }
   indexDB.vetrine[activeId].title = activeVetrina.title || activeId;
   indexDB.vetrine[activeId].tags = activeVetrina.tags || [];
-  indexDB.vetrine[activeId].updatedAt = nowISO();
-  indexDB.meta.updatedAt = nowISO();
+  indexDB.vetrine[activeId].updatedAt = window.SerCucTech.nowISO();
+  indexDB.meta.updatedAt = window.SerCucTech.nowISO();
   refreshIndexUI();
   refreshSelects();
   alert("✅ Index aggiornato. Scarica index.json");
 }
+
 function downloadVetrina(){
   if(!activeVetrina || !activeId){ alert("Carica una vetrina"); return; }
   dlJSON(activeVetrina, `${activeId}.json`);
 }
+
 function createVetrina(){
-  const id = sanitizeId(document.getElementById("newId").value);
+  const id = window.SerCucTech.sanitizeId(document.getElementById("newId").value);
   if(!id){ alert("ID non valido"); return; }
   if(indexDB.vetrine[id]){ alert("ID già esistente"); return; }
 
   const title = (document.getElementById("newTitle").value||"").trim() || id;
-  const tags = splitCSV(document.getElementById("newTags").value);
+  const tags = window.SerCucTech.splitCSV(document.getElementById("newTags").value);
 
-  indexDB.vetrine[id] = { id, title, file:`data/${id}.json`, tags, updatedAt: nowISO() };
-  indexDB.meta.updatedAt = nowISO();
+  indexDB.vetrine[id] = { id, title, file:`data/${id}.json`, tags, updatedAt: window.SerCucTech.nowISO() };
+  indexDB.meta.updatedAt = window.SerCucTech.nowISO();
   refreshIndexUI();
   refreshSelects();
 
@@ -632,11 +661,12 @@ function createVetrina(){
 
   alert("✅ Creata. Ora scarica: index.json e " + id + ".json e caricali su GitHub in /data/");
 }
+
 function deleteVetrina(){
   const id = document.getElementById("vSelect").value || activeId;
   if(!id){ alert("Seleziona una vetrina"); return; }
   if(!indexDB.vetrine[id]){ alert("Non trovata in index"); return; }
-  if(!confirm("Eliminare vetrina " + id + " ? (poi devi cancellare anche data/"+id+".json dal repo)")) return;
+  if(!confirm("Eliminare vetrina " + id + " ? (poi cancella anche data/"+id+".json dal repo)")) return;
 
   Object.keys(indexDB.groups).forEach(gk=>{
     const g = indexDB.groups[gk];
@@ -644,7 +674,7 @@ function deleteVetrina(){
   });
 
   delete indexDB.vetrine[id];
-  indexDB.meta.updatedAt = nowISO();
+  indexDB.meta.updatedAt = window.SerCucTech.nowISO();
   refreshIndexUI();
   refreshSelects();
 
@@ -671,7 +701,7 @@ function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
 function duplicateCurrentVetrina(){
   if(!activeVetrina || !activeId){ alert("Carica una vetrina prima."); return; }
-  const newId = sanitizeId(document.getElementById("dupNewId").value);
+  const newId = window.SerCucTech.sanitizeId(document.getElementById("dupNewId").value);
   if(!newId){ alert("Nuovo ID non valido"); return; }
   if(indexDB.vetrine[newId]){ alert("ID già esistente in index"); return; }
   const newTitle = (document.getElementById("dupNewTitle").value||"").trim();
@@ -679,17 +709,17 @@ function duplicateCurrentVetrina(){
   const cloned = deepClone(activeVetrina);
   cloned.id = newId;
   if(newTitle) cloned.title = newTitle;
-  cloned.createdAt = nowISO();
-  cloned.updatedAt = nowISO();
+  cloned.createdAt = window.SerCucTech.nowISO();
+  cloned.updatedAt = window.SerCucTech.nowISO();
 
   indexDB.vetrine[newId] = {
     id: newId,
     title: cloned.title || newId,
     file: `data/${newId}.json`,
     tags: cloned.tags || [],
-    updatedAt: nowISO()
+    updatedAt: window.SerCucTech.nowISO()
   };
-  indexDB.meta.updatedAt = nowISO();
+  indexDB.meta.updatedAt = window.SerCucTech.nowISO();
 
   activeId = newId;
   activeVetrina = cloned;
@@ -704,24 +734,7 @@ function duplicateCurrentVetrina(){
   alert("✅ Clone creato IN MEMORIA. Ora scarica: index.json e " + newId + ".json e caricali su GitHub in /data/");
 }
 
-/* ================= MEDIA (URL + MULTI) ================= */
-function addMediaByUrl(){
-  if(!activeVetrina){ alert("Carica una vetrina"); return; }
-  const type = document.getElementById("mType").value;
-  const url = (document.getElementById("mUrl").value||"").trim();
-  const title = (document.getElementById("mTitle").value||"").trim();
-  const note = (document.getElementById("mNote").value||"").trim();
-  if(!url){ alert("Inserisci URL"); return; }
-
-  activeVetrina.media.push({type, url, title, note});
-  activeVetrina.updatedAt = nowISO();
-  renderMediaList();
-
-  document.getElementById("mUrl").value="";
-  document.getElementById("mTitle").value="";
-  document.getElementById("mNote").value="";
-}
-
+/* ================= MEDIA (URL + MULTI + riordino) ================= */
 document.getElementById("mFiles").addEventListener("change", ()=>{
   const files = Array.from(document.getElementById("mFiles").files || []);
   mediaQueue = files.map(f=>{
@@ -737,7 +750,7 @@ function renderMediaQueue(){
   const box = document.getElementById("mediaQueue");
   box.innerHTML = "";
   if(mediaQueue.length === 0){
-    box.innerHTML = `<div class="mini">Nessun file selezionato.</div>`;
+    box.innerHTML = `<div class="mut">Nessun file selezionato.</div>`;
     return;
   }
   mediaQueue.forEach((m, idx)=>{
@@ -745,12 +758,12 @@ function renderMediaQueue(){
     row.className = "item";
     row.innerHTML = `
       <div style="flex:1">
-        <b>${m.type==="video" ? "🎬 Video" : "🖼️ Immagine"} — ${escapeHTML(m.file.name)}</b>
-        <div class="mini">URL nel JSON: <span class="kbd">${escapeHTML(m.url)}</span></div>
+        <b>${m.type==="video" ? "🎬 Video" : "🖼️ Immagine"} — ${escapeHtml(m.file.name)}</b>
+        <div class="mut">URL nel JSON: <span class="kbd">${escapeHtml(m.url)}</span></div>
         <label style="margin-top:8px;">Titolo</label>
-        <input id="qTitle_${idx}" value="${escapeAttr(m.title)}" />
+        <input id="qTitle_${idx}" value="${escapeHtml(m.title)}" />
         <label>Nota</label>
-        <input id="qNote_${idx}" value="${escapeAttr(m.note)}" />
+        <input id="qNote_${idx}" value="${escapeHtml(m.note)}" />
         <div style="margin-top:10px;">
           ${m.type==="video"
             ? `<video class="preview" controls src="${m.objectUrl}"></video>`
@@ -759,7 +772,7 @@ function renderMediaQueue(){
         </div>
       </div>
       <div>
-        <button class="danger smallbtn" onclick="removeQueued(${idx})">Rimuovi</button>
+        <button class="btn danger smallbtn" onclick="removeQueued(${idx})">Rimuovi</button>
       </div>
     `;
     box.appendChild(row);
@@ -777,6 +790,22 @@ function clearMediaQueue(){
   document.getElementById("mFiles").value = "";
   renderMediaQueue();
 }
+function addMediaByUrl(){
+  if(!activeVetrina){ alert("Carica una vetrina"); return; }
+  const type = document.getElementById("mType").value;
+  const url = (document.getElementById("mUrl").value||"").trim();
+  const title = (document.getElementById("mTitle").value||"").trim();
+  const note = (document.getElementById("mNote").value||"").trim();
+  if(!url){ alert("Inserisci URL"); return; }
+
+  activeVetrina.media.push({type, url, title, note});
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
+  renderMediaList();
+
+  document.getElementById("mUrl").value="";
+  document.getElementById("mTitle").value="";
+  document.getElementById("mNote").value="";
+}
 function addMediaFromFiles(){
   if(!activeVetrina){ alert("Carica una vetrina"); return; }
   if(mediaQueue.length === 0){ alert("Seleziona file"); return; }
@@ -787,7 +816,7 @@ function addMediaFromFiles(){
     activeVetrina.media.push({ type:m.type, url:m.url, title, note });
   });
 
-  activeVetrina.updatedAt = nowISO();
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
   renderMediaList();
 
   alert("✅ Aggiunti al JSON. Ora: scarica ZIP e carica i file in /media/, poi scarica " + activeId + ".json e caricalo in /data/.");
@@ -813,40 +842,40 @@ function swapInArray(arr, i, j){
 }
 function removeMedia(idx){
   activeVetrina.media.splice(idx,1);
-  activeVetrina.updatedAt = nowISO();
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
   renderMediaList();
 }
 function applyMediaEdits(idx){
   activeVetrina.media[idx].title = String(document.getElementById(`mt_${idx}`)?.value || "").trim();
   activeVetrina.media[idx].note  = String(document.getElementById(`mn_${idx}`)?.value || "").trim();
-  activeVetrina.updatedAt = nowISO();
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
   alert("✅ Modifiche media applicate (scarica poi il JSON).");
 }
 function previewMedia(idx){
   const m = activeVetrina.media[idx];
   const box = document.getElementById(`prevM_${idx}`);
   if(!box) return;
-  if(m.type==="video") box.innerHTML = `<video class="preview" controls src="${escapeAttr(m.url)}"></video>`;
-  else box.innerHTML = `<img class="preview" src="${escapeAttr(m.url)}" alt="preview">`;
+  if(m.type==="video") box.innerHTML = `<video class="preview" controls src="${escapeHtml(m.url)}"></video>`;
+  else box.innerHTML = `<img class="preview" src="${escapeHtml(m.url)}" alt="preview">`;
 }
 function moveMediaUp(idx){
   if(idx<=0) return;
   swapInArray(activeVetrina.media, idx, idx-1);
-  activeVetrina.updatedAt = nowISO();
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
   renderMediaList();
 }
 function moveMediaDown(idx){
   if(idx >= activeVetrina.media.length-1) return;
   swapInArray(activeVetrina.media, idx, idx+1);
-  activeVetrina.updatedAt = nowISO();
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
   renderMediaList();
 }
 function renderMediaList(){
   const list = document.getElementById("mediaList");
   list.innerHTML = "";
-  if(!activeVetrina){ list.innerHTML = `<div class="mini">Carica una vetrina.</div>`; return; }
+  if(!activeVetrina){ list.innerHTML = `<div class="mut">Carica una vetrina.</div>`; return; }
   const media = activeVetrina.media || [];
-  if(media.length === 0){ list.innerHTML = `<div class="mini">Nessun media.</div>`; return; }
+  if(media.length === 0){ list.innerHTML = `<div class="mut">Nessun media.</div>`; return; }
 
   media.forEach((m, idx)=>{
     const row = document.createElement("div");
@@ -871,7 +900,7 @@ function renderMediaList(){
       const to = Number(row.dataset.index);
       if(Number.isFinite(from) && Number.isFinite(to)){
         moveInArray(activeVetrina.media, from, to);
-        activeVetrina.updatedAt = nowISO();
+        activeVetrina.updatedAt = window.SerCucTech.nowISO();
         renderMediaList();
       }
     });
@@ -881,30 +910,24 @@ function renderMediaList(){
       <div style="flex:1">
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
           <span class="drag">⇅</span>
-          <b>${typeIcon} ${escapeHTML(m.title||"(senza titolo)")}</b>
+          <b>${typeIcon} ${escapeHtml(m.title||"(senza titolo)")}</b>
         </div>
-        <div class="mini mono">${escapeHTML(m.url||"")}</div>
-        <div class="row">
-          <div>
-            <label style="margin-top:6px;">Titolo</label>
-            <input id="mt_${idx}" value="${escapeAttr(m.title||"")}" />
-          </div>
-          <div>
-            <label style="margin-top:6px;">Nota</label>
-            <input id="mn_${idx}" value="${escapeAttr(m.note||"")}" />
-          </div>
-        </div>
+        <div class="mut mono">${escapeHtml(m.url||"")}</div>
+        <label style="margin-top:6px;">Titolo</label>
+        <input id="mt_${idx}" value="${escapeHtml(m.title||"")}" />
+        <label>Nota</label>
+        <input id="mn_${idx}" value="${escapeHtml(m.note||"")}" />
         <div class="btns">
-          <button class="sec smallbtn" onclick="applyMediaEdits(${idx})">Applica</button>
-          <button class="sec smallbtn" onclick="previewMedia(${idx})">Anteprima</button>
+          <button class="btn sec smallbtn" onclick="applyMediaEdits(${idx})">Applica</button>
+          <button class="btn sec smallbtn" onclick="previewMedia(${idx})">Anteprima</button>
         </div>
-        <div id="prevM_${idx}" class="mini" style="margin-top:8px;"></div>
+        <div id="prevM_${idx}" class="mut" style="margin-top:8px;"></div>
       </div>
       <div>
         <div class="btns" style="justify-content:flex-end;">
-          <button class="sec smallbtn" onclick="moveMediaUp(${idx})">↑</button>
-          <button class="sec smallbtn" onclick="moveMediaDown(${idx})">↓</button>
-          <button class="danger smallbtn" onclick="removeMedia(${idx})">Rimuovi</button>
+          <button class="btn sec smallbtn" onclick="moveMediaUp(${idx})">↑</button>
+          <button class="btn sec smallbtn" onclick="moveMediaDown(${idx})">↓</button>
+          <button class="btn danger smallbtn" onclick="removeMedia(${idx})">Rimuovi</button>
         </div>
       </div>
     `;
@@ -912,54 +935,59 @@ function renderMediaList(){
   });
 }
 
-/* ================= FILES ================= */
+/* ================= FILES (riordino) ================= */
 function addFileByUrl(){
   if(!activeVetrina){ alert("Carica una vetrina"); return; }
   const label = (document.getElementById("fLabel").value||"").trim();
   const url = (document.getElementById("fUrl").value||"").trim();
   if(!label || !url){ alert("Inserisci Label e URL"); return; }
   activeVetrina.files.push({label, url});
-  activeVetrina.updatedAt = nowISO();
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
   renderFilesList();
   document.getElementById("fLabel").value = "";
   document.getElementById("fUrl").value = "";
 }
 function removeFile(idx){
   activeVetrina.files.splice(idx,1);
-  activeVetrina.updatedAt = nowISO();
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
   renderFilesList();
 }
 function applyFileEdits(idx){
   activeVetrina.files[idx].label = String(document.getElementById(`fl_${idx}`)?.value || "").trim();
   activeVetrina.files[idx].url   = String(document.getElementById(`fu_${idx}`)?.value || "").trim();
-  activeVetrina.updatedAt = nowISO();
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
   alert("✅ Modifiche file applicate (scarica poi il JSON).");
 }
 function previewFile(idx){
   const f = activeVetrina.files[idx];
   const box = document.getElementById(`prevF_${idx}`);
   if(!box) return;
-  if(isPdf(f.url)) box.innerHTML = `<iframe class="preview" src="${escapeAttr(f.url)}"></iframe>`;
-  else box.innerHTML = `<div class="mini">Anteprima solo PDF. Link: <span class="kbd">${escapeHTML(f.url)}</span></div>`;
+  if(window.SerCucTech && typeof window.SerCucTech === "object"){
+    if((f.url||"").toLowerCase().split("?")[0].endsWith(".pdf")){
+      box.innerHTML = `<iframe class="preview" src="${escapeHtml(f.url)}"></iframe>`;
+    }else{
+      box.innerHTML = `<div class="mut">Anteprima solo PDF. Link: <span class="kbd">${escapeHtml(f.url)}</span></div>`;
+    }
+  }
 }
 function moveFileUp(idx){
   if(idx<=0) return;
   swapInArray(activeVetrina.files, idx, idx-1);
-  activeVetrina.updatedAt = nowISO();
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
   renderFilesList();
 }
 function moveFileDown(idx){
   if(idx >= activeVetrina.files.length-1) return;
   swapInArray(activeVetrina.files, idx, idx+1);
-  activeVetrina.updatedAt = nowISO();
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
   renderFilesList();
 }
 function renderFilesList(){
   const list = document.getElementById("filesList");
   list.innerHTML = "";
-  if(!activeVetrina){ list.innerHTML = `<div class="mini">Carica una vetrina.</div>`; return; }
+  if(!activeVetrina){ list.innerHTML = `<div class="mut">Carica una vetrina.</div>`; return; }
   const files = activeVetrina.files || [];
-  if(files.length === 0){ list.innerHTML = `<div class="mini">Nessun file.</div>`; return; }
+  if(files.length === 0){ list.innerHTML = `<div class="mut">Nessun file.</div>`; return; }
 
   files.forEach((f, idx)=>{
     const row = document.createElement("div");
@@ -984,43 +1012,37 @@ function renderFilesList(){
       const to = Number(row.dataset.index);
       if(Number.isFinite(from) && Number.isFinite(to)){
         moveInArray(activeVetrina.files, from, to);
-        activeVetrina.updatedAt = nowISO();
+        activeVetrina.updatedAt = window.SerCucTech.nowISO();
         renderFilesList();
       }
     });
 
-    const ico = isPdf(f.url) ? "📄" : "📎";
+    const ico = (f.url||"").toLowerCase().split("?")[0].endsWith(".pdf") ? "📄" : "📎";
     row.innerHTML = `
       <div style="flex:1">
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
           <span class="drag">⇅</span>
-          <b>${ico} ${escapeHTML(f.label||"(senza label)")}</b>
+          <b>${ico} ${escapeHtml(f.label||"(senza label)")}</b>
         </div>
-        <div class="mini mono">${escapeHTML(f.url||"")}</div>
+        <div class="mut mono">${escapeHtml(f.url||"")}</div>
 
-        <div class="row">
-          <div>
-            <label style="margin-top:6px;">Label</label>
-            <input id="fl_${idx}" value="${escapeAttr(f.label||"")}" />
-          </div>
-          <div>
-            <label style="margin-top:6px;">URL</label>
-            <input id="fu_${idx}" value="${escapeAttr(f.url||"")}" />
-          </div>
-        </div>
+        <label style="margin-top:6px;">Label</label>
+        <input id="fl_${idx}" value="${escapeHtml(f.label||"")}" />
+        <label>URL</label>
+        <input id="fu_${idx}" value="${escapeHtml(f.url||"")}" />
 
         <div class="btns">
-          <button class="sec smallbtn" onclick="applyFileEdits(${idx})">Applica</button>
-          <button class="sec smallbtn" onclick="previewFile(${idx})">Anteprima</button>
+          <button class="btn sec smallbtn" onclick="applyFileEdits(${idx})">Applica</button>
+          <button class="btn sec smallbtn" onclick="previewFile(${idx})">Anteprima</button>
         </div>
-        <div id="prevF_${idx}" class="mini" style="margin-top:8px;"></div>
+        <div id="prevF_${idx}" class="mut" style="margin-top:8px;"></div>
       </div>
 
       <div>
         <div class="btns" style="justify-content:flex-end;">
-          <button class="sec smallbtn" onclick="moveFileUp(${idx})">↑</button>
-          <button class="sec smallbtn" onclick="moveFileDown(${idx})">↓</button>
-          <button class="danger smallbtn" onclick="removeFile(${idx})">Rimuovi</button>
+          <button class="btn sec smallbtn" onclick="moveFileUp(${idx})">↑</button>
+          <button class="btn sec smallbtn" onclick="moveFileDown(${idx})">↓</button>
+          <button class="btn danger smallbtn" onclick="removeFile(${idx})">Rimuovi</button>
         </div>
       </div>
     `;
@@ -1044,12 +1066,12 @@ async function downloadBackupZip(){
   let okCount = 0, failCount = 0;
 
   for(const m of (activeVetrina.media || [])){
-    if(!m?.url || !isRelativeRepoPath(m.url)) continue;
+    if(!m?.url || !String(m.url).startsWith("media/")) continue;
     const name = m.url.replace(/^media\//, "");
     try{ mediaFolder.file(name, await fetchAsBlob(m.url)); okCount++; }catch(e){ failCount++; }
   }
   for(const f of (activeVetrina.files || [])){
-    if(!f?.url || !isRelativeRepoPath(f.url)) continue;
+    if(!f?.url || !String(f.url).startsWith("files/")) continue;
     const name = f.url.replace(/^files\//, "");
     try{ filesFolder.file(name, await fetchAsBlob(f.url)); okCount++; }catch(e){ failCount++; }
   }
@@ -1071,21 +1093,23 @@ const ocrText = document.getElementById("ocrText");
 const ocrStatus = document.getElementById("ocrStatus");
 const ocrBar = document.getElementById("ocrBar");
 
-ocrFile.addEventListener("change", (e)=>{
-  const f = e.target.files && e.target.files[0];
-  if(!f){ ocrImage=null; return; }
-  if(!f.type.startsWith("image/")){
-    alert("Carica un'immagine.");
-    e.target.value = "";
-    return;
-  }
-  ocrImage = f;
-  ocrPreview.src = URL.createObjectURL(f);
-  ocrPreview.style.display = "block";
-  ocrNoPreview.style.display = "none";
-  ocrStatus.textContent = "Immagine caricata";
-  ocrBar.style.width = "0%";
-});
+if(ocrFile){
+  ocrFile.addEventListener("change", (e)=>{
+    const f = e.target.files && e.target.files[0];
+    if(!f){ ocrImage=null; return; }
+    if(!f.type.startsWith("image/")){
+      alert("Carica un'immagine.");
+      e.target.value = "";
+      return;
+    }
+    ocrImage = f;
+    ocrPreview.src = URL.createObjectURL(f);
+    ocrPreview.style.display = "block";
+    ocrNoPreview.style.display = "none";
+    ocrStatus.textContent = "Immagine caricata";
+    ocrBar.style.width = "0%";
+  });
+}
 
 async function runOCR(){
   if(!ocrImage){ alert("Carica un'immagine"); return; }
@@ -1113,7 +1137,6 @@ async function runOCR(){
     alert("Errore OCR: riprova con foto più nitida.");
   }
 }
-
 async function copyOCR(){
   const txt = (ocrText.value||"").trim();
   if(!txt){ alert("Nessun testo"); return; }
@@ -1125,7 +1148,7 @@ function speakOCR(){
   if(!txt){ alert("Nessun testo"); return; }
   const lang = document.getElementById("ocrLang").value;
   const map = { ita:"it-IT", eng:"en-US", ukr:"uk-UA", deu:"de-DE", spa:"es-ES", fra:"fr-FR" };
-  speak(txt, map[lang] || "it-IT");
+  window.SerCucTech.speakText(txt, { lang: map[lang] || "it-IT" });
 }
 function downloadOCRtxt(){
   const txt = (ocrText.value||"").trim();
@@ -1143,20 +1166,19 @@ function addOCRtoFiles(){
   if(!txt){ alert("Nessun testo"); return; }
   const name = ocrLastTxtFilename || `ocr-${activeId || "vetrina"}.txt`;
   activeVetrina.files.push({ label: "Testo OCR", url: `files/${name}` });
-  activeVetrina.updatedAt = nowISO();
+  activeVetrina.updatedAt = window.SerCucTech.nowISO();
   renderFilesList();
   ocrStatus.textContent = "➕ Aggiunto in files[] (carica il TXT in /files/)";
   alert("✅ Aggiunto. Ora: scarica il TXT e caricalo in /files/. Poi scarica " + activeId + ".json e caricalo in /data/.");
 }
 function clearOCR(){
-  document.getElementById("ocrFile").value = "";
+  if(document.getElementById("ocrFile")) document.getElementById("ocrFile").value = "";
   ocrImage = null;
-  ocrPreview.src = "";
-  ocrPreview.style.display = "none";
-  ocrNoPreview.style.display = "block";
-  ocrText.value = "";
-  ocrStatus.textContent = "Pronto";
-  ocrBar.style.width = "0%";
+  if(ocrPreview){ ocrPreview.src = ""; ocrPreview.style.display = "none"; }
+  if(ocrNoPreview) ocrNoPreview.style.display = "block";
+  if(ocrText) ocrText.value = "";
+  if(ocrStatus) ocrStatus.textContent = "Pronto";
+  if(ocrBar) ocrBar.style.width = "0%";
   ocrLastTxtFilename = "";
 }
 
@@ -1172,32 +1194,38 @@ function loadGroupIntoEditor(){
   document.getElementById("gItems").value = (g.items||[]).join(", ");
 }
 function saveGroup(){
-  const k = sanitizeId(document.getElementById("gKey").value);
+  const k = window.SerCucTech.sanitizeId(document.getElementById("gKey").value);
   if(!k){ alert("Key non valida"); return; }
   indexDB.groups[k] = {
     title: (document.getElementById("gTitle").value||"").trim(),
     description: (document.getElementById("gDesc").value||"").trim(),
-    items: splitCSV(document.getElementById("gItems").value).map(sanitizeId).filter(Boolean)
+    items: window.SerCucTech.splitCSV(document.getElementById("gItems").value).map(window.SerCucTech.sanitizeId).filter(Boolean)
   };
-  indexDB.meta.updatedAt = nowISO();
+  indexDB.meta.updatedAt = window.SerCucTech.nowISO();
   refreshIndexUI();
   refreshSelects();
   alert("✅ Gruppo salvato. Scarica index.json");
 }
 function deleteGroup(){
-  const k = sanitizeId(document.getElementById("gKey").value);
+  const k = window.SerCucTech.sanitizeId(document.getElementById("gKey").value);
   if(!k || !indexDB.groups[k]){ alert("Gruppo non trovato"); return; }
   if(!confirm("Eliminare gruppo " + k + " ?")) return;
   delete indexDB.groups[k];
-  indexDB.meta.updatedAt = nowISO();
+  indexDB.meta.updatedAt = window.SerCucTech.nowISO();
   refreshIndexUI();
   refreshSelects();
   alert("🗑️ Gruppo eliminato. Scarica index.json");
 }
 
 /* ================= INIT ================= */
-renderSecretSentence();
-renderMediaQueue();
+initDeviceCodeBox();
+renderClickableSentence();
+
+if(window.SerCucTech.isAdminSessionValid()){
+  showUnlockedUI();
+}else{
+  showLockedUI();
+}
 </script>
 </body>
 </html>
