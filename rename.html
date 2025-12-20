@@ -4,24 +4,33 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>SerCucTech – Rinomina & Media JSON</title>
-  <link rel="stylesheet" href="style.css">
+
   <style>
-    /* extra layout (smartphone) */
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#0b1220;color:#e8eefc;margin:0}
     .wrap{max-width:980px;margin:0 auto;padding:16px}
-    .card{background:rgba(27,35,60,.55);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px;margin:12px 0}
+    .card{background:linear-gradient(180deg,#0f1a31,#0c1530);border:1px solid #22345f;border-radius:18px;padding:14px;margin:12px 0}
     .row{display:grid;grid-template-columns:1fr;gap:10px}
     @media (min-width:900px){ .row{grid-template-columns:1fr 1fr} }
     label{display:block;font-size:.9rem;opacity:.9;margin:6px 0 4px}
-    input,button,select,textarea{width:100%;padding:12px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);color:#fff;font-size:1rem}
-    textarea{min-height:180px;resize:vertical;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+    input,button,select,textarea{
+      width:100%;padding:12px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.25);color:#e8eefc;font-size:1rem
+    }
+    textarea{min-height:180px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
     .btns{display:flex;gap:10px;flex-wrap:wrap}
-    .btns > *{flex:1}
-    .mut{opacity:.8;font-size:.9rem}
+    .btns > *{flex:1;min-height:48px;font-weight:900;cursor:pointer}
+    .ok{background:#5ee1a2;color:#052014;border-color:#5ee1a2}
+    .sec{background:#22345f;color:#e8eefc;border-color:#22345f}
+    .danger{background:#ff6b6b;color:#300;border-color:#ff6b6b}
+    .mut{opacity:.85;font-size:.92rem}
     ul{list-style:none;padding:0;margin:0;max-height:240px;overflow:auto}
     li{padding:6px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:.92rem}
-    .pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22);font-size:.85rem;opacity:.9}
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px}
-    .topbar a{color:#fff;text-decoration:none}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22);font-size:.85rem;opacity:.95}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+    .topbar a{color:#e8eefc;text-decoration:none}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .focusBox{outline:2px solid rgba(94,225,162,.0); transition: outline .2s ease;}
+    .focusBox.highlight{outline:2px solid rgba(94,225,162,.9);}
   </style>
 </head>
 
@@ -29,12 +38,13 @@
   <div class="wrap">
     <div class="topbar">
       <div>
-        <div style="font-weight:800;font-size:1.1rem">SerCucTech – Rinomina + JSON Media</div>
-        <div class="mut">Apri con: <span class="pill">rename.html?id=renzo11</span></div>
+        <div style="font-weight:900;font-size:1.1rem">SerCucTech – Rinomina + JSON Media</div>
+        <div class="mut">Apri con: <span class="pill mono">rename.html?id=renzo11</span></div>
       </div>
-      <div style="display:flex;gap:10px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
         <a class="pill" href="index.html">🏠 Home</a>
         <a class="pill" href="admin.html">🔒 Admin</a>
+        <a class="pill" href="vetrina.html" id="publicLinkTop" target="_blank" rel="noopener">🌐 Vetrina</a>
       </div>
     </div>
 
@@ -43,12 +53,12 @@
         <div>
           <label>1️⃣ ID vetrina (prefisso)</label>
           <input id="prefix" placeholder="es: renzo11">
-          <div class="mut">Consiglio: usa l’ID della vetrina (uguale al file <b>data/ID.json</b>).</div>
+          <div class="mut">Usa l’ID della vetrina (uguale al file <b>data/ID.json</b>).</div>
         </div>
         <div>
-          <label>2️⃣ Cartella di destinazione</label>
+          <label>2️⃣ Cartella destinazione (nel link pubblico)</label>
           <input id="folder" value="media" placeholder="media">
-          <div class="mut">Di solito lasci <b>media</b>. I file finiranno come: <b>media/renzo11-01.jpg</b></div>
+          <div class="mut">Esempio: <b>media/renzo11-01.jpg</b></div>
         </div>
       </div>
 
@@ -56,10 +66,10 @@
         <div>
           <label>3️⃣ Seleziona file (multi)</label>
           <input type="file" id="files" multiple accept="image/*,video/*,.pdf,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx">
-          <div class="mut">Puoi scegliere anche 24+ immagini insieme.</div>
+          <div class="mut">Seleziona anche 24+ immagini insieme.</div>
         </div>
         <div>
-          <label>4️⃣ Opzioni numerazione</label>
+          <label>4️⃣ Numerazione</label>
           <div class="row" style="grid-template-columns:1fr 1fr 1fr;gap:10px">
             <div>
               <label>Start</label>
@@ -78,14 +88,16 @@
       </div>
 
       <div class="btns">
-        <button id="previewBtn">👁️ Anteprima</button>
-        <button id="zipBtn">⬇️ Scarica ZIP rinominato</button>
-        <button id="jsonBtn">🧩 Genera JSON “media”</button>
+        <button class="sec" id="previewBtn">👁️ Anteprima</button>
+        <button class="sec" id="zipBtn">⬇️ ZIP rinominato</button>
+        <button class="sec" id="jsonBtn">🧩 Genera JSON</button>
+
+        <!-- ✅ PULSANTE “TUTTO IN UNO” -->
+        <button class="ok" id="doAllBtn">✅ FAI TUTTO (ZIP + JSON + LINK)</button>
       </div>
 
       <div class="mut" style="margin-top:10px">
-        Nota: i browser non possono rinominare i file originali nella memoria del telefono.  
-        Questo tool crea un <b>ZIP</b> con nomi nuovi + ti prepara la lista “media” per la vetrina.
+        Nota: il browser non può fare commit su GitHub. Ma questo pulsante ti copia il JSON negli appunti e ti prepara il link pubblico + WhatsApp.
       </div>
     </div>
 
@@ -95,16 +107,33 @@
     </div>
 
     <div class="card">
-      <strong>JSON “media” pronto da incollare in <span class="pill" id="where">data/ID.json</span></strong>
+      <strong>JSON “media” pronto da incollare in <span class="pill mono" id="where">data/ID.json</span></strong>
       <div class="mut" style="margin:8px 0">
-        Incolla questo array dentro <b>"media": [ ... ]</b> della tua vetrina (es. <b>data/renzo11.json</b>).
+        Incolla questo array dentro <b>"media": [ ... ]</b> in <b>data/<span class="mono" id="idSpan">ID</span>.json</b>.
       </div>
-      <textarea id="jsonOut" placeholder='Clicca “Genera JSON media”…'></textarea>
+      <textarea class="focusBox" id="jsonOut" placeholder='Clicca “FAI TUTTO”…'></textarea>
+
       <div class="btns" style="margin-top:10px">
-        <button id="copyBtn">📋 Copia JSON</button>
-        <button class="secondary" id="clearBtn" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.12)">🧹 Pulisci</button>
+        <button class="sec" id="copyBtn">📋 Copia JSON</button>
+        <button class="sec" id="openGithubBtn">🧷 Apri GitHub (data/ID.json)</button>
+        <button class="danger" id="clearBtn">🧹 Pulisci</button>
       </div>
     </div>
+
+    <div class="card">
+      <strong>Link pubblico (da condividere)</strong>
+      <div class="mut" style="margin:8px 0">
+        Questo è il link della vetrina pubblica. Copialo e invialo su WhatsApp.
+      </div>
+
+      <input class="focusBox" id="publicLink" readonly>
+      <div class="btns" style="margin-top:10px">
+        <button class="ok" id="copyLinkBtn">📎 Copia Link</button>
+        <button class="sec" id="shareBtn">📤 Condividi</button>
+        <button class="sec" id="whatsBtn">🟢 WhatsApp</button>
+      </div>
+    </div>
+
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
