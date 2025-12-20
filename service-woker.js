@@ -1,4 +1,3 @@
-/* SerCucTech Vetrine PWA – Service Worker */
 const CACHE_NAME = "sercuctech-vetrine-v1";
 
 const CORE_ASSETS = [
@@ -14,15 +13,11 @@ const CORE_ASSETS = [
   "./data/index.json"
 ];
 
-// Install: cache base
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)));
   self.skipWaiting();
 });
 
-// Activate: cleanup old caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -32,17 +27,13 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Fetch strategy:
-// - HTML: network first (per avere aggiornamenti)
-// - JSON / media / files: cache first + update in background
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Solo stesso origin (GitHub Pages)
   if (url.origin !== self.location.origin) return;
 
-  // HTML => network first
+  // HTML: network-first
   if (req.headers.get("accept") && req.headers.get("accept").includes("text/html")) {
     event.respondWith(
       fetch(req)
@@ -56,7 +47,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Altri asset => cache first, poi update
+  // Others: cache-first + update
   event.respondWith(
     caches.match(req).then((cached) => {
       const networkFetch = fetch(req)
