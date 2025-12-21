@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Admin SerCucTech</title>
 
+  <!-- JSZip (per backup ZIP) -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
   <style>
     :root{
       --bg:#0b1220;
@@ -14,36 +17,52 @@
       --muted:rgba(234,240,255,.72);
       --green:#23c55e;
       --red:#ff4d4d;
+      --amber:#ffcc66;
+      --btn:rgba(255,255,255,.10);
+      --shadow:0 10px 30px rgba(0,0,0,.35);
     }
-
     *{box-sizing:border-box}
-
     body{
       margin:0;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:var(--bg);
+      background: radial-gradient(900px 600px at 20% -20%, rgba(130,170,255,.20), transparent 60%),
+                  radial-gradient(900px 600px at 90% 10%, rgba(120,255,210,.10), transparent 60%),
+                  var(--bg);
       color:var(--txt);
       padding-bottom:120px;
     }
-
     header{
-      position:sticky;
-      top:0;
-      z-index:10;
+      position:sticky; top:0; z-index:50;
       padding:14px;
-      background:linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,.15));
+      background:linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.18));
       backdrop-filter:blur(10px);
       border-bottom:1px solid var(--line);
     }
-
     h1{
       margin:0 0 10px;
       font-size:20px;
       font-weight:1000;
       text-align:center;
     }
+    .wrap{
+      max-width:980px;
+      margin:0 auto;
+      padding:16px;
+      display:grid;
+      gap:14px;
+    }
+    .card{
+      border:1px solid var(--line);
+      background:var(--card);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
+    .row{display:grid; gap:10px}
+    .grid2{display:grid; gap:12px}
+    @media(min-width:900px){ .grid2{grid-template-columns:1fr 1fr;} }
 
-    /* 🔥 TASTO CREA NUOVA VETRINA */
+    /* 🔥 TASTO CREA NUOVA */
     .createBtn{
       display:block;
       width:100%;
@@ -56,63 +75,36 @@
       color:#06110a;
       border:none;
       cursor:pointer;
-      box-shadow:0 10px 30px rgba(0,0,0,.35);
+      box-shadow:var(--shadow);
     }
-
     .createBtn:active{transform:scale(.98)}
 
-    main{
-      padding:16px;
-      display:grid;
-      gap:14px;
-      max-width:900px;
-      margin:0 auto;
-    }
-
-    .card{
-      border:1px solid var(--line);
-      background:var(--card);
-      border-radius:18px;
-      padding:14px;
-    }
-
-    .row{
-      display:grid;
-      gap:10px;
-    }
-
-    input{
+    input, select, textarea{
       width:100%;
       padding:14px;
       border-radius:14px;
       border:1px solid var(--line);
       background:rgba(0,0,0,.25);
       color:var(--txt);
-      font-size:16px;
+      font-size:15px;
       font-weight:900;
+      outline:none;
     }
-
+    textarea{min-height:120px;font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;font-size:12px;color:var(--muted)}
     .btn{
       padding:14px;
       border-radius:14px;
       border:1px solid var(--line);
-      background:rgba(255,255,255,.10);
+      background:var(--btn);
       color:var(--txt);
-      font-weight:900;
+      font-weight:1000;
       font-size:14px;
       cursor:pointer;
     }
-
-    .btn.green{
-      background:var(--green);
-      color:#06110a;
-      border-color:rgba(0,0,0,.2);
-    }
-
-    .btn.red{
-      background:rgba(255,77,77,.18);
-      color:#fff;
-    }
+    .btn.green{background:var(--green);color:#06110a;border-color:rgba(0,0,0,.2)}
+    .btn.red{background:rgba(255,77,77,.18);color:#fff}
+    .btn.amber{background:rgba(255,204,102,.18);color:#fff}
+    .btn:active{transform:scale(.99)}
 
     .small{
       font-size:12px;
@@ -120,12 +112,18 @@
       font-weight:800;
       line-height:1.35;
     }
-
-    .list{
-      display:grid;
-      gap:10px;
+    .pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      color:var(--muted);
+      font-weight:900;
+      font-size:12px;
     }
 
+    .list{display:grid; gap:10px}
     .item{
       display:flex;
       justify-content:space-between;
@@ -136,15 +134,8 @@
       border:1px solid var(--line);
       background:rgba(0,0,0,.18);
     }
-
     .item strong{font-weight:1000}
-
-    .itemBtns{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-
+    .itemBtns{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
     a.linkBtn{
       text-decoration:none;
       padding:8px 10px;
@@ -153,128 +144,520 @@
       background:rgba(255,255,255,.08);
       color:var(--txt);
       font-size:12px;
-      font-weight:900;
+      font-weight:1000;
     }
+
+    /* GATE admin */
+    .gate{
+      position:fixed; inset:0; z-index:999;
+      background:rgba(0,0,0,.68);
+      display:flex; align-items:center; justify-content:center;
+      padding:18px;
+    }
+    .gateCard{
+      width:min(560px,100%);
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(20,26,44,.92);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
+    .gateTitle{font-weight:1000;font-size:16px;text-align:center;margin-bottom:8px}
+    .gateText{color:rgba(255,255,255,.78);font-size:13px;text-align:center;line-height:1.35}
+    .phrase{
+      margin-top:10px;
+      padding:12px;
+      border-radius:14px;
+      border:1px dashed rgba(255,255,255,.18);
+      background:rgba(0,0,0,.18);
+      font-weight:900;
+      line-height:1.4;
+      text-align:center;
+      user-select:none;
+    }
+    .hot{
+      display:inline-block;
+      padding:2px 6px;
+      border-radius:10px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.14);
+    }
+    .gateOkRow{margin-top:10px; display:grid; gap:10px}
+    .gateOkRow input{background:rgba(0,0,0,.28)}
   </style>
 </head>
 
 <body>
 
-<header>
-  <h1>🔧 Admin SerCucTech</h1>
+<!-- GATE -->
+<div class="gate" id="gate">
+  <div class="gateCard">
+    <div class="gateTitle">🔒 Accesso Admin</div>
+    <div class="gateText">
+      Sblocco con 2 parole in sequenza, poi PIN. Valido 24 ore su questo dispositivo.
+    </div>
 
-  <!-- 🔥 TASTO PRINCIPALE -->
-  <button class="createBtn" onclick="openCreate()">
-    ➕ CREA NUOVA VETRINA
-  </button>
-</header>
+    <div class="phrase" id="phrase">
+      <span class="hot" data-word="SerCucTech">SerCucTech</span>.
+      con i suoi servizi ti aiuta a gestiscire qualsiasi genere di problematiche in modo semplice creando anche App personalizzate.
+      <span class="hot" data-word="qualsiasi">qualsiasi</span>
+    </div>
 
-<main>
-
-  <!-- CREAZIONE -->
-  <section class="card" id="createBox" hidden>
-    <div class="row">
-      <div style="font-weight:1000">ID nuova vetrina</div>
-      <input id="newId" placeholder="es. renzo13 / scalvini11">
-      <button class="btn green" onclick="createVetrina()">Crea ora</button>
-      <div class="small">
-        Verrà creato un JSON base.<br>
-        Poi carichi immagini e personalizzi.
+    <div class="gateOkRow">
+      <input id="pinInput" placeholder="Inserisci PIN (es. 1234)" inputmode="numeric" autocomplete="off">
+      <button class="btn green" id="enterBtn">Entra</button>
+      <div class="small" style="text-align:center">
+        Tocca prima <b>SerCucTech</b> poi <b>qualsiasi</b> (in quest’ordine).
       </div>
     </div>
-  </section>
+  </div>
+</div>
 
-  <!-- ELENCO -->
-  <section class="card">
-    <div style="font-weight:1000;margin-bottom:8px">Vetrine esistenti</div>
+<header>
+  <h1>🔧 Admin SerCucTech</h1>
+  <button class="createBtn" id="createMainBtn">➕ CREA NUOVA VETRINA</button>
+</header>
+
+<div class="wrap" id="app" hidden>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="font-weight:1000">Stato</div>
+      <span class="pill" id="statePill">Caricamento…</span>
+    </div>
+    <div class="small" style="margin-top:8px">
+      Questo Admin legge le vetrine da <b>data/vetrine.json</b>. Se aggiungi una vetrina, aggiorna quel file (1 riga).
+    </div>
+  </div>
+
+  <div class="grid2">
+
+    <!-- CREA -->
+    <div class="card" id="createCard" hidden>
+      <div style="font-weight:1000;margin-bottom:8px">➕ Crea nuova vetrina</div>
+      <div class="row">
+        <input id="newId" placeholder="ID nuova vetrina (es. renzo13 / scalvini11)">
+        <input id="newTitle" placeholder="Titolo (es. Bazar di ... con SerCucTech)">
+        <textarea id="newSpeech" placeholder="Testo fisso (description + voice.text) che resterà visibile e verrà letto dall’audio. Inserisci anche numeri telefono qui."></textarea>
+        <button class="btn green" id="createBtn">Crea e scarica JSON</button>
+        <div class="small">
+          Scarica <b>ID.json</b> pronto. Poi lo carichi su GitHub in <b>data/ID.json</b>.  
+          Link utente: <b>link.html?id=ID</b>
+        </div>
+      </div>
+    </div>
+
+    <!-- DUPLICA -->
+    <div class="card">
+      <div style="font-weight:1000;margin-bottom:8px">🧬 Duplica vetrina (clone)</div>
+      <div class="row">
+        <select id="cloneFrom"></select>
+        <input id="cloneTo" placeholder="Nuovo ID (es. renzo14)">
+        <button class="btn amber" id="cloneBtn">Duplica e scarica JSON</button>
+        <div class="small">
+          Duplica tutto e sostituisce automaticamente gli URL:
+          <b>media/ID-</b> da sorgente → nuovo ID.  
+          (Poi rinomini/carichi le immagini nella cartella <b>media/</b>).
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BACKUP -->
+  <div class="card">
+    <div style="font-weight:1000;margin-bottom:8px">🧰 Backup</div>
+    <div class="row">
+      <button class="btn green" id="backupJsonBtn">Scarica ZIP (solo JSON)</button>
+      <button class="btn" id="backupFullBtn">Scarica ZIP (JSON + media referenziati)</button>
+      <div class="small">
+        • “Solo JSON” è veloce e sicuro.  
+        • “JSON + media” prova a scaricare anche i file indicati nel JSON (se esistono).
+      </div>
+    </div>
+  </div>
+
+  <!-- LISTA -->
+  <div class="card">
+    <div style="font-weight:1000;margin-bottom:8px">📌 Vetrine (da data/vetrine.json)</div>
     <div class="list" id="list"></div>
-  </section>
+    <div class="small" style="margin-top:10px">
+      Per ogni vetrina hai:
+      <b>Link</b> (pagina da condividere) e <b>Vetrina</b> (pagina pubblica).
+    </div>
+  </div>
 
-</main>
+</div>
 
 <script>
-  const list = document.getElementById("list");
-  const createBox = document.getElementById("createBox");
-  const newId = document.getElementById("newId");
+/* =========================================================
+   CONFIG SICUREZZA ADMIN
+========================================================= */
+const PINKEY = "sercuctech_pin";
+const ADMIN_UNLOCK_KEY = "sercuctech_admin_unlock_until";
+const DEFAULT_PIN = "1234"; // cambia qui se vuoi
 
-  const vetrine = [
-    "renzo11",
-    "renzo12"
-  ];
+function initPin(){
+  if(!localStorage.getItem(PINKEY)) localStorage.setItem(PINKEY, DEFAULT_PIN);
+}
+function getPin(){ return localStorage.getItem(PINKEY) || DEFAULT_PIN; }
+function setUnlock24h(){
+  const until = Date.now() + (24*60*60*1000);
+  localStorage.setItem(ADMIN_UNLOCK_KEY, String(until));
+}
+function isUnlocked(){
+  const until = Number(localStorage.getItem(ADMIN_UNLOCK_KEY) || "0");
+  return Date.now() < until;
+}
 
-  function openCreate(){
-    createBox.hidden = !createBox.hidden;
-    if(!createBox.hidden) newId.focus();
+/* sblocco parole: SerCucTech -> qualsiasi */
+let seq = [];
+const gate = document.getElementById("gate");
+const app = document.getElementById("app");
+const phrase = document.getElementById("phrase");
+const pinInput = document.getElementById("pinInput");
+const enterBtn = document.getElementById("enterBtn");
+
+function resetSeq(){ seq = []; }
+
+phrase.addEventListener("click", (e)=>{
+  const t = e.target;
+  const w = t?.getAttribute?.("data-word");
+  if(!w) return;
+
+  seq.push(w);
+  if(seq.length > 2) seq.shift();
+
+  const ok = (seq[0]==="SerCucTech" && seq[1]==="qualsiasi");
+  if(ok){
+    // feedback leggero
+    t.style.outline = "2px solid rgba(35,197,94,.55)";
+    setTimeout(()=>{ t.style.outline=""; }, 600);
   }
+});
 
-  function createVetrina(){
-    const id = newId.value.trim();
-    if(!id){
-      alert("Inserisci un ID valido");
-      return;
-    }
-
-    const json = {
-      id,
-      title: "Nuova Vetrina",
-      description: "Descrizione vetrina",
-      voice: {
-        lang: "it-IT",
-        text: "Benvenuto nella nuova vetrina."
-      },
-      tags: ["vetrina"],
-      media: [],
-      files: [],
-      pinsData: {
-        pinSize: 28,
-        byImage: {}
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    // download JSON base
-    const blob = new Blob([JSON.stringify(json,null,2)], {type:"application/json"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `${id}.json`;
-    a.click();
-
-    // apri pagina link vetrina
-    const link = `link.html?id=${encodeURIComponent(id)}`;
-    window.open(link, "_blank");
-
-    alert(
-      "JSON base creato.\n\n" +
-      "1) Carica il file in data/" + id + ".json\n" +
-      "2) Aggiungi immagini in media/\n" +
-      "3) Apri il link e lavora sulla vetrina"
-    );
-
-    newId.value = "";
+enterBtn.addEventListener("click", ()=>{
+  const okWords = (seq[0]==="SerCucTech" && seq[1]==="qualsiasi");
+  if(!okWords){
+    alert("Prima tocca: SerCucTech → qualsiasi");
+    return;
   }
+  if(String(pinInput.value||"").trim() !== String(getPin()).trim()){
+    alert("PIN errato");
+    return;
+  }
+  setUnlock24h();
+  gate.style.display = "none";
+  app.hidden = false;
+  boot();
+});
 
-  function renderList(){
-    list.innerHTML = "";
-    vetrine.forEach(id=>{
-      const el = document.createElement("div");
-      el.className = "item";
-      el.innerHTML = `
-        <div>
-          <strong>${id}</strong><br>
-          <span class="small">data/${id}.json</span>
-        </div>
-        <div class="itemBtns">
-          <a class="linkBtn" href="link.html?id=${id}">Link</a>
-          <a class="linkBtn" href="vetrina.html?id=${id}">Vetrina</a>
-        </div>
-      `;
-      list.appendChild(el);
+window.addEventListener("load", ()=>{
+  initPin();
+  if(isUnlocked()){
+    gate.style.display = "none";
+    app.hidden = false;
+    boot();
+  }
+});
+
+/* =========================================================
+   DATI VETRINE: data/vetrine.json
+   Formato:
+   { "vetrine":[ {"id":"renzo11","title":"..."} , ... ] }
+========================================================= */
+const statePill = document.getElementById("statePill");
+const listEl = document.getElementById("list");
+const createMainBtn = document.getElementById("createMainBtn");
+const createCard = document.getElementById("createCard");
+const newId = document.getElementById("newId");
+const newTitle = document.getElementById("newTitle");
+const newSpeech = document.getElementById("newSpeech");
+const createBtn = document.getElementById("createBtn");
+
+const cloneFrom = document.getElementById("cloneFrom");
+const cloneTo = document.getElementById("cloneTo");
+const cloneBtn = document.getElementById("cloneBtn");
+
+const backupJsonBtn = document.getElementById("backupJsonBtn");
+const backupFullBtn = document.getElementById("backupFullBtn");
+
+let vetrineIndex = []; // [{id,title}]
+let vetrineDataCache = new Map(); // id -> json
+
+function escapeHtml(s){
+  return String(s||"").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[c]));
+}
+
+async function fetchJson(url){
+  const res = await fetch(url, {cache:"no-store"});
+  if(!res.ok) throw new Error("HTTP " + res.status);
+  return await res.json();
+}
+
+function downloadJson(filename, obj){
+  const blob = new Blob([JSON.stringify(obj,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{
+    URL.revokeObjectURL(a.href);
+    a.remove();
+  }, 1200);
+}
+
+function openLinkPage(id){
+  window.open(`link.html?id=${encodeURIComponent(id)}`, "_blank");
+}
+
+function buildBaseVetrina(id, title, speech){
+  const now = new Date().toISOString();
+  const text = (speech||"").trim();
+  return {
+    id,
+    title: (title||id).trim() || id,
+    description: text || "Descrizione vetrina",
+    voice: { lang:"it-IT", text: text || "Benvenuto nella vetrina." },
+    tags: ["vetrina"],
+    media: [],
+    files: [],
+    pinsData: { pinSize: 28, byImage: {} },
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
+function rewriteIdInJson(obj, fromId, toId){
+  const cloned = JSON.parse(JSON.stringify(obj));
+
+  cloned.id = toId;
+  cloned.title = cloned.title || toId;
+
+  // description/voice restano uguali
+
+  // media: sostituisce "media/fromId-" -> "media/toId-"
+  if(Array.isArray(cloned.media)){
+    cloned.media = cloned.media.map(m=>{
+      if(!m || !m.url) return m;
+      const mm = {...m};
+      mm.url = String(mm.url).replaceAll(`media/${fromId}-`, `media/${toId}-`);
+      return mm;
     });
   }
 
-  renderList();
-</script>
+  // files: non cambia
 
+  // pinsData: rinomina le chiavi byImage
+  if(cloned.pinsData && cloned.pinsData.byImage){
+    const by = cloned.pinsData.byImage;
+    const by2 = {};
+    for(const k of Object.keys(by)){
+      const nk = String(k).replaceAll(`media/${fromId}-`, `media/${toId}-`);
+      by2[nk] = by[k];
+    }
+    cloned.pinsData.byImage = by2;
+  }
+
+  cloned.updatedAt = new Date().toISOString();
+  return cloned;
+}
+
+function renderList(){
+  listEl.innerHTML = "";
+  vetrineIndex.forEach(v=>{
+    const id = v.id;
+    const title = v.title || id;
+
+    const el = document.createElement("div");
+    el.className = "item";
+    el.innerHTML = `
+      <div>
+        <strong>${escapeHtml(title)}</strong><br>
+        <span class="small">id: <b>${escapeHtml(id)}</b> • data/${escapeHtml(id)}.json</span>
+      </div>
+      <div class="itemBtns">
+        <a class="linkBtn" href="link.html?id=${encodeURIComponent(id)}">Link</a>
+        <a class="linkBtn" href="vetrina.html?id=${encodeURIComponent(id)}">Vetrina</a>
+      </div>
+    `;
+    listEl.appendChild(el);
+  });
+}
+
+function fillCloneSelect(){
+  cloneFrom.innerHTML = "";
+  vetrineIndex.forEach(v=>{
+    const opt = document.createElement("option");
+    opt.value = v.id;
+    opt.textContent = `${v.id} — ${v.title || v.id}`;
+    cloneFrom.appendChild(opt);
+  });
+}
+
+/* =========================================================
+   CREATE / CLONE UI
+========================================================= */
+createMainBtn.addEventListener("click", ()=>{
+  createCard.hidden = !createCard.hidden;
+  if(!createCard.hidden) newId.focus();
+});
+
+createBtn.addEventListener("click", ()=>{
+  const id = (newId.value||"").trim();
+  if(!id) return alert("Inserisci un ID");
+  const title = (newTitle.value||"").trim() || id;
+  const speech = (newSpeech.value||"").trim();
+
+  const json = buildBaseVetrina(id, title, speech);
+  downloadJson(`${id}.json`, json);
+  openLinkPage(id);
+
+  alert(
+    "✅ Creato file JSON.\n\n" +
+    "Ora:\n" +
+    "1) Carica su GitHub: data/" + id + ".json\n" +
+    "2) Metti immagini in media/\n" +
+    "3) Condividi: link.html?id=" + id
+  );
+
+  newId.value=""; newTitle.value=""; newSpeech.value="";
+});
+
+cloneBtn.addEventListener("click", async ()=>{
+  const fromId = cloneFrom.value;
+  const toId = (cloneTo.value||"").trim();
+  if(!fromId) return alert("Seleziona vetrina sorgente");
+  if(!toId) return alert("Inserisci nuovo ID");
+
+  try{
+    statePill.textContent = "Clonazione…";
+    const src = await getVetrinaJson(fromId);
+    const out = rewriteIdInJson(src, fromId, toId);
+    downloadJson(`${toId}.json`, out);
+    openLinkPage(toId);
+
+    alert(
+      "✅ Clonato.\n\n" +
+      "Ora:\n" +
+      "1) Carica su GitHub: data/" + toId + ".json\n" +
+      "2) Rinomina/Carica immagini: media/" + toId + "-XXX.jpg\n" +
+      "3) Condividi: link.html?id=" + toId
+    );
+  }catch(e){
+    alert("Errore clonazione: " + e.message);
+  }finally{
+    statePill.textContent = "Pronto";
+  }
+});
+
+/* =========================================================
+   BACKUP ZIP
+========================================================= */
+async function getVetrinaJson(id){
+  if(vetrineDataCache.has(id)) return vetrineDataCache.get(id);
+  const j = await fetchJson(`data/${encodeURIComponent(id)}.json`);
+  vetrineDataCache.set(id, j);
+  return j;
+}
+
+function downloadBlob(filename, blob){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{
+    URL.revokeObjectURL(a.href);
+    a.remove();
+  }, 2000);
+}
+
+async function backupZipJsonOnly(){
+  if(!window.JSZip) return alert("JSZip non caricato");
+  const zip = new JSZip();
+
+  for(const v of vetrineIndex){
+    const j = await getVetrinaJson(v.id);
+    zip.file(`data/${v.id}.json`, JSON.stringify(j, null, 2));
+  }
+
+  const blob = await zip.generateAsync({type:"blob"});
+  downloadBlob(`backup-json-${new Date().toISOString().slice(0,10)}.zip`, blob);
+}
+
+async function fetchAsBlob(url){
+  const res = await fetch(url, {cache:"no-store"});
+  if(!res.ok) throw new Error("HTTP " + res.status);
+  return await res.blob();
+}
+
+async function backupZipFull(){
+  if(!window.JSZip) return alert("JSZip non caricato");
+  const zip = new JSZip();
+
+  for(const v of vetrineIndex){
+    const j = await getVetrinaJson(v.id);
+    zip.file(`data/${v.id}.json`, JSON.stringify(j, null, 2));
+
+    // prova a scaricare media e files referenziati nel JSON
+    const media = Array.isArray(j.media) ? j.media : [];
+    for(const m of media){
+      if(!m?.url) continue;
+      try{
+        const b = await fetchAsBlob(m.url);
+        zip.file(m.url, b);
+      }catch(e){
+        // ignora file mancanti
+      }
+    }
+
+    const files = Array.isArray(j.files) ? j.files : [];
+    for(const f of files){
+      if(!f?.url) continue;
+      try{
+        const b = await fetchAsBlob(f.url);
+        zip.file(f.url, b);
+      }catch(e){
+        // ignora
+      }
+    }
+  }
+
+  const blob = await zip.generateAsync({type:"blob"});
+  downloadBlob(`backup-full-${new Date().toISOString().slice(0,10)}.zip`, blob);
+}
+
+backupJsonBtn.addEventListener("click", backupZipJsonOnly);
+backupFullBtn.addEventListener("click", backupZipFull);
+
+/* =========================================================
+   BOOT
+========================================================= */
+async function boot(){
+  try{
+    statePill.textContent = "Leggo data/vetrine.json…";
+    const idx = await fetchJson("data/vetrine.json");
+    vetrineIndex = Array.isArray(idx.vetrine) ? idx.vetrine : [];
+    if(!vetrineIndex.length){
+      statePill.textContent = "Nessuna vetrina nel file indice";
+    }else{
+      statePill.textContent = "Pronto";
+    }
+    renderList();
+    fillCloneSelect();
+  }catch(e){
+    statePill.textContent = "Errore indice";
+    alert(
+      "Non trovo data/vetrine.json.\n\n" +
+      "Crea il file data/vetrine.json (ti ho messo il codice sotto in chat).\n" +
+      "Errore: " + e.message
+    );
+  }
+}
+</script>
 </body>
 </html>
