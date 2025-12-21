@@ -1,18 +1,16 @@
-/* ===================== SERCUCTECH VETRINA APP.JS ===================== */
+/* ===================== SERCUCTECH VETRINA APP.JS (v3) ===================== */
 (() => {
   "use strict";
 
-  // ---------- Helpers ----------
   const $ = (id) => document.getElementById(id);
   const qs = new URLSearchParams(location.search);
   const VETRINA_ID = (qs.get("id") || "").trim() || "renzo11";
 
-  // URL base repo
   const BASE = location.origin + location.pathname.replace(/\/[^\/]*$/, "/");
   const LINK_PUBLIC = `${BASE}link.html?id=${encodeURIComponent(VETRINA_ID)}`;
   const DATA_URL = `data/${encodeURIComponent(VETRINA_ID)}.json`;
 
-  // ---------- UI refs ----------
+  // UI
   const pageTitle = $("pageTitle");
   const pageDesc  = $("pageDesc");
   const badgeId   = $("badgeId");
@@ -35,32 +33,29 @@
   const kioskBtn  = $("kioskBtn");
   const homeBtn   = $("homeBtn");
 
-  // WhatsApp buttons in vetrina.html
   const waPhotoRenzo = $("waPhotoRenzo");
   const waPhotoSergio= $("waPhotoSergio");
   const waVetrinaRenzo = $("waVetrinaRenzo");
   const waVetrinaSergio= $("waVetrinaSergio");
 
-  // Audio gate (optional)
   const audioGate = $("audioGate");
   const enableAudioBtn = $("enableAudioBtn");
   const skipAudioBtn = $("skipAudioBtn");
 
-  // ---------- State ----------
+  const shareBtn = $("shareBtn");
+
+  // State
   let data = null;
-  let media = []; // array of {type,url,label}
+  let media = [];
   let idx = 0;
   let isFull = false;
   let kiosk = false;
-
-  // Contacts: expects in JSON: contacts[], but you currently don't have it.
-  // We'll auto-detect phone numbers from voice.text for click-to-WhatsApp + click-to-call if contacts missing.
   let contacts = []; // {name, phone}
 
-  // ---------- Theme ----------
+  // Theme
   const THEME_KEY = "sercuctech_theme";
   function setTheme(mode){
-    document.documentElement.dataset.theme = mode; // if your css uses it
+    document.documentElement.dataset.theme = mode;
     localStorage.setItem(THEME_KEY, mode);
   }
   function toggleTheme(){
@@ -68,7 +63,16 @@
     setTheme(cur === "dark" ? "light" : "dark");
   }
 
-  // ---------- Kiosk ----------
+  // Fullscreen image (in-page)
+  function setFull(on){
+    isFull = !!on;
+    document.body.classList.toggle("imgFull", isFull);
+  }
+  function toggleFull(){
+    setFull(!isFull);
+  }
+
+  // Kiosk
   function setKiosk(on){
     kiosk = !!on;
     document.body.classList.toggle("kiosk", kiosk);
@@ -83,23 +87,36 @@
     }catch(e){}
   }
 
-  // ---------- Fullscreen image (toggle) ----------
-  function setFull(on){
-    isFull = !!on;
-    document.body.classList.toggle("imgFull", isFull);
-    heroImg?.classList.toggle("full", isFull);
-  }
-  function toggleFull(){
-    setFull(!isFull);
+  // -------- Speech helpers --------
+  function stopSpeak(){
+    try{ speechSynthesis.cancel(); }catch(e){}
   }
 
-  // ---------- Speech ----------
+  // Trasforma numeri telefono in "3 3 3 2 9 2 7 8 4 2"
+  function phoneDigitsSpaced(digits){
+    const s = String(digits||"").replace(/\D/g,"");
+    return s.split("").join(" ");
+  }
+
+  function normalizeForSpeech(text){
+    const raw = String(text || "");
+
+    // trova sequenze che sembrano telefoni (anche con spazi / +)
+    return raw.replace(/(\+?\d[\d\s]{7,}\d)/g, (m) => {
+      const digits = m.replace(/\D/g,"");
+      if(digits.length < 8 || digits.length > 15) return m;
+      // per farlo leggere bene: "numero 3 3 3 ..."
+      return ` numero ${phoneDigitsSpaced(digits)} `;
+    });
+  }
+
   function speak(text, lang){
     if(!text) return false;
     if(!("speechSynthesis" in window)) return false;
+
     try{
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
+      stopSpeak();
+      const u = new SpeechSynthesisUtterance(normalizeForSpeech(text));
       u.lang = lang || (navigator.language || "it-IT");
       u.rate = 1;
       u.pitch = 1;
@@ -110,48 +127,20 @@
       return false;
     }
   }
-  function stopSpeak(){
-    try{ speechSynthesis.cancel(); }catch(e){}
-  }
 
-  // ---------- Autoplay audio on open (best-effort) ----------
-  // Mobile often blocks autoplay. We'll try, else show audioGate if exists.
   function tryAutoVoice(){
     const t = data?.voice?.text || "";
     const lang = data?.voice?.lang || "it-IT";
     if(!t) return;
 
     const ok = speak(t, lang);
-    if(!ok && audioGate){
-      audioGate.hidden = false;
-    }
+    if(!ok && audioGate) audioGate.hidden = false;
   }
 
-  // ---------- Contacts: from JSON OR detect phones from voice.text ----------
-  function extractPhonesFromText(text){
-    // catches italian mobile forms like 3332927842 or 320 885 2858
-    const raw = String(text||"");
-    const matches = raw.match(/(\+?\d[\d\s]{7,}\d)/g) || [];
-    const phones = [];
-    for(const m of matches){
-      const digits = m.replace(/\D/g,"");
-      if(digits.length >= 8 && digits.length <= 15) phones.push(digits);
-    }
-    // unique
-    return [...new Set(phones)];
-  }
-
-  function formatPhonePretty(digits){
-    const s = String(digits||"").replace(/\D/g,"");
-    // simple grouping for IT 10 digits
-    if(s.length === 10) return s.replace(/(\d{3})(\d{3})(\d{4})/,"$1 $2 $3");
-    return s;
-  }
-
+  // -------- WhatsApp helpers --------
   function waUrl(phone, msg){
     const digits = String(phone||"").replace(/\D/g,"");
-    if(digits) return `https://wa.me/${digits}?text=${encodeURIComponent(msg||"")}`;
-    return `https://wa.me/?text=${encodeURIComponent(msg||"")}`;
+    return `https://wa.me/${digits}?text=${encodeURIComponent(msg||"")}`;
   }
 
   function msgForVetrina(name){
@@ -178,27 +167,58 @@ Vorrei informazioni per il numero ${n}.
 ✅ Se disponibile, mandatemi prezzo e disponibilità.`;
   }
 
+  // -------- Contacts --------
+  function extractPhonesFromText(text){
+    const raw = String(text||"");
+    // prende sequenze numeriche anche se ci sono punti/virgole vicino
+    const matches = raw.match(/(\+?\d[\d\s]{7,}\d)/g) || [];
+    const phones = [];
+    for(const m of matches){
+      const digits = m.replace(/\D/g,"");
+      if(digits.length >= 8 && digits.length <= 15) phones.push(digits);
+    }
+    return [...new Set(phones)];
+  }
+
+  function formatPhonePretty(digits){
+    const s = String(digits||"").replace(/\D/g,"");
+    if(s.length === 10) return s.replace(/(\d{3})(\d{3})(\d{4})/,"$1 $2 $3");
+    return s;
+  }
+
+  function buildContacts(){
+    // 1) se JSON ha contacts -> usa quelli
+    if(Array.isArray(data?.contacts) && data.contacts.length){
+      return data.contacts
+        .filter(c => c && c.phone)
+        .map(c => ({ name: c.name || "Contatto", phone: String(c.phone) }));
+    }
+
+    // 2) fallback: estrai da voice.text e metti nomi di default
+    const phones = extractPhonesFromText(data?.voice?.text || "");
+    const out = [];
+    if(phones[0]) out.push({name:"Renzo", phone: phones[0]});
+    if(phones[1]) out.push({name:"Sergio", phone: phones[1]});
+
+    // 3) fallback estremo (solo per renzo11)
+    if(!out.length && VETRINA_ID === "renzo11"){
+      out.push({name:"Renzo", phone:"3332927842"});
+      out.push({name:"Sergio", phone:"3208852858"});
+    }
+
+    return out;
+  }
+
   function renderContacts(){
     if(!contactsRow) return;
     contactsRow.innerHTML = "";
 
-    // If JSON has contacts -> use them
-    if(Array.isArray(data?.contacts) && data.contacts.length){
-      contacts = data.contacts
-        .filter(c => c && c.phone)
-        .map(c => ({ name: c.name || "Contatto", phone: String(c.phone) }));
-    } else {
-      // fallback from voice text
-      const phones = extractPhonesFromText(data?.voice?.text || "");
-      // assign default names if possible
-      contacts = phones.slice(0,2).map((p,i)=>({
-        name: i===0 ? "Renzo" : (i===1 ? "Sergio" : "Contatto"),
-        phone: p
-      }));
-    }
+    contacts = buildContacts();
+    const c1 = contacts[0] || {name:"Renzo", phone:"3332927842"};
+    const c2 = contacts[1] || {name:"Sergio", phone:"3208852858"};
 
-    // Create clickable pills (WhatsApp + Call)
-    contacts.slice(0,2).forEach((c)=>{
+    // contatti cliccabili (WhatsApp + Call)
+    [c1,c2].forEach((c)=>{
       const wrap = document.createElement("div");
       wrap.style.display = "flex";
       wrap.style.gap = "10px";
@@ -207,60 +227,41 @@ Vorrei informazioni per il numero ${n}.
       const wa = document.createElement("button");
       wa.className = "contactBtn wa";
       wa.textContent = `WhatsApp ${c.name} (${formatPhonePretty(c.phone)})`;
-      wa.onclick = () => window.open(waUrl(c.phone, msgForVetrina(c.name)), "_blank");
+      wa.onclick = (ev) => { ev.stopPropagation(); window.open(waUrl(c.phone, msgForVetrina(c.name)), "_blank"); };
 
       const call = document.createElement("a");
       call.className = "contactBtn";
       call.href = "tel:" + String(c.phone).replace(/\D/g,"");
       call.textContent = `Chiama ${c.name}`;
+      call.onclick = (ev) => ev.stopPropagation();
 
       wrap.appendChild(wa);
       wrap.appendChild(call);
-
       contactsRow.appendChild(wrap);
     });
 
-    // Wire the 4 fixed WA buttons (if exist)
-    const c1 = contacts[0] || null;
-    const c2 = contacts[1] || null;
-
-    function setBtn(btn, c, label){
+    // 4 bottoni fissi (vetrina + foto)
+    function wire(btn, label, phone, msgFn){
       if(!btn) return;
-      if(!c){
-        btn.textContent = label + " (non configurato)";
-        btn.classList.add("gray");
-        btn.disabled = true;
-        return;
-      }
-      btn.textContent = label.replace("{NAME}", c.name);
-      btn.classList.remove("gray");
+      btn.textContent = label;
       btn.disabled = false;
+      btn.classList.remove("gray");
+      btn.onclick = () => window.open(waUrl(phone, msgFn()), "_blank");
     }
 
-    setBtn(waVetrinaRenzo, c1, "🟢 WhatsApp {NAME} (Vetrina)");
-    setBtn(waVetrinaSergio, c2, "🟢 WhatsApp {NAME} (Vetrina)");
-    setBtn(waPhotoRenzo, c1, "🟢 WhatsApp {NAME} (Foto)");
-    setBtn(waPhotoSergio, c2, "🟢 WhatsApp {NAME} (Foto)");
+    wire(waVetrinaRenzo, "🟢 WhatsApp Renzo (Vetrina)", c1.phone, () => msgForVetrina("Renzo"));
+    wire(waVetrinaSergio,"🟢 WhatsApp Sergio (Vetrina)", c2.phone, () => msgForVetrina("Sergio"));
 
-    if(waVetrinaRenzo && c1) waVetrinaRenzo.onclick = ()=>window.open(waUrl(c1.phone, msgForVetrina(c1.name)), "_blank");
-    if(waVetrinaSergio && c2) waVetrinaSergio.onclick = ()=>window.open(waUrl(c2.phone, msgForVetrina(c2.name)), "_blank");
-    if(waPhotoRenzo && c1) waPhotoRenzo.onclick = ()=>window.open(waUrl(c1.phone, msgForFoto(c1.name)), "_blank");
-    if(waPhotoSergio && c2) waPhotoSergio.onclick = ()=>window.open(waUrl(c2.phone, msgForFoto(c2.name)), "_blank");
+    wire(waPhotoRenzo, "🟢 WhatsApp Renzo (Foto)", c1.phone, () => msgForFoto("Renzo"));
+    wire(waPhotoSergio,"🟢 WhatsApp Sergio (Foto)", c2.phone, () => msgForFoto("Sergio"));
   }
 
-  // ---------- Media slider ----------
+  // -------- Media slider --------
   function setImage(i){
     if(!media.length) return;
     idx = (i + media.length) % media.length;
 
     const item = media[idx];
-    if(!item) return;
-
-    // for now: images only (your JSON uses type:image)
-    if(item.type !== "image"){
-      // if video later: could extend
-    }
-
     const url = item.url || item.src || "";
     heroImg.src = url;
     heroImg.alt = item.label || `Foto ${idx+1}`;
@@ -270,7 +271,6 @@ Vorrei informazioni per il numero ${n}.
     if(imgCounter) imgCounter.textContent = `${cur}/${tot}`;
     if(imgBadge) imgBadge.textContent = cur;
 
-    // thumbs highlight
     if(thumbRow){
       [...thumbRow.querySelectorAll(".thumb")].forEach((el, n)=>{
         el.classList.toggle("active", n === idx);
@@ -296,7 +296,7 @@ Vorrei informazioni per il numero ${n}.
     prevBtn?.addEventListener("click", ()=>setImage(idx-1));
     nextBtn?.addEventListener("click", ()=>setImage(idx+1));
 
-    // swipe on hero image
+    // swipe
     let x0 = null;
     heroImg?.addEventListener("touchstart", (e)=>{
       x0 = e.touches?.[0]?.clientX ?? null;
@@ -313,11 +313,11 @@ Vorrei informazioni per il numero ${n}.
       x0 = null;
     }, {passive:true});
 
-    // tap image toggles full
+    // tap immagine = toggle full
     heroImg?.addEventListener("click", ()=>toggleFull());
   }
 
-  // ---------- Load JSON ----------
+  // -------- Load JSON --------
   async function load(){
     if(badgeId) badgeId.textContent = "id: " + VETRINA_ID;
 
@@ -326,11 +326,11 @@ Vorrei informazioni per il numero ${n}.
       if(!res.ok) throw new Error("HTTP " + res.status);
       data = await res.json();
 
-      // Title/desc
+      // titolo/desc (più evidenti via CSS)
       if(pageTitle) pageTitle.textContent = data.title || VETRINA_ID;
       if(pageDesc) pageDesc.textContent  = data.description || "";
 
-      // Voice panel text visible always if exists
+      // voice panel: testo sempre visibile e cliccabile
       if(data.voice?.text){
         if(voiceTextEl) voiceTextEl.textContent = data.voice.text;
         if(voicePanel) voicePanel.hidden = false;
@@ -338,25 +338,24 @@ Vorrei informazioni per il numero ${n}.
         if(voicePanel) voicePanel.hidden = true;
       }
 
-      // Media
+      // media
       media = Array.isArray(data.media) ? data.media.filter(m=>m && (m.url||m.src)) : [];
-      if(!media.length){
-        // fallback: show nothing, but don't crash
+      if(media.length){
+        renderThumbs();
+        setImage(0);
+      }else{
         if(heroImg){ heroImg.removeAttribute("src"); heroImg.alt = "Nessuna immagine"; }
         if(imgCounter) imgCounter.textContent = "00/00";
         if(imgBadge) imgBadge.textContent = "--";
-      }else{
-        renderThumbs();
-        setImage(0);
       }
 
-      // Contacts (or fallback from voice text)
+      // contatti + bottoni WA
       renderContacts();
 
-      // Events
+      // nav
       bindNav();
 
-      // Buttons in bottom bar
+      // bottom bar
       voiceBtn?.addEventListener("click", ()=>{
         const t = data?.voice?.text || "";
         const lang = data?.voice?.lang || "it-IT";
@@ -369,17 +368,38 @@ Vorrei informazioni per il numero ${n}.
       kioskBtn?.addEventListener("click", ()=>setKiosk(!kiosk));
       homeBtn?.addEventListener("click", ()=>location.href = LINK_PUBLIC);
 
-      // Audio gate handlers
+      // CLICK OVUNQUE sul pannello testo = parte audio (senza bloccare click ai bottoni)
+      const playVoiceFromPanel = () => voiceBtn?.click();
+      voicePanel?.addEventListener("click", (e)=>{
+        // se clicchi su un bottone/link dentro, non far partire l'audio
+        const t = e.target;
+        if(t && (t.closest("button") || t.closest("a"))) return;
+        playVoiceFromPanel();
+      });
+      voicePanel?.addEventListener("keydown", (e)=>{
+        if(e.key === "Enter" || e.key === " "){
+          e.preventDefault();
+          playVoiceFromPanel();
+        }
+      });
+
+      // audio gate
       enableAudioBtn?.addEventListener("click", ()=>{
         audioGate.hidden = true;
         tryAutoVoice();
       });
       skipAudioBtn?.addEventListener("click", ()=>{ audioGate.hidden = true; });
 
-      // Apply theme
+      // share WhatsApp (link vetrina)
+      shareBtn?.addEventListener("click", ()=>{
+        const msg = `Guarda questa vetrina:\n${LINK_PUBLIC}\n\nDimmi il numero dell’oggetto che ti interessa.`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+      });
+
+      // theme init
       setTheme(localStorage.getItem(THEME_KEY) || "dark");
 
-      // Autoplay voice on open (first try)
+      // autoplay voice on open (best effort)
       tryAutoVoice();
 
     }catch(e){
