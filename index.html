@@ -2,557 +2,722 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>SerCucTech — Indice Link</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>SerCucTech • Indice Link</title>
   <style>
     :root{
-      --bg:#0b1220;
-      --card:rgba(255,255,255,.06);
-      --line:rgba(255,255,255,.12);
-      --txt:#eaf0ff;
-      --muted:rgba(234,240,255,.72);
-      --btn:rgba(255,255,255,.10);
-      --green:#23c55e;
-      --amber:#ffcc66;
-      --shadow:0 10px 30px rgba(0,0,0,.35);
+      --bg:#070A12;
+      --card:#0D1222;
+      --card2:#0B1020;
+      --text:#EAF0FF;
+      --muted:#9AA7C0;
+      --line:rgba(255,255,255,.08);
+      --accent:#36D399;
+      --accent2:#60A5FA;
+      --danger:#F87171;
+      --warn:#FBBF24;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --r:18px;
+      --pad:14px;
     }
-    *{box-sizing:border-box}
+    *{ box-sizing:border-box; }
     body{
       margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:
-        radial-gradient(900px 600px at 20% -20%, rgba(130,170,255,.20), transparent 60%),
-        radial-gradient(900px 600px at 90% 10%, rgba(120,255,210,.10), transparent 60%),
-        var(--bg);
-      color:var(--txt);
-      padding:16px;
-      padding-bottom:190px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1100px 600px at 30% -10%, rgba(96,165,250,.18), transparent 55%),
+                  radial-gradient(900px 500px at 100% 0%, rgba(54,211,153,.16), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      -webkit-tap-highlight-color: transparent;
     }
-    .wrap{max-width:980px;margin:0 auto;display:grid;gap:12px}
+    a{ color:inherit; text-decoration:none; }
+    .wrap{ max-width:1100px; margin:0 auto; padding:18px 14px 110px; }
+
+    /* HEADER */
     .top{
-      border:1px solid var(--line);
-      background:var(--card);
-      border-radius:18px;
-      padding:14px;
-      box-shadow:var(--shadow);
+      position: sticky;
+      top:0;
+      z-index:20;
+      backdrop-filter: blur(10px);
+      background: linear-gradient(to bottom, rgba(7,10,18,.90), rgba(7,10,18,.55));
+      border-bottom:1px solid var(--line);
     }
-    h1{margin:0;font-size:20px;font-weight:1000;text-align:center}
-    .sub{margin:8px 0 0;color:var(--muted);text-align:center;font-weight:900;line-height:1.35}
-
-    .grid{display:grid;gap:12px}
-    @media(min-width:900px){ .grid{grid-template-columns:1fr 1fr;} }
-
-    .card{
-      border:1px solid var(--line);
-      background:var(--card);
-      border-radius:18px;
-      padding:14px;
-      box-shadow:var(--shadow);
-    }
-    .titleRow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-    .title{font-weight:1000}
+    .topInner{ max-width:1100px; margin:0 auto; padding:14px; display:flex; gap:12px; align-items:center; }
+    .dot{ width:12px; height:12px; border-radius:999px; background:var(--accent); box-shadow:0 0 0 6px rgba(54,211,153,.14); }
+    .titles{ flex:1; min-width:0; }
+    .h1{ margin:0; font-size:18px; font-weight:900; letter-spacing:.2px; }
+    .sub{ margin:2px 0 0; color:var(--muted); font-size:12px; }
     .pill{
-      display:inline-block;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.06);
-      color:var(--muted);
-      font-weight:900;
-      font-size:12px;
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border:1px solid var(--line); border-radius:999px;
+      background: rgba(255,255,255,.03);
+      font-size:12px; color:var(--muted);
+      white-space:nowrap;
     }
 
-    .row{display:grid;gap:10px}
-    .item{
-      display:grid;
-      grid-template-columns:1fr auto auto;
-      gap:8px;
-      align-items:center;
-      padding:12px;
-      border-radius:16px;
+    /* SEARCH */
+    .searchCard{
+      margin-top:14px;
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
       border:1px solid var(--line);
-      background:rgba(0,0,0,.18);
+      border-radius: var(--r);
+      padding: var(--pad);
+      box-shadow: var(--shadow);
     }
-    .item a{
-      color:var(--txt);
-      text-decoration:none;
-      font-weight:1000;
-      word-break:break-word;
+    .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .input{
+      flex:1;
+      min-width:220px;
+      background: rgba(0,0,0,.25);
+      border:1px solid var(--line);
+      border-radius: 14px;
+      padding:12px 12px;
+      color:var(--text);
+      outline:none;
+      font-size:14px;
     }
-    .desc{
-      grid-column:1 / -1;
-      color:var(--muted);
-      font-size:12px;
-      font-weight:800;
-      line-height:1.35;
-      margin-top:2px;
-    }
-
     .btn{
       border:1px solid var(--line);
-      background:var(--btn);
-      color:var(--txt);
-      border-radius:14px;
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-weight: 800;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{ background: rgba(54,211,153,.16); border-color: rgba(54,211,153,.35); }
+    .btn.blue{ background: rgba(96,165,250,.16); border-color: rgba(96,165,250,.35); }
+    .btn.danger{ background: rgba(248,113,113,.14); border-color: rgba(248,113,113,.35); }
+    .btn.small{ padding:8px 10px; border-radius: 12px; font-size:12px; font-weight:900; }
+
+    .hint{ margin:10px 0 0; color:var(--muted); font-size:12px; line-height:1.35; }
+    .result{
+      margin-top:12px;
+      border-top:1px dashed var(--line);
+      padding-top:12px;
+      display:none;
+    }
+    .result .big{
+      font-weight:900;
+      font-size:14px;
+    }
+    .result .mini{ color:var(--muted); font-size:12px; margin-top:6px; }
+
+    /* LIST */
+    .grid{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:12px;
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius: var(--r);
+      padding: var(--pad);
+      box-shadow: var(--shadow);
+    }
+    .card h2{ margin:0 0 10px; font-size:14px; font-weight:1000; letter-spacing:.2px; }
+
+    .item{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px;
+      border-radius: 16px;
+      border:1px solid transparent;
+      background: rgba(0,0,0,.18);
+      margin-bottom:10px;
+    }
+    .item:last-child{ margin-bottom:0; }
+    .item.active{
+      border-color: rgba(54,211,153,.55);
+      box-shadow: 0 0 0 4px rgba(54,211,153,.12);
+      background: rgba(54,211,153,.08);
+    }
+    .num{
+      width:46px; height:46px; border-radius: 16px;
+      display:flex; align-items:center; justify-content:center;
+      font-weight: 1000;
+      letter-spacing:.5px;
+      background: rgba(96,165,250,.14);
+      border:1px solid rgba(96,165,250,.30);
+      flex:0 0 auto;
+    }
+    .meta{ flex:1; min-width:0; }
+    .title{ font-weight: 1000; font-size:14px; margin:0; }
+    .desc{ margin:3px 0 0; color:var(--muted); font-size:12px; line-height:1.25; }
+    .actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    .linkBtn{
+      display:inline-flex; align-items:center; gap:8px;
       padding:10px 12px;
-      font-weight:1000;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      font-weight: 1000;
+      font-size: 12px;
       cursor:pointer;
       user-select:none;
       white-space:nowrap;
     }
-    .btn:active{transform:scale(.99)}
-    .btn.green{background:rgba(35,197,94,.18);border-color:rgba(35,197,94,.35)}
-    .btn.amber{background:rgba(255,204,102,.18);border-color:rgba(255,204,102,.35)}
-    .btnSolid{
-      border:none;
-      background:var(--green);
-      color:#06110a;
-      border-radius:16px;
-      padding:12px 14px;
-      font-weight:1000;
-      cursor:pointer;
-    }
-    .btnSolid:active{transform:scale(.99)}
-    .btnWide{width:100%}
+    .linkBtn.primary{ background: rgba(54,211,153,.16); border-color: rgba(54,211,153,.35); }
+    .linkBtn.blue{ background: rgba(96,165,250,.16); border-color: rgba(96,165,250,.35); }
+    .linkBtn:active{ transform: translateY(1px); }
 
-    input{
-      width:100%;
-      padding:12px 12px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:rgba(0,0,0,.22);
-      color:var(--txt);
-      font-weight:900;
-      outline:none;
-    }
-
-    .bar{
-      position:fixed;
+    /* AUDIO CONTROL DOCK */
+    .dock{
+      position: fixed;
       left:0; right:0; bottom:0;
-      padding:10px 12px;
-      background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.55));
-      backdrop-filter:blur(10px);
+      z-index:30;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: linear-gradient(to top, rgba(7,10,18,.92), rgba(7,10,18,.60));
       border-top:1px solid var(--line);
-      display:grid;
-      gap:10px;
-      justify-items:center;
-      z-index:999;
+      backdrop-filter: blur(10px);
     }
-    .barInner{
-      width:min(980px,100%);
-      display:grid;
-      grid-template-columns:1fr 1fr 1fr;
-      gap:10px;
+    .dockInner{
+      max-width:1100px; margin:0 auto;
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
     }
-    @media(max-width:520px){
-      .barInner{grid-template-columns:1fr}
-    }
-
-    .warn{
-      color:rgba(255,255,255,.86);
-      background:rgba(255,204,102,.12);
-      border:1px solid rgba(255,204,102,.25);
-      padding:10px;
-      border-radius:14px;
-      font-weight:900;
-      font-size:12px;
-      line-height:1.35;
-    }
-
-    .checklist{
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:16px;
-      padding:12px;
-      background:rgba(0,0,0,.18);
-      display:grid;
-      gap:10px;
-      margin-top:10px;
-    }
-    .steps{
-      margin:0;
-      padding-left:18px;
-      color:rgba(255,255,255,.88);
-      font-weight:900;
-      line-height:1.4;
-      font-size:13px;
-    }
-    .steps li{margin:6px 0}
-    .steps b{color:#fff}
-    .steps code{
-      font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size:12px;
-      color:rgba(234,240,255,.9);
-    }
-
-    .guideTitle{
-      font-weight:1000;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    .mini{
-      font-size:12px;
+    .dockLabel{
       color:var(--muted);
+      font-size:12px;
       font-weight:900;
-      line-height:1.35;
+      display:flex; align-items:center; gap:8px;
     }
+    .speed{
+      display:flex; gap:8px; align-items:center; flex:1;
+      min-width: 220px;
+    }
+    input[type="range"]{ width:100%; }
 
-    .actions2{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
+    /* POPUP */
+    .popup{
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      top: 72px;
+      z-index: 40;
+      display:none;
+      max-width: 1100px;
+      margin: 0 auto;
     }
-    @media(max-width:520px){ .actions2{grid-template-columns:1fr;} }
+    .popupCard{
+      background: rgba(13,18,34,.92);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      padding: 12px 12px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .popupTop{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      margin-bottom:6px;
+    }
+    .popupTitle{ font-weight:1000; font-size:13px; }
+    .popupText{ color:var(--text); font-size:13px; line-height:1.35; white-space:pre-wrap; }
+    .x{ border:none; background:transparent; color:var(--muted); font-weight:1000; font-size:16px; cursor:pointer; }
 
-    .waBtn{
-      border:none;
-      background:#25D366;
-      color:#06210f;
-      border-radius:14px;
-      padding:10px 12px;
-      font-weight:1000;
-      cursor:pointer;
-      white-space:nowrap;
-    }
-    .waBtn:active{transform:scale(.99)}
+    .tiny{ font-size:11px; color:var(--muted); margin-top:6px; }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="top">
-      <h1>SerCucTech — Indice Link</h1>
-      <div class="sub">
-        Tocca un link per aprirlo. Tocca 🔊 per sentire la spiegazione (livello 10 anni).
+  <header class="top">
+    <div class="topInner">
+      <div class="dot" aria-hidden="true"></div>
+      <div class="titles">
+        <h1 class="h1">SerCucTech • Indice Link (con guida vocale)</h1>
+        <p class="sub">Tutti i tuoi strumenti in un posto: tocchi, ascolti, e apri.</p>
       </div>
-
-      <div class="checklist">
-        <div class="guideTitle">
-          <div>✅ Checklist veloce (1–2–3–4)</div>
-          <span class="pill" id="guideState">pronto</span>
-        </div>
-
-        <ol class="steps" id="stepsText">
-          <li><b>Crea/Duplica</b> in Admin → scarichi <code>ID.json</code>.</li>
-          <li>GitHub → <b>data</b> → incolla in <code>data/ID.json</code> → <b>Commit</b>.</li>
-          <li>GitHub → <b>media</b> → carica file (<code>ID-001.jpg</code>, <code>ID-002.jpg</code>...).</li>
-          <li>Aggiorna <code>data/vetrine.json</code> → Commit → condividi: <code>link.html?id=ID</code>.</li>
-        </ol>
-
-        <div class="actions2">
-          <button class="btnSolid" id="readChecklist">🔊 Leggi checklist</button>
-          <button class="btn" id="readFullGuide">🎧 Guida completa</button>
-        </div>
-
-        <div class="actions2">
-          <button class="btn" id="pauseGuide">⏸️ Pausa</button>
-          <button class="btn" id="resumeGuide">▶️ Riprendi</button>
-        </div>
-
-        <div class="warn" id="audioWarn" style="display:none">
-          ⚠️ Su Android/Chrome l’audio può partire solo dopo un tuo tocco.
-          Se non senti la voce, tocca di nuovo un pulsante 🔊.
-        </div>
-      </div>
+      <div class="pill" id="basePill">Base: …</div>
     </div>
+  </header>
+
+  <div class="popup" id="popup">
+    <div class="popupCard">
+      <div class="popupTop">
+        <div class="popupTitle" id="popupTitle">Guida</div>
+        <button class="x" id="popupClose" aria-label="Chiudi">✕</button>
+      </div>
+      <div class="popupText" id="popupText"></div>
+      <div class="tiny" id="popupTiny"></div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section class="searchCard">
+      <div class="row">
+        <input id="q" class="input"
+          placeholder='Scrivi cosa devi fare… es: "devo numerare gli oggetti della foto id renzo11"'
+          autocomplete="off" />
+        <button class="btn primary" id="searchBtn">Cerca</button>
+        <button class="btn" id="clearBtn">Pulisci</button>
+      </div>
+      <div class="hint">
+        Suggerimenti rapidi: <b>numerare oggetti</b>, <b>vetrina renzo11</b>, <b>admin</b>, <b>rinominare foto</b>, <b>guida</b>, <b>checklist</b>, <b>pubblica</b>.
+      </div>
+      <div class="result" id="resultBox">
+        <div class="big" id="resultBig"></div>
+        <div class="mini" id="resultMini"></div>
+        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn blue" id="resultSpeakBtn">🎧 Spiega</button>
+          <button class="btn primary" id="resultOpenBtn">🔗 Apri link consigliato</button>
+        </div>
+      </div>
+    </section>
 
     <div class="grid">
+      <section class="card">
+        <h2>📌 Link principali</h2>
+        <div id="list"></div>
+      </section>
 
-      <div class="card">
-        <div class="titleRow">
-          <div class="title">🔧 Pagine principali</div>
-          <span class="pill" id="statusPill">carico…</span>
+      <section class="card">
+        <h2>🛍️ Vetrine pubbliche (da data/vetrine.json)</h2>
+        <div class="hint" style="margin:0 0 10px;">
+          Qui compaiono automaticamente le vetrine che aggiungi nel file <b>data/vetrine.json</b>.
         </div>
-        <div class="row" id="mainLinks"></div>
-      </div>
-
-      <div class="card">
-        <div class="titleRow">
-          <div class="title">🔍 Apri / Condividi una vetrina per ID</div>
-          <span class="pill">WhatsApp pronto</span>
-        </div>
-
-        <div class="row">
-          <input id="idBox" placeholder="Scrivi ID (es. renzo11)" />
-          <button class="btnSolid" id="openLinkBtn">Apri pagina link della vetrina</button>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <div class="item">
-            <a id="previewLink" href="link.html?id=renzo11">link.html?id=renzo11</a>
-            <button class="btn green" id="copyPreview">Copia</button>
-            <button class="btn amber" id="speakPreview">🔊</button>
-            <div class="desc" id="shareDesc">
-              Usa questi bottoni per condividere.
-            </div>
-          </div>
-        </div>
-
-        <div class="actions2" style="margin-top:10px">
-          <button class="btn green" id="copyWhatsAppMsg">📌 Copia messaggio WhatsApp</button>
-          <button class="waBtn" id="openWhatsApp">🟢 Apri WhatsApp (messaggio pronto)</button>
-        </div>
-
-        <div class="mini" style="margin-top:10px">
-          Nota: “Apri WhatsApp” apre la chat di scelta contatto con testo già pronto.
-        </div>
-      </div>
-
-    </div>
-
-    <div class="card">
-      <div class="titleRow">
-        <div class="title">🧾 Elenco vetrine (automatico da data/vetrine.json)</div>
-        <span class="pill" id="countPill">0</span>
-      </div>
-      <div class="row" id="vetrineList"></div>
+        <div id="vetrineList"></div>
+      </section>
     </div>
   </div>
 
-  <div class="bar">
-    <div class="barInner">
-      <button class="btnSolid" id="stopAudio">⏹️ Ferma voce</button>
-      <button class="btn" id="speakWhatToShare">🔊 Cosa condividere su WhatsApp?</button>
-      <button class="btn" id="speakIfBroken">🔊 Se mi si rompe il telefono?</button>
+  <div class="dock">
+    <div class="dockInner">
+      <div class="dockLabel">Audio:</div>
+      <button class="btn small" id="muteBtn">Mute</button>
+      <button class="btn small" id="pauseBtn">Pause</button>
+      <button class="btn small" id="resumeBtn">Play</button>
+      <button class="btn small" id="repeatBtn">Repeat</button>
+
+      <div class="speed">
+        <div class="dockLabel" style="min-width:110px;">Velocità</div>
+        <input type="range" id="rate" min="0.7" max="1.3" step="0.05" value="1.00" />
+        <div class="pill" id="rateVal">1.00x</div>
+      </div>
     </div>
   </div>
 
-<script>
-(function(){
-"use strict";
+  <script>
+    // ===================== BASE URL =====================
+    const BASE = location.origin + location.pathname.replace(/\\/[^\\/]*$/, '/'); // folder corrente
+    document.getElementById("basePill").textContent = "Base: " + BASE;
 
-const statusPill = document.getElementById("statusPill");
-const countPill  = document.getElementById("countPill");
-const mainLinks  = document.getElementById("mainLinks");
-const vetrineList= document.getElementById("vetrineList");
-const audioWarn  = document.getElementById("audioWarn");
+    // ===================== AUDIO ENGINE =====================
+    const synth = window.speechSynthesis;
+    let lastUtter = null;
+    let lastText = "";
+    let muted = false;
+    let speechRate = 1.0;
 
-const idBox = document.getElementById("idBox");
-const openLinkBtn = document.getElementById("openLinkBtn");
-const previewLink = document.getElementById("previewLink");
-const copyPreview = document.getElementById("copyPreview");
-const speakPreview= document.getElementById("speakPreview");
-const shareDesc   = document.getElementById("shareDesc");
+    const popup = document.getElementById("popup");
+    const popupTitle = document.getElementById("popupTitle");
+    const popupText = document.getElementById("popupText");
+    const popupTiny = document.getElementById("popupTiny");
+    document.getElementById("popupClose").onclick = () => hidePopup();
 
-const copyWhatsAppMsgBtn = document.getElementById("copyWhatsAppMsg");
-const openWhatsAppBtn = document.getElementById("openWhatsApp");
-
-const stopAudioBtn= document.getElementById("stopAudio");
-const speakWhatToShareBtn = document.getElementById("speakWhatToShare");
-const speakIfBrokenBtn = document.getElementById("speakIfBroken");
-
-const guideState = document.getElementById("guideState");
-const readChecklistBtn = document.getElementById("readChecklist");
-const readFullGuideBtn = document.getElementById("readFullGuide");
-const pauseGuideBtn = document.getElementById("pauseGuide");
-const resumeGuideBtn = document.getElementById("resumeGuide");
-
-const base = location.origin + location.pathname.replace(/index\.html$/,"");
-
-function canSpeak(){ return "speechSynthesis" in window && "SpeechSynthesisUtterance" in window; }
-function stopSpeak(){ try{ speechSynthesis.cancel(); }catch(e){} }
-function pauseSpeak(){ try{ speechSynthesis.pause(); }catch(e){} }
-function resumeSpeak(){ try{ speechSynthesis.resume(); }catch(e){} }
-
-function speak(text){
-  if(!canSpeak()) return alert("Sintesi vocale non disponibile su questo browser.");
-  try{
-    stopSpeak();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = navigator.language || "it-IT";
-    u.rate = 1.03;
-    u.onstart = ()=>{ guideState.textContent = "parlo…"; };
-    u.onend = ()=>{ guideState.textContent = "finito"; };
-    u.onerror = ()=>{ guideState.textContent = "errore"; audioWarn.style.display=""; };
-    speechSynthesis.speak(u);
-  }catch(e){
-    guideState.textContent = "errore";
-    audioWarn.style.display = "";
-  }
-}
-
-stopAudioBtn.addEventListener("click", ()=>{ stopSpeak(); guideState.textContent="pronto"; });
-pauseGuideBtn.addEventListener("click", ()=>{ pauseSpeak(); guideState.textContent="in pausa"; });
-resumeGuideBtn.addEventListener("click", ()=>{ resumeSpeak(); guideState.textContent="parlo…"; });
-
-function mkItem({label, href, explain}){
-  const el = document.createElement("div");
-  el.className = "item";
-  el.innerHTML = `
-    <a href="${href}">${label}</a>
-    <button class="btn green copyBtn">Copia</button>
-    <button class="btn amber speakBtn">🔊</button>
-    <div class="desc"></div>
-  `;
-  el.querySelector(".desc").textContent = explain.short;
-  el.querySelector(".copyBtn").addEventListener("click", async ()=>{
-    try{
-      await navigator.clipboard.writeText(href.startsWith("http") ? href : (base + href));
-      alert("Copiato ✅");
-    }catch(e){
-      alert("Copia non riuscita. Tieni premuto sul link e copia manualmente.");
+    function showPopup(title, text, tiny=""){
+      popupTitle.textContent = title;
+      popupText.textContent = text;
+      popupTiny.textContent = tiny || "";
+      popup.style.display = "block";
     }
-  });
-  el.querySelector(".speakBtn").addEventListener("click", ()=> speak(explain.long));
-  return el;
-}
+    function hidePopup(){ popup.style.display = "none"; }
 
-const explainers = {
-  home:{ short:"Questa è la pagina indice.", long:"Questa pagina è una mappa. Torna qui quando ti perdi e scegli dove andare." },
-  admin:{ short:"Area comandi (solo per te).", long:"Qui crei e duplichi vetrine e fai backup. È protetto da sblocco + PIN." },
-  linkPage:{ short:"Pagina da condividere su WhatsApp.", long:"Condividi sempre link.html?id=ID. È più semplice per gli utenti." },
-  vetrina:{ short:"Pagina con foto e numerini.", long:"Qui l’utente vede tutte le foto e i numeri sugli oggetti." },
-  githubData:{ short:"Qui metti i JSON delle vetrine.", long:"Cartella data su GitHub: ogni vetrina ha il suo file ID.json." },
-  githubMedia:{ short:"Qui carichi foto e video.", long:"Cartella media su GitHub: carichi immagini e video, meglio con nomi ID-001 ecc." },
-  githubIndex:{ short:"Elenco vetrine.json.", long:"Questo file è la lista di tutte le vetrine. Serve a farle apparire nell’elenco." }
-};
+    function speak(text, title="Guida", tiny=""){
+      lastText = text || "";
+      // se muted, mostra solo popup
+      showPopup(title, text, tiny);
 
-const checklistSpeak =
-`Checklist veloce:
-1. Admin: crea o duplica, scarichi ID.json.
-2. GitHub: cartella data, incolli in data/ID.json e fai Commit.
-3. GitHub: cartella media, carichi le foto e i video con nomi tipo ID-001.
-4. Aggiorni data/vetrine.json, fai Commit e condividi su WhatsApp: link.html?id=ID.`;
+      if(muted) return;
 
-const fullGuideText =
-`Guida completa:
-Una vetrina è una pagina con foto e oggetti. L’Admin è la stanza dei comandi, solo per te.
-Quando crei una vetrina, scarichi un file ID.json.
-Poi lo metti su GitHub nella cartella data come data/ID.json e fai Commit.
-Poi carichi foto e video nella cartella media.
-Poi aggiorni data/vetrine.json per far apparire la nuova vetrina nell’elenco.
-Infine condividi su WhatsApp: link.html?id=ID.`;
+      try{
+        synth.cancel();
+      }catch(e){}
 
-readChecklistBtn.addEventListener("click", ()=> speak(checklistSpeak));
-readFullGuideBtn.addEventListener("click", ()=> speak(fullGuideText));
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "it-IT";
+      utter.rate = speechRate;
+      utter.onend = () => {
+        // popup sparisce a fine audio
+        hidePopup();
+      };
+      utter.onerror = () => {
+        // se errore, lascia popup visibile 6 secondi e poi chiudi
+        setTimeout(hidePopup, 6000);
+      };
+      lastUtter = utter;
+      synth.speak(utter);
+    }
 
-function renderMain(){
-  mainLinks.innerHTML = "";
-  mainLinks.appendChild(mkItem({ label:"🏠 Home (questa pagina)", href:"index.html", explain: explainers.home }));
-  mainLinks.appendChild(mkItem({ label:"🔒 Admin", href:"admin.html", explain: explainers.admin }));
-  mainLinks.appendChild(mkItem({ label:"📄 Pagina link vetrina (esempio renzo11)", href:"link.html?id=renzo11", explain: explainers.linkPage }));
-  mainLinks.appendChild(mkItem({ label:"🖼️ Vetrina diretta (esempio renzo11)", href:"vetrina.html?id=renzo11", explain: explainers.vetrina }));
-  mainLinks.appendChild(mkItem({ label:"📁 GitHub cartella data", href:`https://github.com/creamiaappsercuctech/SerCucTech/tree/main/data`, explain: explainers.githubData }));
-  mainLinks.appendChild(mkItem({ label:"🖼️ GitHub cartella media", href:`https://github.com/creamiaappsercuctech/SerCucTech/tree/main/media`, explain: explainers.githubMedia }));
-  mainLinks.appendChild(mkItem({ label:"🧾 GitHub file data/vetrine.json", href:`https://github.com/creamiaappsercuctech/SerCucTech/blob/main/data/vetrine.json`, explain: explainers.githubIndex }));
-}
-
-function setPreview(id){
-  const clean = (id||"renzo11").trim() || "renzo11";
-  const href = `link.html?id=${encodeURIComponent(clean)}`;
-  previewLink.href = href;
-  previewLink.textContent = href;
-  previewLink.dataset.id = clean;
-
-  const full = `${base}${href}`;
-  shareDesc.textContent = `Link completo: ${full}`;
-}
-
-function makeWhatsAppMessage(id){
-  const clean = (id||"renzo11").trim() || "renzo11";
-  const link = `${base}link.html?id=${encodeURIComponent(clean)}`;
-  return `Ciao! 👋\nGuarda questa vetrina:\n${link}\n\n(Se hai domande, rispondi qui su WhatsApp)`;
-}
-
-function openWhatsAppWithText(text){
-  const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-  window.open(url, "_blank");
-}
-
-idBox.addEventListener("input", ()=> setPreview(idBox.value));
-
-openLinkBtn.addEventListener("click", ()=>{
-  const clean = (idBox.value||"").trim();
-  if(!clean) return alert("Scrivi un ID (es. renzo11)");
-  location.href = `link.html?id=${encodeURIComponent(clean)}`;
-});
-
-copyPreview.addEventListener("click", async ()=>{
-  const id = previewLink.dataset.id || "renzo11";
-  const full = `${base}link.html?id=${encodeURIComponent(id)}`;
-  try{ await navigator.clipboard.writeText(full); alert("Copiato ✅"); }
-  catch(e){ alert("Copia non riuscita."); }
-});
-
-speakPreview.addEventListener("click", ()=> speak(explainers.linkPage.long));
-
-copyWhatsAppMsgBtn.addEventListener("click", async ()=>{
-  const id = previewLink.dataset.id || "renzo11";
-  const msg = makeWhatsAppMessage(id);
-  try{
-    await navigator.clipboard.writeText(msg);
-    alert("Messaggio WhatsApp copiato ✅");
-  }catch(e){
-    alert("Copia non riuscita.");
-  }
-});
-
-openWhatsAppBtn.addEventListener("click", ()=>{
-  const id = previewLink.dataset.id || "renzo11";
-  const msg = makeWhatsAppMessage(id);
-  openWhatsAppWithText(msg);
-});
-
-speakWhatToShareBtn.addEventListener("click", ()=> speak("Condividi su WhatsApp la pagina link: link.html?id=ID. È la più semplice per gli utenti."));
-speakIfBrokenBtn.addEventListener("click", ()=> speak("Se ti si rompe il telefono recuperi tutto da GitHub: data per i JSON e media per foto e video."));
-
-/* ----------- Elenco vetrine automatico ----------- */
-async function loadIndex(){
-  statusPill.textContent = "carico vetrine…";
-  try{
-    const res = await fetch("data/vetrine.json", {cache:"no-store"});
-    if(!res.ok) throw new Error("HTTP " + res.status);
-    const j = await res.json();
-    const list = Array.isArray(j.vetrine) ? j.vetrine : [];
-    countPill.textContent = String(list.length);
-
-    vetrineList.innerHTML = "";
-    list.forEach(v=>{
-      const id = String(v.id||"").trim();
-      if(!id) return;
-      const title = String(v.title||id);
-      const linkHref = `link.html?id=${encodeURIComponent(id)}`;
-      const fullLink = `${base}${linkHref}`;
-
-      const box = document.createElement("div");
-      box.className = "item";
-      box.innerHTML = `
-        <a href="${linkHref}">👤 ${title} — ${linkHref}</a>
-        <button class="btn green copyBtn">Copia</button>
-        <button class="waBtn waBtnSmall">WhatsApp</button>
-        <div class="desc">Copia il link o apri WhatsApp con messaggio pronto.</div>
-      `;
-
-      box.querySelector(".copyBtn").addEventListener("click", async ()=>{
-        try{ await navigator.clipboard.writeText(fullLink); alert("Copiato ✅"); }
-        catch(e){ alert("Copia non riuscita."); }
-      });
-
-      box.querySelector(".waBtnSmall").addEventListener("click", ()=>{
-        openWhatsAppWithText(makeWhatsAppMessage(id));
-      });
-
-      vetrineList.appendChild(box);
+    // Controls
+    const rateEl = document.getElementById("rate");
+    const rateVal = document.getElementById("rateVal");
+    rateEl.addEventListener("input", ()=>{
+      speechRate = parseFloat(rateEl.value);
+      rateVal.textContent = speechRate.toFixed(2) + "x";
     });
 
-    statusPill.textContent = "pronto";
-  }catch(e){
-    statusPill.textContent = "errore";
-    vetrineList.innerHTML = `
-      <div class="warn">
-        Non riesco a leggere <b>data/vetrine.json</b>.<br>
-        Controlla che esista in repo e che sia pubblico.
-      </div>`;
-  }
-}
+    document.getElementById("muteBtn").onclick = ()=>{
+      muted = !muted;
+      document.getElementById("muteBtn").textContent = muted ? "Unmute" : "Mute";
+      if(muted) try{ synth.cancel(); }catch(e){}
+    };
+    document.getElementById("pauseBtn").onclick = ()=>{ try{ synth.pause(); }catch(e){} };
+    document.getElementById("resumeBtn").onclick = ()=>{ try{ synth.resume(); }catch(e){} };
+    document.getElementById("repeatBtn").onclick = ()=>{
+      if(lastText) speak(lastText, popupTitle.textContent || "Guida");
+    };
 
-renderMain();
-setPreview("renzo11");
-loadIndex();
-})();
-</script>
+    // ===================== LINK DATA =====================
+    // (Puoi aggiungere/togliere link qui quando vuoi)
+    const links = [
+      {
+        key: "admin",
+        title: "Admin (gestione vetrine)",
+        desc: "Crea/modifica vetrine, testi, media e impostazioni.",
+        url: "admin.html",
+        keywords: ["admin","crea vetrina","modifica vetrina","gestione","privato","pin"],
+        guide: [
+          "Questo è l'ADMIN. Qui crei e modifichi le vetrine.",
+          "Se devi aggiungere foto o cambiare il testo, entra qui.",
+          "Poi salva, e condividi il link pubblico della vetrina."
+        ].join("\\n")
+      },
+      {
+        key: "vetrina",
+        title: "Vetrina pubblica (apertura per utenti)",
+        desc: "Pagina che mostra foto scorrevoli e pulsanti WhatsApp.",
+        url: "vetrina.html?id=renzo11",
+        keywords: ["vetrina","pubblico","renzo11","foto scorrevoli","whatsapp","condividere"],
+        guide: [
+          "Questa è una VETRINA pubblica.",
+          "Gli utenti vedono le foto scorrevoli e i tasti di contatto.",
+          "Se vuoi aprire una vetrina specifica, usa: vetrina punto html, punto interrogativo, id uguale, nome vetrina."
+        ].join("\\n")
+      },
+      {
+        key: "pubblica",
+        title: "Pubblica (strumento pubblicazione/link)",
+        desc: "Pagina utile per link e condivisione (se la usi).",
+        url: "pubblica.html",
+        keywords: ["pubblica","condividi","link","whatsapp","pubblicazione"],
+        guide: [
+          "Qui puoi trovare strumenti di pubblicazione e condivisione.",
+          "Se non ti serve, puoi ignorarla."
+        ].join("\\n")
+      },
+      {
+        key: "rename",
+        title: "Rinomina file in sequenza",
+        desc: "Strumento per rinominare immagini e file in modo progressivo.",
+        url: "rename.html",
+        keywords: ["rinominare","sequenza","rename","file","immagini","foto"],
+        guide: [
+          "Qui rinomini tanti file in sequenza: 001, 002, 003…",
+          "Utile prima di caricare le foto nella cartella media.",
+          "Alla fine scarichi/usi i nomi nuovi."
+        ].join("\\n")
+      },
+      {
+        key: "contatore",
+        title: "Contatore oggetti su foto (manuale)",
+        desc: "Metti numerini manuali sugli oggetti in una foto e regoli la grandezza.",
+        url: "tools/contatore.html",
+        keywords: ["numerare","oggetti","foto","pins","numerini","contatore","manuale"],
+        guide: [
+          "Questo serve per NUMERARE manualmente gli oggetti nella foto.",
+          "Tocchi l'immagine e piazzi 1, 2, 3… dove vuoi.",
+          "Poi esporti il JSON dei punti (pins) e lo inserisci nella vetrina."
+        ].join("\\n")
+      },
+      {
+        key: "guida",
+        title: "Guida (pagina istruzioni)",
+        desc: "Guida generale del progetto e delle funzioni.",
+        url: "guida.html",
+        keywords: ["guida","istruzioni","aiuto","come fare","tutorial"],
+        guide: [
+          "Qui trovi una guida testuale per capire le funzioni.",
+          "Se non ricordi dove si fa una cosa, apri questa pagina."
+        ].join("\\n")
+      },
+      {
+        key: "checklist",
+        title: "Checklist",
+        desc: "Checklist operative (sezione dedicata).",
+        url: "checklist.html",
+        keywords: ["checklist","lista","controllo","attività"],
+        guide: [
+          "Questa è una checklist: una lista di cose da fare.",
+          "Serve per non dimenticare passaggi importanti."
+        ].join("\\n")
+      }
+    ];
 
+    // ===================== RENDER LIST =====================
+    function pad2(n){ return String(n).padStart(2,"0"); }
+
+    const listEl = document.getElementById("list");
+    function renderLinks(){
+      listEl.innerHTML = "";
+      links.forEach((it, idx)=>{
+        const n = idx+1;
+        const row = document.createElement("div");
+        row.className = "item";
+        row.dataset.num = String(n);
+        row.dataset.key = it.key;
+
+        row.innerHTML = `
+          <div class="num">${pad2(n)}</div>
+          <div class="meta">
+            <div class="title">${it.title}</div>
+            <div class="desc">${it.desc}</div>
+          </div>
+          <div class="actions">
+            <button class="linkBtn blue" data-act="speak">🎧 Audio</button>
+            <button class="linkBtn primary" data-act="open">🔗 Apri</button>
+          </div>
+        `;
+
+        row.querySelector('[data-act="speak"]').onclick = ()=>{
+          focusItem(row);
+          speak(it.guide, `Link ${pad2(n)} • ${it.title}`, `Apre: ${BASE}${it.url}`);
+        };
+
+        row.querySelector('[data-act="open"]').onclick = ()=>{
+          focusItem(row);
+          // parla e popup, poi apri
+          speak(it.guide, `Link ${pad2(n)} • ${it.title}`, `Sto aprendo: ${BASE}${it.url}`);
+          setTimeout(()=> window.open(it.url, "_blank", "noopener,noreferrer"), 250);
+        };
+
+        listEl.appendChild(row);
+      });
+    }
+
+    function clearActive(){
+      document.querySelectorAll(".item.active").forEach(el=>el.classList.remove("active"));
+    }
+    function focusItem(row){
+      clearActive();
+      row.classList.add("active");
+      row.scrollIntoView({behavior:"smooth", block:"center"});
+    }
+
+    renderLinks();
+
+    // ===================== LOAD VETRINE INDEX (data/vetrine.json) =====================
+    const vetrineListEl = document.getElementById("vetrineList");
+
+    async function loadVetrine(){
+      vetrineListEl.innerHTML = `<div class="hint">Caricamento vetrine…</div>`;
+      try{
+        const r = await fetch("data/vetrine.json", {cache:"no-store"});
+        if(!r.ok) throw new Error("HTTP " + r.status);
+        const data = await r.json();
+
+        const arr = (data && data.vetrine) ? data.vetrine : [];
+        if(!arr.length){
+          vetrineListEl.innerHTML = `<div class="hint">Nessuna vetrina trovata in data/vetrine.json</div>`;
+          return;
+        }
+
+        vetrineListEl.innerHTML = "";
+        arr.forEach((v, i)=>{
+          const title = v.title || v.id;
+          const id = v.id;
+          const url = `vetrina.html?id=${encodeURIComponent(id)}`;
+
+          const card = document.createElement("div");
+          card.className = "item";
+          card.innerHTML = `
+            <div class="num">V${pad2(i+1)}</div>
+            <div class="meta">
+              <div class="title">${title}</div>
+              <div class="desc">Apri vetrina pubblica: <span style="color:var(--muted)">${id}</span></div>
+            </div>
+            <div class="actions">
+              <button class="linkBtn blue">🎧 Audio</button>
+              <button class="linkBtn primary">🔗 Apri</button>
+            </div>
+          `;
+          const guide = [
+            `Questa è la vetrina "${title}".`,
+            `Si apre con: vetrina punto html, punto interrogativo, id uguale ${id}.`,
+            `Gli utenti vedono foto scorrevoli e i pulsanti WhatsApp.`
+          ].join("\\n");
+
+          card.querySelectorAll(".linkBtn")[0].onclick = ()=>{
+            clearActive();
+            card.classList.add("active");
+            speak(guide, `Vetrina • ${title}`, `Apre: ${BASE}${url}`);
+          };
+          card.querySelectorAll(".linkBtn")[1].onclick = ()=>{
+            clearActive();
+            card.classList.add("active");
+            speak(guide, `Vetrina • ${title}`, `Sto aprendo: ${BASE}${url}`);
+            setTimeout(()=> window.open(url, "_blank", "noopener,noreferrer"), 250);
+          };
+
+          vetrineListEl.appendChild(card);
+        });
+
+      }catch(e){
+        vetrineListEl.innerHTML = `<div class="hint">Errore nel leggere <b>data/vetrine.json</b>. Controlla che esista e che sia JSON valido.</div>`;
+      }
+    }
+    loadVetrine();
+
+    // ===================== SEARCH / MATCH =====================
+    const qEl = document.getElementById("q");
+    const resultBox = document.getElementById("resultBox");
+    const resultBig = document.getElementById("resultBig");
+    const resultMini = document.getElementById("resultMini");
+    const resultSpeakBtn = document.getElementById("resultSpeakBtn");
+    const resultOpenBtn = document.getElementById("resultOpenBtn");
+
+    let bestMatch = null;
+
+    function normalize(s){
+      return (s||"").toLowerCase()
+        .replace(/[àáâä]/g,"a").replace(/[èéêë]/g,"e").replace(/[ìíîï]/g,"i")
+        .replace(/[òóôö]/g,"o").replace(/[ùúûü]/g,"u")
+        .replace(/[^a-z0-9+ ]/g," ")
+        .replace(/\s+/g," ")
+        .trim();
+    }
+
+    function scoreItem(query, item){
+      const q = normalize(query);
+      const hay = normalize([item.title, item.desc, (item.keywords||[]).join(" ")].join(" "));
+      if(!q) return 0;
+
+      let score = 0;
+      const words = q.split(" ");
+      for(const w of words){
+        if(!w) continue;
+        if(hay.includes(w)) score += 2;
+      }
+
+      // extra: se contiene un id tipo renzo11 e link è vetrina
+      const idMatch = q.match(/\b([a-z]{3,}\d{1,})\b/);
+      if(idMatch){
+        const id = idMatch[1];
+        if(item.url && item.url.includes("vetrina.html") && q.includes(id)) score += 6;
+        if((item.keywords||[]).includes(id)) score += 6;
+      }
+
+      // bonus se query contiene "numerare" e item è contatore
+      if(q.includes("numer") && item.key === "contatore") score += 6;
+
+      return score;
+    }
+
+    function doSearch(){
+      const query = qEl.value.trim();
+      bestMatch = null;
+
+      // cerca nei link principali
+      let best = {score:0, type:"main", item:null, num:null};
+      links.forEach((it, idx)=>{
+        const s = scoreItem(query, it);
+        if(s > best.score){
+          best = {score:s, type:"main", item:it, num: idx+1};
+        }
+      });
+
+      // se query contiene id, prova a suggerire direttamente vetrina pubblica
+      const idMatch = normalize(query).match(/\b([a-z]{3,}\d{1,})\b/);
+      if(idMatch){
+        const id = idMatch[1];
+        // suggerimento forte: aprire vetrina con quell'id
+        if(best.score < 6){
+          best = {
+            score: 6,
+            type: "dynamicVetrina",
+            item: {
+              title: `Vetrina pubblica: ${id}`,
+              desc: `Apri la vetrina con id ${id}`,
+              url: `vetrina.html?id=${encodeURIComponent(id)}`,
+              guide: [
+                `Devi lavorare sulla vetrina con id ${id}.`,
+                `Aprila con questo link: vetrina punto html, punto interrogativo, id uguale ${id}.`,
+                `Se vuoi numerare gli oggetti della foto, usa anche il contatore oggetti e poi incolla i pins nella vetrina.`
+              ].join("\\n")
+            },
+            num: null
+          };
+        }
+      }
+
+      if(best.score <= 0){
+        resultBox.style.display = "block";
+        resultBig.textContent = "Non ho trovato un link sicuro. Prova con parole più semplici.";
+        resultMini.textContent = "Esempio: “numerare oggetti foto”, “admin”, “rinominare foto”, “vetrina renzo11”.";
+        resultSpeakBtn.onclick = ()=> speak(
+          "Non ho trovato un link preciso. Scrivi una frase più corta, per esempio: numerare oggetti foto, oppure admin, oppure rinominare foto.",
+          "Ricerca"
+        );
+        resultOpenBtn.onclick = ()=>{};
+        return;
+      }
+
+      bestMatch = best;
+
+      resultBox.style.display = "block";
+      if(best.type === "main"){
+        resultBig.textContent = `Usa il link n. ${pad2(best.num)}: ${best.item.title}`;
+        resultMini.textContent = `Perché: ${best.item.desc}`;
+        resultSpeakBtn.onclick = ()=>{
+          const row = document.querySelector(`.item[data-num="${best.num}"]`);
+          if(row) focusItem(row);
+          speak(best.item.guide, `Consiglio: link ${pad2(best.num)}`, `Apre: ${BASE}${best.item.url}`);
+        };
+        resultOpenBtn.onclick = ()=>{
+          const row = document.querySelector(`.item[data-num="${best.num}"]`);
+          if(row) focusItem(row);
+          speak(best.item.guide, `Consiglio: link ${pad2(best.num)}`, `Sto aprendo: ${BASE}${best.item.url}`);
+          setTimeout(()=> window.open(best.item.url, "_blank", "noopener,noreferrer"), 250);
+        };
+      } else {
+        resultBig.textContent = `Usa: ${best.item.title}`;
+        resultMini.textContent = `Link diretto: ${best.item.url}`;
+        resultSpeakBtn.onclick = ()=> speak(best.item.guide, "Consiglio ricerca", `Apre: ${BASE}${best.item.url}`);
+        resultOpenBtn.onclick = ()=>{
+          speak(best.item.guide, "Consiglio ricerca", `Sto aprendo: ${BASE}${best.item.url}`);
+          setTimeout(()=> window.open(best.item.url, "_blank", "noopener,noreferrer"), 250);
+        };
+      }
+    }
+
+    document.getElementById("searchBtn").onclick = doSearch;
+    qEl.addEventListener("keydown", (e)=>{ if(e.key === "Enter") doSearch(); });
+
+    document.getElementById("clearBtn").onclick = ()=>{
+      qEl.value = "";
+      resultBox.style.display = "none";
+      clearActive();
+      hidePopup();
+      try{ synth.cancel(); }catch(e){}
+    };
+
+    // Piccola guida iniziale (solo prima volta per dispositivo)
+    try{
+      const k="sercuctech_links_intro_v1";
+      if(!localStorage.getItem(k)){
+        localStorage.setItem(k,"1");
+        setTimeout(()=>{
+          speak(
+            "Questa è la tua pagina indice. Ogni riga ha un numero e due pulsanti: Audio e Apri. " +
+            "Se scrivi cosa devi fare nella ricerca, io ti consiglio il link giusto.",
+            "Benvenuto nell'indice"
+          );
+        }, 600);
+      }
+    }catch(e){}
+  </script>
 </body>
-</html>
+</html>.
