@@ -4,19 +4,36 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Vetrina</title>
-  <link rel="stylesheet" href="style.css?v=1">
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
 
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brandDot" aria-hidden="true"></div>
+
       <div class="titleWrap">
         <h1 id="pageTitle" class="pageTitle">Caricamento…</h1>
         <p id="pageDesc" class="pageDesc"></p>
       </div>
+
       <span id="badgeId" class="idBadge">id: -</span>
     </div>
+
+    <!-- TESTO AUDIO FISSO + CONTATTI -->
+    <section class="voicePanel" id="voicePanel" hidden>
+      <div class="voicePanelInner">
+        <div class="voiceTop">
+          <div class="voiceTitle">📣 Messaggio (tocca “Voice” per ascoltare)</div>
+          <div class="voiceHint">Numeri cliccabili: WhatsApp o chiamata</div>
+        </div>
+
+        <div class="voiceText" id="voiceText"></div>
+
+        <div class="contactsRow" id="contactsRow"></div>
+        <div class="contactsHint">👉 Tocca un numero per contattare subito</div>
+      </div>
+    </section>
   </header>
 
   <main class="content">
@@ -27,7 +44,13 @@
 
         <div class="mediaStage" id="mediaStage">
           <div class="imgCounter" id="imgCounter">01/01</div>
-          <img id="heroImg" class="heroImg" alt="Immagine vetrina">
+
+          <div class="imgWrap" id="imgWrap">
+            <img id="heroImg" class="heroImg" alt="Immagine vetrina">
+            <!-- pins overlay -->
+            <div id="pinsLayer" class="pinsLayer" aria-hidden="true"></div>
+          </div>
+
           <div class="imgBadge" id="imgBadge">01</div>
         </div>
 
@@ -35,13 +58,51 @@
       </div>
 
       <div class="thumbRow" id="thumbRow"></div>
-      <div class="smallHint">Swipe sull’immagine • Tap = schermo intero • Tap di nuovo = normale</div>
+
+      <div class="smallHint">
+        Swipe sull’immagine • Tap = schermo intero • Tap di nuovo = normale
+        <br>
+        <span class="smallHint2">Modalità numerini: tap rapido sul titolo 5 volte (solo sul tuo telefono)</span>
+      </div>
     </section>
 
     <!-- FILES (se li aggiungi nel JSON) -->
     <section class="card" id="filesCard" hidden>
       <h2 class="h2">Files</h2>
       <div id="filesList" class="filesList"></div>
+    </section>
+
+    <!-- LABEL TOOL (NASCOSTO) -->
+    <section class="card labelCard" id="labelCard" hidden>
+      <div class="labelHead">
+        <h2 class="h2" style="margin:0">🧷 Numerini manuali sugli oggetti</h2>
+        <span class="labelBadge" id="labelModeBadge">OFF</span>
+      </div>
+
+      <div class="labelControls">
+        <button class="labelBtn" id="labelToggleBtn">Attiva/Disattiva</button>
+        <button class="labelBtn" id="labelUndoBtn">Annulla ultimo</button>
+        <button class="labelBtn danger" id="labelClearBtn">Pulisci tutti</button>
+      </div>
+
+      <div class="labelSliderRow">
+        <div class="labelSliderTitle">Grandezza numerino</div>
+        <input type="range" id="pinSizeRange" min="14" max="64" value="28">
+        <div class="labelSliderValue"><span id="pinSizeValue">28</span> px</div>
+      </div>
+
+      <div class="labelExportRow">
+        <button class="labelBtn" id="exportPinsBtn">Export JSON (pins)</button>
+        <button class="labelBtn" id="copyPinsBtn">Copia JSON</button>
+      </div>
+
+      <textarea id="pinsJsonBox" class="pinsJsonBox" placeholder="Qui comparirà il JSON dei pins…"></textarea>
+
+      <div class="labelTip">
+        ✅ Quando la modalità è attiva: tocca l’immagine per piazzare un numerino (1,2,3…).<br>
+        ✅ I numerini restano salvati sul tuo telefono (localStorage).<br>
+        ✅ Gli utenti che aprono il link vedono i numerini SOLO se tu li hai esportati e li metti nel JSON (ti spiego dopo se vuoi).
+      </div>
     </section>
   </main>
 
@@ -60,7 +121,7 @@
     <button class="barBtn" id="kioskBtn">Kiosk</button>
   </nav>
 
-  <!-- OVERLAY audio sblocco (non blocca i bottoni sotto) -->
+  <!-- OVERLAY audio sblocco -->
   <div class="audioGate" id="audioGate" hidden>
     <div class="audioGateCard">
       <div class="audioGateTitle">Audio bloccato dal telefono</div>
@@ -72,6 +133,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=1"></script>
+  <script src="app.js?v=2"></script>
 </body>
 </html>
