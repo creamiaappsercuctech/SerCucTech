@@ -1,80 +1,144 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Apri Vetrina</title>
-  <link rel="stylesheet" href="style.css?v=1">
-  <style>
-    body{padding:18px}
-    .cardx{
-      max-width:720px;margin:0 auto;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(0,0,0,.18);
-      border-radius:18px;padding:14px;display:grid;gap:12px
-    }
-    .h{font-weight:1000;font-size:20px;margin:0}
-    .p{opacity:.9;margin:0;font-weight:800;line-height:1.35}
-    .btn{
-      width:100%;border:none;border-radius:16px;
-      padding:14px 12px;font-weight:1000;cursor:pointer
-    }
-    .btn:active{transform:scale(.99)}
-    .primary{background:#25D366;color:#06210f}
-    .ghost{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.16)}
-    .row{display:grid;gap:10px}
-    .small{font-size:12px;opacity:.85;font-weight:900}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>SerCucTech – Indice Link Guidato</title>
+
+<style>
+body{
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background:#0e0e11;
+  color:#f1f1f1;
+  margin:0;
+  padding:16px;
+}
+
+h1{
+  text-align:center;
+  font-size:1.6em;
+  margin-bottom:10px;
+}
+
+.searchBox{
+  width:100%;
+  padding:12px;
+  font-size:1em;
+  border-radius:10px;
+  border:none;
+  margin-bottom:16px;
+}
+
+.list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.item{
+  background:#1b1b22;
+  border-radius:12px;
+  padding:12px;
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  transition:0.3s;
+}
+
+.item.active{
+  outline:2px solid #25d366;
+  background:#222;
+}
+
+.num{
+  font-size:1.3em;
+  font-weight:bold;
+  color:#25d366;
+  width:32px;
+}
+
+.content{
+  flex:1;
+}
+
+.title{
+  font-weight:600;
+  margin-bottom:4px;
+}
+
+.desc{
+  font-size:0.9em;
+  opacity:0.85;
+}
+
+.buttons{
+  display:flex;
+  gap:6px;
+  margin-top:8px;
+  flex-wrap:wrap;
+}
+
+button{
+  border:none;
+  border-radius:8px;
+  padding:6px 10px;
+  font-size:0.85em;
+  cursor:pointer;
+}
+
+.openBtn{ background:#25d366; color:#000; }
+.audioBtn{ background:#444; color:#fff; }
+.ctrlBtn{ background:#333; color:#fff; }
+
+.popup{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#1f1f27;
+  padding:14px;
+  border-radius:14px;
+  max-width:90%;
+  display:none;
+  z-index:1000;
+}
+</style>
 </head>
+
 <body>
-  <div class="cardx">
-    <h1 class="h" id="t">Caricamento…</h1>
-    <p class="p" id="d"></p>
 
-    <div class="row">
-      <button class="btn primary" id="openV">✅ Apri la vetrina</button>
-      <button class="btn ghost" id="openIndex">🔗 Vedi indice vetrine</button>
-      <button class="btn ghost" id="copy">📋 Copia link da condividere</button>
-    </div>
+<h1>📌 Indice Link SerCucTech</h1>
 
-    <div class="small" id="s"></div>
-  </div>
+<input id="search" class="searchBox" placeholder="Scrivi cosa devi fare… es. numerare oggetti foto">
+
+<div id="list" class="list"></div>
+
+<div id="popup" class="popup"></div>
 
 <script>
-(async function(){
-  const sp = new URLSearchParams(location.search);
-  const id = (sp.get("id") || "").trim() || "renzo11";
-
-  const base = location.origin + location.pathname.replace(/link\.html$/,"");
-  const share = `${base}link.html?id=${encodeURIComponent(id)}`;
-  const vetrina = `${base}vetrina.html?id=${encodeURIComponent(id)}`;
-  const index = `${base}index.html`;
-
-  document.getElementById("openV").onclick = ()=> location.href = vetrina;
-  document.getElementById("openIndex").onclick = ()=> location.href = index;
-  document.getElementById("copy").onclick = async ()=>{
-    try{
-      await navigator.clipboard.writeText(share);
-      alert("Link copiato ✅");
-    }catch(e){
-      prompt("Copia questo link:", share);
-    }
-  };
-
-  // prova a leggere titolo/desc dal JSON
-  try{
-    const r = await fetch(`data/${encodeURIComponent(id)}.json`, {cache:"no-store"});
-    const j = await r.json();
-    document.getElementById("t").textContent = j.title || ("Vetrina " + id);
-    document.getElementById("d").textContent = j.description || "";
-  }catch(e){
-    document.getElementById("t").textContent = "Vetrina " + id;
+/* ===== DATI LINK ===== */
+const links = [
+  {
+    title:"Vetrina – Renzo11",
+    url:"vetrina.html?id=renzo11",
+    keywords:["vetrina","foto","oggetti","renzo","numerare"],
+    text:"Questa è la vetrina Renzo undici. Qui puoi vedere le foto, numerare gli oggetti e ricevere richieste WhatsApp."
+  },
+  {
+    title:"Admin – Gestione Vetrine",
+    url:"admin.html",
+    keywords:["admin","creare","modificare","vetrine"],
+    text:"Questa è la pagina amministratore. Da qui crei nuove vetrine e carichi foto e dati."
+  },
+  {
+    title:"Contatore Manuale Oggetti",
+    url:"tools/contatore.html",
+    keywords:["numerare","oggetti","foto","pin"],
+    text:"Questo strumento serve per mettere numeri manuali sugli oggetti nelle foto."
   }
+];
 
-  document.getElementById("s").textContent =
-    "Link pubblico: " + share + "\\n" +
-    "Link diretto: " + vetrina;
-})();
-</script>
-</body>
-</html>
+/* ===== UI ===== */
+const listEl = document.getElementById("list");
+const popup = document.getElement
