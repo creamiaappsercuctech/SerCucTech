@@ -4,30 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>SerCucTech – Indice Link Guidato</title>
+<title>Indice Link SerCucTech</title>
 
 <style>
 body{
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background:#0e0e11;
-  color:#f1f1f1;
   margin:0;
   padding:16px;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  background:#0e0e11;
+  color:#fff;
 }
 
 h1{
   text-align:center;
-  font-size:1.6em;
-  margin-bottom:10px;
+  margin-bottom:12px;
 }
 
-.searchBox{
+input{
   width:100%;
   padding:12px;
-  font-size:1em;
   border-radius:10px;
   border:none;
   margin-bottom:16px;
+  font-size:1em;
 }
 
 .list{
@@ -37,45 +36,33 @@ h1{
 }
 
 .item{
-  background:#1b1b22;
+  background:#1c1c24;
   border-radius:12px;
   padding:12px;
   display:flex;
-  gap:10px;
-  align-items:flex-start;
-  transition:0.3s;
-}
-
-.item.active{
-  outline:2px solid #25d366;
-  background:#222;
+  gap:12px;
 }
 
 .num{
-  font-size:1.3em;
+  font-size:1.4em;
   font-weight:bold;
   color:#25d366;
   width:32px;
 }
 
-.content{
-  flex:1;
-}
-
 .title{
   font-weight:600;
-  margin-bottom:4px;
 }
 
 .desc{
   font-size:0.9em;
-  opacity:0.85;
+  opacity:.85;
 }
 
 .buttons{
-  display:flex;
-  gap:6px;
   margin-top:8px;
+  display:flex;
+  gap:8px;
   flex-wrap:wrap;
 }
 
@@ -83,25 +70,22 @@ button{
   border:none;
   border-radius:8px;
   padding:6px 10px;
-  font-size:0.85em;
-  cursor:pointer;
+  font-size:.85em;
 }
 
-.openBtn{ background:#25d366; color:#000; }
-.audioBtn{ background:#444; color:#fff; }
-.ctrlBtn{ background:#333; color:#fff; }
+.open{background:#25d366;color:#000;}
+.audio{background:#444;color:#fff;}
 
 .popup{
   position:fixed;
   bottom:20px;
   left:50%;
   transform:translateX(-50%);
-  background:#1f1f27;
+  background:#222;
   padding:14px;
   border-radius:14px;
-  max-width:90%;
   display:none;
-  z-index:1000;
+  max-width:90%;
 }
 </style>
 </head>
@@ -110,35 +94,88 @@ button{
 
 <h1>📌 Indice Link SerCucTech</h1>
 
-<input id="search" class="searchBox" placeholder="Scrivi cosa devi fare… es. numerare oggetti foto">
+<input id="search" placeholder="Scrivi cosa devi fare… es. numerare oggetti foto">
 
 <div id="list" class="list"></div>
 
 <div id="popup" class="popup"></div>
 
 <script>
-/* ===== DATI LINK ===== */
-const links = [
+/* ===== DATI SICURI ===== */
+const LINKS = [
   {
-    title:"Vetrina – Renzo11",
-    url:"vetrina.html?id=renzo11",
-    keywords:["vetrina","foto","oggetti","renzo","numerare"],
-    text:"Questa è la vetrina Renzo undici. Qui puoi vedere le foto, numerare gli oggetti e ricevere richieste WhatsApp."
+    title: "Vetrina Renzo11",
+    url: "vetrina.html?id=renzo11",
+    desc: "Apri la vetrina Renzo11, guarda le foto, numeri gli oggetti e ricevi richieste WhatsApp.",
+    keywords: "vetrina foto numerare oggetti renzo"
   },
   {
-    title:"Admin – Gestione Vetrine",
-    url:"admin.html",
-    keywords:["admin","creare","modificare","vetrine"],
-    text:"Questa è la pagina amministratore. Da qui crei nuove vetrine e carichi foto e dati."
+    title: "Admin Vetrine",
+    url: "admin.html",
+    desc: "Gestisci vetrine, crea nuove schede e carica immagini.",
+    keywords: "admin creare modificare vetrine"
   },
   {
-    title:"Contatore Manuale Oggetti",
-    url:"tools/contatore.html",
-    keywords:["numerare","oggetti","foto","pin"],
-    text:"Questo strumento serve per mettere numeri manuali sugli oggetti nelle foto."
+    title: "Contatore Oggetti",
+    url: "tools/contatore.html",
+    desc: "Strumento per mettere numeri manuali sugli oggetti nelle foto.",
+    keywords: "contatore numerare oggetti foto"
   }
 ];
 
-/* ===== UI ===== */
-const listEl = document.getElementById("list");
-const popup = document.getElement
+const list = document.getElementById("list");
+const popup = document.getElementById("popup");
+
+/* ===== RENDER SEMPRE ===== */
+function render(data){
+  list.innerHTML = "";
+  data.forEach((l,i)=>{
+    const el = document.createElement("div");
+    el.className="item";
+    el.innerHTML = `
+      <div class="num">${i+1}</div>
+      <div>
+        <div class="title">${l.title}</div>
+        <div class="desc">${l.desc}</div>
+        <div class="buttons">
+          <button class="open">Apri</button>
+          <button class="audio">🔊 Spiega</button>
+        </div>
+      </div>
+    `;
+    el.querySelector(".open").onclick=()=>location.href=l.url;
+    el.querySelector(".audio").onclick=()=>speak(l.desc);
+    list.appendChild(el);
+  });
+}
+
+/* ===== AUDIO SAFE ===== */
+function speak(text){
+  popup.innerText=text;
+  popup.style.display="block";
+
+  if(!window.speechSynthesis){
+    setTimeout(()=>popup.style.display="none",3000);
+    return;
+  }
+
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang="it-IT";
+  u.onend=()=>popup.style.display="none";
+  speechSynthesis.speak(u);
+}
+
+/* ===== SEARCH ===== */
+document.getElementById("search").addEventListener("input",e=>{
+  const q=e.target.value.toLowerCase();
+  if(!q){ render(LINKS); return; }
+  render(LINKS.filter(l=>l.keywords.includes(q)));
+});
+
+/* ===== AVVIO ===== */
+render(LINKS);
+</script>
+
+</body>
+</html>
