@@ -1,874 +1,765 @@
-/* ===================== VETRINA APP (SerCucTech) ===================== */
+/* ===================== SerCucTech Vetrina - app.js ===================== */
+(() => {
+  "use strict";
 
-const qs = (s, el=document) => el.querySelector(s);
-const qsa = (s, el=document) => Array.from(el.querySelectorAll(s));
+  const qs = (s) => document.querySelector(s);
+  const qsa = (s) => Array.from(document.querySelectorAll(s));
 
-const els = {
-  pageTitle: qs('#pageTitle'),
-  pageDesc: qs('#pageDesc'),
-  badgeId: qs('#badgeId'),
+  // --- Elements (dal tuo vetrina.html) ---
+  const pageTitle = qs("#pageTitle");
+  const pageDesc  = qs("#pageDesc");
+  const badgeId   = qs("#badgeId");
 
-  voicePanel: qs('#voicePanel'),
-  voiceText: qs('#voiceText'),
-  voiceClickable: qs('#voiceClickable'),
-  contactsRow: qs('#contactsRow'),
+  const voicePanel = qs("#voicePanel");
+  const voiceTextEl = qs("#voiceText");
+  const contactsRow = qs("#contactsRow");
 
-  indexPanel: qs('#indexPanel'),
-  indexList: qs('#indexList'),
-  indexRefreshBtn: qs('#indexRefreshBtn'),
+  const heroImg = qs("#heroImg");
+  const imgWrap = qs("#imgWrap");
+  const mediaStage = qs("#mediaStage");
+  const thumbRow = qs("#thumbRow");
+  const imgCounter = qs("#imgCounter");
+  const imgBadge = qs("#imgBadge");
+  const prevBtn = qs("#prevBtn");
+  const nextBtn = qs("#nextBtn");
 
-  heroImg: qs('#heroImg'),
-  imgWrap: qs('#imgWrap'),
-  imgCounter: qs('#imgCounter'),
-  imgBadge: qs('#imgBadge'),
-  prevBtn: qs('#prevBtn'),
-  nextBtn: qs('#nextBtn'),
-  thumbRow: qs('#thumbRow'),
-  pinsLayer: qs('#pinsLayer'),
+  const filesCard = qs("#filesCard");
+  const filesList = qs("#filesList");
 
-  waPhotoBtn: qs('#waPhotoBtn'),
-  shareBtn: qs('#shareBtn'),
+  const shareBtn = qs("#shareBtn");
 
-  filesCard: qs('#filesCard'),
-  filesList: qs('#filesList'),
+  const homeBtn = qs("#homeBtn");
+  const voiceBtn = qs("#voiceBtn");
+  const stopBtn = qs("#stopBtn");
+  const fullBtn = qs("#fullBtn");
 
-  homeBtn: qs('#homeBtn'),
-  voiceBtn: qs('#voiceBtn'),
-  stopBtn: qs('#stopBtn'),
-  fullBtn: qs('#fullBtn'),
-  themeBtn: qs('#themeBtn'),
-  kioskBtn: qs('#kioskBtn'),
+  const audioGate = qs("#audioGate");
+  const enableAudioBtn = qs("#enableAudioBtn");
+  const skipAudioBtn = qs("#skipAudioBtn");
 
-  audioGate: qs('#audioGate'),
-  enableAudioBtn: qs('#enableAudioBtn'),
-  skipAudioBtn: qs('#skipAudioBtn'),
+  const pinsLayer = qs("#pinsLayer");
 
-  waModal: qs('#waModal'),
-  waModalText: qs('#waModalText'),
-  waOpenSecondBtn: qs('#waOpenSecondBtn'),
-  waCloseBtn: qs('#waCloseBtn'),
+  // Label tool (nascosto)
+  const labelCard = qs("#labelCard");
+  const labelModeBadge = qs("#labelModeBadge");
+  const labelToggleBtn = qs("#labelToggleBtn");
+  const labelUndoBtn = qs("#labelUndoBtn");
+  const labelClearBtn = qs("#labelClearBtn");
+  const pinSizeRange = qs("#pinSizeRange");
+  const pinSizeValue = qs("#pinSizeValue");
+  const exportPinsBtn = qs("#exportPinsBtn");
+  const copyPinsBtn = qs("#copyPinsBtn");
+  const pinsJsonBox = qs("#pinsJsonBox");
 
-  labelCard: qs('#labelCard'),
-  labelModeBadge: qs('#labelModeBadge'),
-  labelToggleBtn: qs('#labelToggleBtn'),
-  labelUndoBtn: qs('#labelUndoBtn'),
-  labelClearBtn: qs('#labelClearBtn'),
-  pinSizeRange: qs('#pinSizeRange'),
-  pinSizeValue: qs('#pinSizeValue'),
-  exportPinsBtn: qs('#exportPinsBtn'),
-  copyPinsBtn: qs('#copyPinsBtn'),
-  pinsJsonBox: qs('#pinsJsonBox'),
+  // --- State ---
+  let vetrina = null;
+  let media = [];
+  let currentIndex = 0;
 
-  adminCard: qs('#adminCard'),
-  adminBadge: qs('#adminBadge'),
-  exportRequestsBtn: qs('#exportRequestsBtn'),
-  copyRequestsBtn: qs('#copyRequestsBtn'),
-  clearRequestsBtn: qs('#clearRequestsBtn'),
-  requestsBox: qs('#requestsBox'),
+  let speechEnabled = false; // sblocco dopo gesto
+  let lastSpokenText = "";
 
-  errorCard: qs('#errorCard'),
-  errorText: qs('#errorText'),
-};
+  // Fullscreen state (toggling)
+  let isFull = false;
 
-const params = new URLSearchParams(location.search);
-const VETRINA_ID = (params.get('id') || 'renzo11').trim();
+  // Manual pins
+  let labelMode = false;
+  let pinsData = {}; // { "mediaUrl": { size: 28, pins: [ {x,y,n} ] } }
+  let pinSize = 28;
 
-const DATA_URL = `data/${encodeURIComponent(VETRINA_ID)}.json?v=${Date.now()}`;
-const INDEX_URL = `data/vetrine.json?v=${Date.now()}`; // formato A
+  // Tap counter to unlock label mode (5 taps)
+  let titleTapCount = 0;
+  let titleTapTimer = null;
 
-const LS_PINS_KEY = (id)=> `sercuctech_pins_${id}`;
-const LS_REQ_KEY  = (id)=> `sercuctech_requests_${id}`;
-const LS_THEME_KEY = `sercuctech_theme`;
-const LS_KIOSK_KEY = `sercuctech_kiosk`;
-const LS_ADMIN_KEY = `sercuctech_admin_enabled`;
+  // WhatsApp row under photo
+  let photoWaRow = null;
+  let photoWaBtn = null;
 
-let state = {
-  data: null,
-  media: [],
-  idx: 0,
-
-  // audio
-  speaking: false,
-  audioUnlocked: false,
-
-  // fullscreen
-  isFull: false,
-
-  // pins admin
-  adminEnabled: false,
-  labelMode: false,
-  pinSize: 28,
-  currentPins: {}, // per immagine: { "media/xxx.jpg": [{x,y,n,size}] }
-
-  // whatsapp dual send
-  pendingSecondWaUrl: null,
-};
-
-init().catch(err => showError(String(err || 'Errore sconosciuto')));
-
-/* ===================== INIT ===================== */
-async function init(){
-  applyTheme(loadLS(LS_THEME_KEY, 'dark'));
-  state.adminEnabled = loadLS(LS_ADMIN_KEY, '0') === '1';
-  updateAdminUI();
-
-  els.badgeId.textContent = `id: ${VETRINA_ID}`;
-
-  // carico vetrina
-  const data = await fetchJson(DATA_URL);
-  state.data = data;
-
-  // titolo + descrizione
-  els.pageTitle.textContent = data.title || VETRINA_ID;
-  els.pageDesc.textContent = data.description || '';
-  document.title = data.title ? `Vetrina • ${data.title}` : `Vetrina • ${VETRINA_ID}`;
-
-  // voice panel
-  const voiceText = (data.voice && data.voice.text) ? String(data.voice.text) : '';
-  if(voiceText.trim()){
-    els.voicePanel.hidden = false;
-    els.voiceText.textContent = voiceText.trim();
-  }else{
-    els.voicePanel.hidden = true;
+  // ---- Helpers ----
+  function getIdFromUrl() {
+    const u = new URL(location.href);
+    return (u.searchParams.get("id") || "").trim();
   }
 
-  // contatti
-  renderContacts(data.contacts || []);
-
-  // indice altre vetrine
-  await loadIndex(); // non blocca se manca
-
-  // media
-  state.media = Array.isArray(data.media) ? data.media.filter(m => m && m.type === 'image' && m.url) : [];
-  if(state.media.length === 0){
-    showError(`Nessuna immagine trovata in media[].\nControlla il file data/${VETRINA_ID}.json`);
-    return;
+  function safeText(x) {
+    return (x ?? "").toString();
   }
 
-  // pins (dal JSON se presenti, altrimenti da localStorage)
-  state.currentPins = deepClone(data.pinsData || {});
-  const lsPins = loadLS(LS_PINS_KEY(VETRINA_ID), null);
-  if(lsPins && typeof lsPins === 'object' && !data.pinsData){
-    // se non hai pinsData nel json, usa quelli locali (solo per te)
-    state.currentPins = lsPins;
-  }
+  function formatPhoneForSpeech(phone) {
+    const p = safeText(phone).replace(/\s+/g, "");
+    if (!p) return "";
+    const cleaned = p.replace(/[^\d+]/g, "");
 
-  // files
-  renderFiles(data.files || []);
-
-  // galleria
-  buildThumbs();
-  setIndex(0);
-
-  // handlers
-  wireUI();
-
-  // richieste info (solo tu)
-  refreshRequestsBox();
-
-  // kiosk
-  const kiosk = loadLS(LS_KIOSK_KEY, '0') === '1';
-  if(kiosk) document.body.classList.add('kioskMode');
-
-  // hint: non autoplay, ma click su testo/Voice fa partire
-}
-
-/* ===================== FETCH ===================== */
-async function fetchJson(url){
-  const res = await fetch(url, {cache:'no-store'});
-  if(!res.ok){
-    throw new Error(`Non riesco a leggere ${url.replace(/\?.*$/,'')}\nHTTP ${res.status}`);
-  }
-  const txt = await res.text();
-  try{
-    return JSON.parse(txt);
-  }catch(e){
-    throw new Error(`JSON non valido in ${url.replace(/\?.*$/,'')}\n${e.message}`);
-  }
-}
-
-/* ===================== UI WIRING ===================== */
-function wireUI(){
-  els.prevBtn.addEventListener('click', ()=> step(-1));
-  els.nextBtn.addEventListener('click', ()=> step(+1));
-
-  // swipe
-  let startX = 0, startY = 0;
-  els.imgWrap.addEventListener('touchstart', (e)=>{
-    const t = e.touches[0];
-    startX = t.clientX; startY = t.clientY;
-  }, {passive:true});
-  els.imgWrap.addEventListener('touchend', (e)=>{
-    const t = e.changedTouches[0];
-    const dx = t.clientX - startX;
-    const dy = t.clientY - startY;
-    if(Math.abs(dx) > 42 && Math.abs(dx) > Math.abs(dy)){
-      step(dx < 0 ? +1 : -1);
+    if (cleaned.startsWith("+39") && cleaned.length > 3) {
+      const rest = cleaned.slice(3);
+      const a = rest.slice(0, 3);
+      const b = rest.slice(3, 6);
+      const c = rest.slice(6);
+      return `+39 ${a} ${b} ${c}`.trim();
     }
-  }, {passive:true});
 
-  // tap foto = fullscreen toggle
-  els.heroImg.addEventListener('click', ()=> toggleFull());
-
-  // bottoni barra
-  els.homeBtn.addEventListener('click', ()=> scrollToTop());
-  els.voiceBtn.addEventListener('click', ()=> speakVoice());
-  els.stopBtn.addEventListener('click', ()=> stopVoice());
-  els.fullBtn.addEventListener('click', ()=> toggleFull(true));
-  els.themeBtn.addEventListener('click', ()=> toggleTheme());
-  els.kioskBtn.addEventListener('click', ()=> toggleKiosk());
-
-  // clic su testo audio = parte audio
-  els.voiceClickable.addEventListener('click', ()=> speakVoice());
-
-  // share vetrina su WhatsApp
-  els.shareBtn.addEventListener('click', ()=> shareVetrinaWhatsApp());
-
-  // WhatsApp su foto (unico) -> manda a 2 numeri (con passaggio anti-blocco)
-  els.waPhotoBtn.addEventListener('click', ()=> askInfoWhatsAppForCurrentPhoto());
-
-  // audio gate
-  els.enableAudioBtn.addEventListener('click', ()=>{
-    state.audioUnlocked = true;
-    els.audioGate.hidden = true;
-    speakVoice();
-  });
-  els.skipAudioBtn.addEventListener('click', ()=>{
-    els.audioGate.hidden = true;
-  });
-
-  // modal per 2° numero
-  els.waCloseBtn.addEventListener('click', ()=> closeWaModal());
-  els.waOpenSecondBtn.addEventListener('click', ()=>{
-    if(state.pendingSecondWaUrl){
-      window.open(state.pendingSecondWaUrl, '_blank');
-      state.pendingSecondWaUrl = null;
-    }
-    closeWaModal();
-  });
-
-  // indice refresh
-  els.indexRefreshBtn.addEventListener('click', loadIndex);
-
-  // admin: attiva con 5 tap sul titolo
-  enableFiveTapAdmin();
-
-  // label tool
-  els.pinSizeRange.addEventListener('input', ()=>{
-    state.pinSize = Number(els.pinSizeRange.value || 28);
-    els.pinSizeValue.textContent = String(state.pinSize);
-  });
-
-  els.labelToggleBtn.addEventListener('click', ()=>{
-    state.labelMode = !state.labelMode;
-    updateLabelModeUI();
-  });
-
-  els.labelUndoBtn.addEventListener('click', undoPin);
-  els.labelClearBtn.addEventListener('click', clearPinsForCurrentImage);
-
-  els.exportPinsBtn.addEventListener('click', exportPinsData);
-  els.copyPinsBtn.addEventListener('click', copyPinsData);
-
-  // click su immagine per piazzare pin in label mode (solo admin)
-  els.imgWrap.addEventListener('click', (e)=>{
-    if(!state.adminEnabled || !state.labelMode) return;
-
-    // evita che il click sul bottone WA o su altri overlay metta pin
-    const target = e.target;
-    if(target && (target.id === 'waPhotoBtn' || target.closest('.waOnPhoto'))) return;
-
-    // click su immagine -> coordinate relative al wrap
-    const rect = els.imgWrap.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-
-    addPinForCurrentImage(x, y);
-  });
-
-  // richieste admin
-  els.exportRequestsBtn.addEventListener('click', exportRequests);
-  els.copyRequestsBtn.addEventListener('click', copyRequests);
-  els.clearRequestsBtn.addEventListener('click', clearRequests);
-}
-
-/* ===================== GALLERY ===================== */
-function buildThumbs(){
-  els.thumbRow.innerHTML = '';
-  state.media.forEach((m, i)=>{
-    const b = document.createElement('button');
-    b.className = 'thumb';
-    b.type = 'button';
-    b.title = m.label || `Foto ${i+1}`;
-    b.addEventListener('click', ()=> setIndex(i));
-
-    const img = document.createElement('img');
-    img.loading = 'lazy';
-    img.src = m.url;
-    img.alt = m.label || `Foto ${i+1}`;
-
-    b.appendChild(img);
-    els.thumbRow.appendChild(b);
-  });
-  markThumbActive();
-}
-
-function markThumbActive(){
-  qsa('.thumb', els.thumbRow).forEach((t, i)=> t.classList.toggle('active', i === state.idx));
-}
-
-function setIndex(i){
-  const n = state.media.length;
-  state.idx = ((i % n) + n) % n;
-
-  const item = state.media[state.idx];
-  els.heroImg.src = item.url;
-  els.heroImg.alt = item.label || `Foto ${state.idx+1}`;
-
-  const a = String(state.idx + 1).padStart(2,'0');
-  const b = String(n).padStart(2,'0');
-  els.imgCounter.textContent = `${a}/${b}`;
-  els.imgBadge.textContent = a;
-
-  markThumbActive();
-  renderPinsForCurrentImage();
-}
-
-function step(delta){
-  setIndex(state.idx + delta);
-}
-
-/* ===================== FULLSCREEN ===================== */
-async function toggleFull(forceOn){
-  const wantOn = (typeof forceOn === 'boolean') ? forceOn : !state.isFull;
-
-  // prefer Fullscreen API if available, else CSS fallback
-  try{
-    if(wantOn){
-      state.isFull = true;
-      document.body.classList.add('fullscreenMode');
-      if(els.imgWrap.requestFullscreen) await els.imgWrap.requestFullscreen().catch(()=>{});
-    }else{
-      state.isFull = false;
-      document.body.classList.remove('fullscreenMode');
-      if(document.fullscreenElement) await document.exitFullscreen().catch(()=>{});
-    }
-  }catch(e){
-    // fallback already applied
-    state.isFull = wantOn;
-    document.body.classList.toggle('fullscreenMode', wantOn);
+    const digits = cleaned.replace("+", "");
+    const groups = digits.match(/.{1,3}/g) || [digits];
+    return (cleaned.startsWith("+") ? "+" : "") + groups.join(" ");
   }
-}
 
-/* ===================== THEME / KIOSK ===================== */
-function applyTheme(name){
-  // semplice: dark only (ma lasciamo la struttura)
-  saveLS(LS_THEME_KEY, name || 'dark');
-}
-function toggleTheme(){
-  // (per ora teniamo dark, ma così non rompiamo nulla)
-  applyTheme('dark');
-}
-function toggleKiosk(){
-  const on = !document.body.classList.contains('kioskMode');
-  document.body.classList.toggle('kioskMode', on);
-  saveLS(LS_KIOSK_KEY, on ? '1' : '0');
-}
+  function whatsappLink(phone, message) {
+    const p = safeText(phone).replace(/[^\d]/g, "");
+    const txt = encodeURIComponent(message || "");
+    return `https://wa.me/${p}?text=${txt}`;
+  }
 
-/* ===================== VOICE ===================== */
-function stopVoice(){
-  try{
-    window.speechSynthesis.cancel();
-  }catch(e){}
-  state.speaking = false;
-}
+  function telLink(phone) {
+    return `tel:${safeText(phone).replace(/\s+/g, "")}`;
+  }
 
-function speakVoice(){
-  const txt = (state.data && state.data.voice && state.data.voice.text) ? String(state.data.voice.text) : '';
-  if(!txt.trim()) return;
+  function showError(msg) {
+    document.body.innerHTML = `
+      <div style="padding:16px;font-family:system-ui;color:#111;background:#fff">
+        <h1>Errore</h1>
+        <p>${msg}</p>
+      </div>
+    `;
+  }
 
-  // se il telefono blocca, mostra gate SOLO se non sbloccato ancora
-  if(!state.audioUnlocked){
-    // proviamo comunque: se fallisce, mostriamo il gate
-    const ok = trySpeak(txt);
-    if(!ok){
-      els.audioGate.hidden = false;
+  function stopSpeech() {
+    try { window.speechSynthesis?.cancel(); } catch(e){}
+  }
+
+  function showAudioGate(on) {
+    if (!audioGate) return;
+    audioGate.hidden = !on;
+  }
+
+  function buildSpeakText() {
+    const base = safeText(vetrina?.voice?.text || "").trim();
+    const contacts = Array.isArray(vetrina?.contacts) ? vetrina.contacts : [];
+
+    if (!contacts.length) return base;
+
+    const spokenPhones = contacts
+      .map(c => `${safeText(c.name)}: ${formatPhoneForSpeech(c.phone)}`)
+      .filter(Boolean)
+      .join(". ");
+
+    return base ? `${base}. ${spokenPhones}.` : spokenPhones;
+  }
+
+  function speak(text, lang) {
+    const t = safeText(text).trim();
+    if (!t) return;
+
+    if (!speechEnabled) {
+      lastSpokenText = t;
+      showAudioGate(true);
       return;
     }
-    state.audioUnlocked = true;
-    return;
+
+    try {
+      stopSpeech();
+      const u = new SpeechSynthesisUtterance(t);
+      u.lang = lang || "it-IT";
+      u.rate = 1;
+      u.pitch = 1;
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
   }
 
-  trySpeak(txt);
-}
-
-function trySpeak(text){
-  try{
-    stopVoice();
-    const u = new SpeechSynthesisUtterance(formatForPhoneSpeech(text));
-    u.lang = (state.data && state.data.voice && state.data.voice.lang) ? state.data.voice.lang : 'it-IT';
-    u.rate = 1.0;
-    u.pitch = 1.0;
-    u.onend = ()=> { state.speaking = false; };
-    u.onerror = ()=> { state.speaking = false; };
-
-    state.speaking = true;
-    window.speechSynthesis.speak(u);
-    return true;
-  }catch(e){
-    return false;
-  }
-}
-
-/* Trasforma numeri telefono in “dette a cifra” */
-function formatForPhoneSpeech(s){
-  let out = String(s);
-
-  // Normalizza: +39 333... / 333... -> spazio tra cifre
-  out = out.replace(/(\+?\d[\d\s]{6,}\d)/g, (m)=>{
-    const raw = m.replace(/\s+/g,'');
-    if(raw.length < 7) return m;
-
-    // +39...
-    if(raw.startsWith('+')){
-      const digits = raw.slice(1).replace(/\D/g,'').split('').join(' ');
-      return `più ${digits}`;
+  function enableSpeechAndAutoPlay() {
+    speechEnabled = true;
+    showAudioGate(false);
+    if (vetrina?.voice?.text) {
+      speak(buildSpeakText(), vetrina.voice.lang || "it-IT");
     }
-    // 333...
-    const digits = raw.replace(/\D/g,'').split('').join(' ');
-    return digits;
-  });
-
-  return out;
-}
-
-/* ===================== CONTACTS ===================== */
-function renderContacts(list){
-  els.contactsRow.innerHTML = '';
-
-  if(!Array.isArray(list) || list.length === 0){
-    // fallback: se non c'è array contacts, prova a estrarre numeri dal testo
-    const fromText = extractPhonesFromText((state.data && state.data.voice && state.data.voice.text) ? state.data.voice.text : '');
-    fromText.forEach((p, i)=> list.push({name:`Contatto ${i+1}`, phone:p}));
   }
 
-  (list || []).forEach(c=>{
-    const name = (c && c.name) ? String(c.name) : 'Contatto';
-    const phone = (c && c.phone) ? String(c.phone) : '';
-    if(!phone) return;
+  // ---- Load JSON ----
+  async function loadVetrina(id) {
+    const url = `data/${encodeURIComponent(id)}.json?ts=${Date.now()}`;
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`Non riesco a leggere ${url}`);
+    return await res.json();
+  }
 
-    const norm = normalizePhone(phone);
-    const wa = `https://wa.me/${norm.replace(/^\+/, '')}`;
-    const tel = `tel:${norm}`;
+  // ---- Render ----
+  function renderHeader() {
+    const title = safeText(vetrina.title || "Vetrina");
+    const desc  = safeText(vetrina.description || "");
+    pageTitle.textContent = title;
+    pageDesc.textContent = desc;
+    badgeId.textContent = `id: ${safeText(vetrina.id || "-")}`;
 
-    const a = document.createElement('a');
-    a.className = 'contactChip';
-    a.href = wa;
-    a.target = '_blank';
-    a.rel = 'noopener';
+    pageTitle.addEventListener("click", () => {
+      titleTapCount++;
+      clearTimeout(titleTapTimer);
+      titleTapTimer = setTimeout(() => (titleTapCount = 0), 900);
+      if (titleTapCount >= 5) {
+        titleTapCount = 0;
+        toggleLabelCard(true);
+      }
+    });
+  }
 
-    a.innerHTML = `<span>🟢</span><b>${escapeHtml(name)}</b><span>${escapeHtml(prettyPhone(norm))}</span>`;
-    a.addEventListener('click', (e)=>{
-      // tap breve -> WhatsApp
-      // tap lungo -> user può copiare
+  function renderVoicePanel() {
+    const hasVoice = !!safeText(vetrina?.voice?.text).trim();
+    const contacts = Array.isArray(vetrina?.contacts) ? vetrina.contacts : [];
+
+    if (!hasVoice && !contacts.length) {
+      voicePanel.hidden = true;
+      return;
+    }
+    voicePanel.hidden = false;
+
+    const msg = safeText(vetrina?.voice?.text || "");
+    voiceTextEl.textContent = msg;
+
+    voiceTextEl.addEventListener("click", () => {
+      speak(buildSpeakText(), vetrina.voice?.lang || "it-IT");
     });
 
-    // aggiungo anche chiamata (secondo chip)
-    const b = document.createElement('a');
-    b.className = 'contactChip';
-    b.href = tel;
-    b.innerHTML = `<span>📞</span><b>${escapeHtml(name)}</b><span>Chiama</span>`;
+    contactsRow.innerHTML = "";
+    contacts.forEach((c) => {
+      const name = safeText(c.name || "Contatto");
+      const phone = safeText(c.phone || "");
+      if (!phone) return;
 
-    els.contactsRow.appendChild(a);
-    els.contactsRow.appendChild(b);
-  });
-}
+      const pill = document.createElement("a");
+      pill.className = "contactPill";
+      pill.href = whatsappLink(phone, `Ciao ${name}, ho visto la vetrina "${vetrina.title}". Vorrei informazioni.`);
+      pill.target = "_blank";
+      pill.rel = "noopener";
 
-function normalizePhone(p){
-  let s = String(p).trim();
-  if(!s) return '';
-  s = s.replace(/[^\d+]/g,'');
-  if(s.startsWith('00')) s = '+' + s.slice(2);
-  if(!s.startsWith('+') && s.length >= 9){
-    // se è italiano e non ha prefisso, metti +39
-    if(s.startsWith('3') || s.startsWith('0')) s = '+39' + s;
-  }
-  return s;
-}
-function prettyPhone(p){
-  // +393332... -> +39 333 292 7842
-  const s = String(p);
-  if(!s.startsWith('+')) return s;
-  const cc = s.slice(0,3); // +39
-  const rest = s.slice(3);
-  if(rest.length <= 3) return s;
-  const a = rest.slice(0,3);
-  const b = rest.slice(3,6);
-  const c = rest.slice(6);
-  return `${cc} ${a} ${b} ${c}`.trim();
-}
+      const strong = document.createElement("strong");
+      strong.textContent = `💬 ${name}`;
 
-function extractPhonesFromText(t){
-  const s = String(t || '');
-  const matches = s.match(/(\+?\d[\d\s]{6,}\d)/g) || [];
-  return matches.map(m=> normalizePhone(m)).filter(Boolean);
-}
+      const span = document.createElement("span");
+      span.textContent = formatPhoneForSpeech(phone);
 
-/* ===================== INDEX (ALTRE VETRINE) ===================== */
-async function loadIndex(){
-  els.indexList.innerHTML = '';
-  els.indexPanel.hidden = true;
+      pill.appendChild(strong);
+      pill.appendChild(span);
+      contactsRow.appendChild(pill);
 
-  try{
-    const idx = await fetchJson(INDEX_URL);
-    const arr = (idx && Array.isArray(idx.vetrine)) ? idx.vetrine : [];
-    if(arr.length === 0) return;
-
-    // render
-    arr.forEach(v=>{
-      if(!v || !v.id) return;
-      const a = document.createElement('a');
-      a.className = 'indexLink';
-      a.href = `vetrina.html?id=${encodeURIComponent(v.id)}`;
-      a.innerHTML = `<span class="dot"></span><span>${escapeHtml(v.title || v.id)}</span>`;
-      els.indexList.appendChild(a);
+      const call = document.createElement("a");
+      call.className = "contactPill";
+      call.href = telLink(phone);
+      call.innerHTML = `<strong>📞 ${name}</strong><span>Chiama</span>`;
+      contactsRow.appendChild(call);
     });
-
-    els.indexPanel.hidden = false;
-  }catch(e){
-    // se manca il file, non mostriamo errore (solo silenzioso)
-    els.indexPanel.hidden = true;
-  }
-}
-
-/* ===================== FILES ===================== */
-function renderFiles(files){
-  const arr = Array.isArray(files) ? files : [];
-  if(arr.length === 0){
-    els.filesCard.hidden = true;
-    return;
-  }
-  els.filesCard.hidden = false;
-  els.filesList.innerHTML = '';
-  arr.forEach(f=>{
-    if(!f || !f.url) return;
-    const a = document.createElement('a');
-    a.className = 'fileLink';
-    a.href = f.url;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    a.innerHTML = `<span>${escapeHtml(f.label || f.url)}</span><span>Apri</span>`;
-    els.filesList.appendChild(a);
-  });
-}
-
-/* ===================== WHATSAPP (FOTO + DUE NUMERI) ===================== */
-function askInfoWhatsAppForCurrentPhoto(){
-  const contacts = Array.isArray(state.data.contacts) ? state.data.contacts : [];
-  const renzo = contacts.find(c => (c.name||'').toLowerCase().includes('renzo')) || contacts[0];
-  const sergio = contacts.find(c => (c.name||'').toLowerCase().includes('sergio')) || contacts[1];
-
-  const item = state.media[state.idx];
-  const photoUrl = absoluteUrl(item.url);
-  const vLink = absoluteUrl(`vetrina.html?id=${encodeURIComponent(VETRINA_ID)}`);
-
-  const msg =
-`Ciao! Chiedo informazioni per questa foto.
-
-Vetrina: ${vLink}
-Foto: ${photoUrl}
-
-Per favore dimmi prezzo/dettagli e disponibilità. Grazie!`;
-
-  // salva richiesta (solo per te, ma l'evento viene registrato sempre nel tuo telefono)
-  archiveRequest({
-    id: VETRINA_ID,
-    photoIndex: state.idx + 1,
-    photoUrl,
-    message: msg
-  });
-
-  const first = renzo ? makeWaUrl(renzo.phone, msg) : null;
-  const second = sergio ? makeWaUrl(sergio.phone, msg) : null;
-
-  // copia messaggio per sicurezza
-  copyToClipboard(msg).catch(()=>{});
-
-  // apri primo
-  if(first){
-    window.open(first, '_blank');
   }
 
-  // prepara secondo con click “anti blocco”
-  if(second){
-    state.pendingSecondWaUrl = second;
-    openWaModal(
-      `Ho aperto WhatsApp per ${renzo ? renzo.name : 'primo contatto'}.\n\nOra tocca “Apri Sergio” per inviare lo stesso messaggio anche al secondo numero.\n\n(Messaggio già copiato negli appunti, se serve incollare.)`
-    );
+  function renderThumbs() {
+    thumbRow.innerHTML = "";
+    media.forEach((m, idx) => {
+      const t = document.createElement("div");
+      t.className = "thumb" + (idx === currentIndex ? " active" : "");
+      const img = document.createElement("img");
+      img.alt = m.label || `Foto ${idx + 1}`;
+      img.src = m.url;
+      img.loading = "lazy";
+      t.appendChild(img);
+      t.addEventListener("click", () => goTo(idx));
+      thumbRow.appendChild(t);
+    });
   }
-}
 
-function makeWaUrl(phone, message){
-  const norm = normalizePhone(phone);
-  const to = norm.replace(/^\+/, '');
-  return `https://wa.me/${to}?text=${encodeURIComponent(message)}`;
-}
+  function renderFiles() {
+    const files = Array.isArray(vetrina.files) ? vetrina.files : [];
+    if (!files.length) {
+      filesCard.hidden = true;
+      return;
+    }
+    filesCard.hidden = false;
+    filesList.innerHTML = "";
+    files.forEach((f) => {
+      const row = document.createElement("div");
+      row.className = "fileItem";
+      const a = document.createElement("a");
+      a.href = f.url;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = f.label || f.url;
+      const meta = document.createElement("small");
+      meta.textContent = f.type || "";
+      row.appendChild(a);
+      row.appendChild(meta);
+      filesList.appendChild(row);
+    });
+  }
 
-function shareVetrinaWhatsApp(){
-  const link = absoluteUrl(`vetrina.html?id=${encodeURIComponent(VETRINA_ID)}`);
-  const title = state.data && state.data.title ? state.data.title : VETRINA_ID;
-  const msg = `Guarda questa vetrina: ${title}\n${link}`;
-  const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-  window.open(url, '_blank');
-}
+  function updateCounter() {
+    const total = media.length || 1;
+    const a = String(currentIndex + 1).padStart(2, "0");
+    const b = String(total).padStart(2, "0");
+    imgCounter.textContent = `${a}/${b}`;
+    imgBadge.textContent = a;
+  }
 
-function openWaModal(text){
-  els.waModalText.textContent = text;
-  els.waModal.hidden = false;
-}
-function closeWaModal(){
-  els.waModal.hidden = true;
-}
+  function setActiveThumb() {
+    const thumbs = qsa(".thumb");
+    thumbs.forEach((t, i) => t.classList.toggle("active", i === currentIndex));
+    const t = thumbs[currentIndex];
+    if (t && t.scrollIntoView) {
+      t.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    }
+  }
 
-/* ===================== REQUESTS ARCHIVE (SOLO TU) ===================== */
-function archiveRequest({id, photoIndex, photoUrl, message}){
-  try{
-    const now = new Date();
-    const entry = {
-      atISO: now.toISOString(),
-      atLocal: now.toLocaleString(),
-      id,
-      photoIndex,
-      photoUrl,
-      message
+  function renderPinsForCurrent() {
+    pinsLayer.innerHTML = "";
+    const item = media[currentIndex];
+    if (!item) return;
+
+    const key = item.url;
+    const entry = pinsData[key];
+    if (!entry || !Array.isArray(entry.pins)) return;
+
+    const size = Number(entry.size || pinSize || 28);
+    pinsLayer.style.setProperty("--pinSize", `${size}px`);
+
+    entry.pins.forEach((p) => {
+      const el = document.createElement("div");
+      el.className = "pin";
+      el.textContent = String(p.n);
+      el.style.left = `${p.x * 100}%`;
+      el.style.top  = `${p.y * 100}%`;
+      pinsLayer.appendChild(el);
+    });
+  }
+
+  function showImage(idx) {
+    if (!media.length) return;
+
+    currentIndex = (idx + media.length) % media.length;
+    const item = media[currentIndex];
+
+    heroImg.src = item.url;
+    heroImg.alt = item.label || "Immagine vetrina";
+
+    updateCounter();
+    setActiveThumb();
+    renderPinsForCurrent();
+
+    updatePhotoWhatsAppButtonUnderPhoto();
+  }
+
+  function goTo(idx) { showImage(idx); }
+  function next() { showImage(currentIndex + 1); }
+  function prev() { showImage(currentIndex - 1); }
+
+  // ---- Fullscreen toggle (tap on image) ----
+  function toggleFull() {
+    isFull = !isFull;
+    if (isFull) {
+      const el = mediaStage || imgWrap || heroImg;
+      if (el?.requestFullscreen) {
+        el.requestFullscreen().catch(() => {});
+      } else {
+        document.body.style.overflow = "hidden";
+        mediaStage.style.position = "fixed";
+        mediaStage.style.inset = "0";
+        mediaStage.style.zIndex = "200";
+        mediaStage.style.borderRadius = "0";
+      }
+    } else {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      } else {
+        document.body.style.overflow = "";
+        mediaStage.style.position = "";
+        mediaStage.style.inset = "";
+        mediaStage.style.zIndex = "";
+        mediaStage.style.borderRadius = "";
+      }
+    }
+  }
+
+  // ---- Swipe support ----
+  function attachSwipe() {
+    let startX = 0;
+    let startY = 0;
+    let moved = false;
+
+    heroImg.addEventListener("touchstart", (e) => {
+      if (!e.touches?.length) return;
+      const t = e.touches[0];
+      startX = t.clientX;
+      startY = t.clientY;
+      moved = false;
+    }, { passive: true });
+
+    heroImg.addEventListener("touchmove", (e) => {
+      if (!e.touches?.length) return;
+      const t = e.touches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+      if (Math.abs(dx) > 18 && Math.abs(dx) > Math.abs(dy)) moved = true;
+    }, { passive: true });
+
+    heroImg.addEventListener("touchend", (e) => {
+      if (labelMode) return;
+      if (!moved) return;
+
+      const endX = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : startX;
+      const dx = endX - startX;
+      if (dx < -40) next();
+      else if (dx > 40) prev();
+    }, { passive: true });
+  }
+
+  // ✅ WhatsApp button UNDER ALL PHOTOS (sotto la foto)
+  function ensurePhotoWaRow() {
+    if (photoWaRow && photoWaBtn) return;
+
+    const heroCard = qs(".heroCard");
+    if (!heroCard) return;
+
+    const hero = heroCard.querySelector(".hero");
+    if (!hero) return;
+
+    // crea riga sotto foto (sotto .hero e prima delle miniature)
+    photoWaRow = document.createElement("div");
+    photoWaRow.id = "photoWaRow";
+    photoWaRow.style.margin = "12px 0 6px";
+    photoWaRow.style.display = "flex";
+    photoWaRow.style.justifyContent = "center";
+
+    photoWaBtn = document.createElement("button");
+    photoWaBtn.id = "photoWaBtn";
+    photoWaBtn.className = "shareBtn";
+    photoWaBtn.style.width = "min(520px, 92%)";
+    photoWaBtn.style.padding = "12px 14px";
+    photoWaBtn.style.borderRadius = "14px";
+    photoWaBtn.style.fontWeight = "900";
+    photoWaBtn.style.border = "1px solid rgba(255,255,255,.14)";
+    photoWaBtn.style.background = "rgba(46,204,113,.20)";
+    photoWaBtn.style.backdropFilter = "blur(10px)";
+    photoWaBtn.style.webkitBackdropFilter = "blur(10px)";
+    photoWaBtn.textContent = "💬 WhatsApp (Foto) • Chiedi info";
+
+    photoWaRow.appendChild(photoWaBtn);
+
+    // inserisci sotto hero (e sopra thumbRow)
+    hero.insertAdjacentElement("afterend", photoWaRow);
+  }
+
+  function updatePhotoWhatsAppButtonUnderPhoto() {
+    ensurePhotoWaRow();
+    if (!photoWaBtn) return;
+
+    photoWaBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const a = Array.isArray(vetrina?.contacts) ? vetrina.contacts : [];
+      if (!a.length) {
+        alert("Contatti non configurati nel JSON (contacts).");
+        return;
+      }
+
+      const photoNum = String(currentIndex + 1).padStart(2, "0");
+      const linkVetrina = location.href;
+      const msg =
+        `Ciao! Vorrei informazioni.\n` +
+        `Vetrina: ${vetrina.title}\n` +
+        `Foto #: ${photoNum}\n` +
+        `Link: ${linkVetrina}\n\n` +
+        `Scrivo per chiedere info sull’oggetto/numero che mi interessa.`;
+
+      openWhatsAppChooser(a, msg);
     };
+  }
 
-    const arr = loadLS(LS_REQ_KEY(id), []);
-    arr.push(entry);
-    saveLS(LS_REQ_KEY(id), arr);
-    refreshRequestsBox();
-  }catch(e){}
-}
+  function openWhatsAppChooser(contacts, msg) {
+    let modal = qs("#waChooser");
+    if (modal) modal.remove();
 
-function refreshRequestsBox(){
-  if(!state.adminEnabled) return;
-  const arr = loadLS(LS_REQ_KEY(VETRINA_ID), []);
-  els.requestsBox.value = JSON.stringify(arr, null, 2);
-}
+    modal = document.createElement("div");
+    modal.id = "waChooser";
+    modal.style.position = "fixed";
+    modal.style.inset = "0";
+    modal.style.zIndex = "300";
+    modal.style.background = "rgba(0,0,0,.55)";
+    modal.style.display = "flex";
+    modal.style.alignItems = "center";
+    modal.style.justifyContent = "center";
+    modal.style.padding = "16px";
 
-function exportRequests(){
-  if(!state.adminEnabled) return;
-  refreshRequestsBox();
-  els.requestsBox.focus();
-}
-async function copyRequests(){
-  if(!state.adminEnabled) return;
-  refreshRequestsBox();
-  await copyToClipboard(els.requestsBox.value || '[]');
-  toast('Copiato ✅');
-}
-function clearRequests(){
-  if(!state.adminEnabled) return;
-  if(!confirm('Vuoi cancellare TUTTO l’archivio richieste su questo telefono?')) return;
-  saveLS(LS_REQ_KEY(VETRINA_ID), []);
-  refreshRequestsBox();
-}
+    const card = document.createElement("div");
+    card.style.width = "min(560px, 100%)";
+    card.style.borderRadius = "18px";
+    card.style.background = "rgba(14,22,37,.98)";
+    card.style.border = "1px solid rgba(255,255,255,.14)";
+    card.style.boxShadow = "0 12px 30px rgba(0,0,0,.45)";
+    card.style.padding = "14px";
 
-/* ===================== ADMIN: 5 TAP TITLE ===================== */
-function enableFiveTapAdmin(){
-  let taps = 0;
-  let tmr = null;
+    const h = document.createElement("div");
+    h.style.fontWeight = "900";
+    h.style.fontSize = "16px";
+    h.textContent = "Scegli a chi inviare su WhatsApp";
+    card.appendChild(h);
 
-  els.pageTitle.addEventListener('click', ()=>{
-    taps++;
-    clearTimeout(tmr);
-    tmr = setTimeout(()=>{ taps = 0; }, 1200);
+    const p = document.createElement("div");
+    p.style.marginTop = "6px";
+    p.style.color = "rgba(255,255,255,.75)";
+    p.style.fontSize = "13px";
+    p.textContent = "WhatsApp non invia a 2 numeri insieme con un solo click: scegli Renzo o Sergio.";
+    card.appendChild(p);
 
-    if(taps >= 5){
-      taps = 0;
-      state.adminEnabled = !state.adminEnabled;
-      saveLS(LS_ADMIN_KEY, state.adminEnabled ? '1' : '0');
-      updateAdminUI();
-      toast(state.adminEnabled ? 'Admin ON 🔒' : 'Admin OFF');
+    const list = document.createElement("div");
+    list.style.display = "flex";
+    list.style.flexDirection = "column";
+    list.style.gap = "10px";
+    list.style.marginTop = "12px";
+
+    contacts.forEach((c) => {
+      const b = document.createElement("a");
+      b.href = whatsappLink(c.phone, msg);
+      b.target = "_blank";
+      b.rel = "noopener";
+      b.style.display = "block";
+      b.style.textDecoration = "none";
+      b.style.padding = "12px 12px";
+      b.style.borderRadius = "14px";
+      b.style.border = "1px solid rgba(255,255,255,.12)";
+      b.style.background = "rgba(255,255,255,.06)";
+      b.style.color = "#e9eef7";
+      b.style.fontWeight = "900";
+      b.textContent = `💬 ${c.name} • ${formatPhoneForSpeech(c.phone)}`;
+      list.appendChild(b);
+    });
+
+    card.appendChild(list);
+
+    const close = document.createElement("button");
+    close.textContent = "Chiudi";
+    close.style.marginTop = "12px";
+    close.style.width = "100%";
+    close.style.padding = "12px";
+    close.style.borderRadius = "14px";
+    close.style.border = "1px solid rgba(255,255,255,.12)";
+    close.style.background = "rgba(255,255,255,.04)";
+    close.style.color = "#e9eef7";
+    close.style.fontWeight = "900";
+    close.addEventListener("click", () => modal.remove());
+    card.appendChild(close);
+
+    modal.appendChild(card);
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) modal.remove();
+    });
+
+    document.body.appendChild(modal);
+  }
+
+  // ---- Bottom share button (share vetrina) ----
+  function shareVetrina() {
+    const link = location.href;
+    const msg = `Guarda questa vetrina: ${vetrina?.title || "Vetrina"}\n${link}`;
+    const a = Array.isArray(vetrina?.contacts) ? vetrina.contacts : [];
+
+    if (a.length) {
+      openWhatsAppChooser(a, msg);
+      return;
     }
-  });
-}
 
-function updateAdminUI(){
-  els.labelCard.hidden = !state.adminEnabled;
-  els.adminCard.hidden = !state.adminEnabled;
-  els.adminBadge.textContent = state.adminEnabled ? 'ON' : 'OFF';
-
-  if(state.adminEnabled){
-    // carica pins locali sempre (per te)
-    const lsPins = loadLS(LS_PINS_KEY(VETRINA_ID), null);
-    if(lsPins && typeof lsPins === 'object'){
-      state.currentPins = lsPins;
+    if (navigator.share) {
+      navigator.share({ title: vetrina?.title || "Vetrina", text: msg, url: link }).catch(() => {});
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
     }
-    refreshRequestsBox();
-  }else{
-    state.labelMode = false;
-    updateLabelModeUI();
   }
 
-  updateLabelModeUI();
-  renderPinsForCurrentImage();
-}
-
-/* ===================== PINS (NUMERINI) ===================== */
-function updateLabelModeUI(){
-  els.labelModeBadge.textContent = state.labelMode ? 'ON' : 'OFF';
-  els.pinSizeValue.textContent = String(state.pinSize);
-  els.pinSizeRange.value = String(state.pinSize);
-}
-
-function currentMediaKey(){
-  const item = state.media[state.idx];
-  return item ? item.url : '';
-}
-
-function addPinForCurrentImage(x, y){
-  const key = currentMediaKey();
-  if(!key) return;
-
-  if(!state.currentPins[key]) state.currentPins[key] = [];
-  const list = state.currentPins[key];
-
-  const n = list.length + 1;
-  list.push({ x, y, n, size: state.pinSize });
-
-  saveLS(LS_PINS_KEY(VETRINA_ID), state.currentPins);
-  renderPinsForCurrentImage();
-}
-
-function undoPin(){
-  const key = currentMediaKey();
-  if(!key || !state.currentPins[key] || state.currentPins[key].length === 0) return;
-  state.currentPins[key].pop();
-  saveLS(LS_PINS_KEY(VETRINA_ID), state.currentPins);
-  renderPinsForCurrentImage();
-}
-
-function clearPinsForCurrentImage(){
-  const key = currentMediaKey();
-  if(!key) return;
-  if(!confirm('Vuoi rimuovere tutti i numerini da QUESTA foto?')) return;
-  state.currentPins[key] = [];
-  saveLS(LS_PINS_KEY(VETRINA_ID), state.currentPins);
-  renderPinsForCurrentImage();
-}
-
-function renderPinsForCurrentImage(){
-  els.pinsLayer.innerHTML = '';
-  const key = currentMediaKey();
-  if(!key) return;
-
-  const list = Array.isArray(state.currentPins[key]) ? state.currentPins[key] : [];
-  list.forEach(p=>{
-    const d = document.createElement('div');
-    d.className = 'pin';
-    const size = Number(p.size || 28);
-    d.style.width = `${size}px`;
-    d.style.height = `${size}px`;
-    d.style.left = `${(p.x * 100).toFixed(3)}%`;
-    d.style.top = `${(p.y * 100).toFixed(3)}%`;
-    d.style.fontSize = `${Math.max(10, Math.floor(size * 0.52))}px`;
-    d.textContent = String(p.n || '');
-    els.pinsLayer.appendChild(d);
-  });
-}
-
-function exportPinsData(){
-  if(!state.adminEnabled) return;
-  const snippet = JSON.stringify({ pinsData: state.currentPins }, null, 2);
-  els.pinsJsonBox.value = snippet;
-}
-
-async function copyPinsData(){
-  if(!state.adminEnabled) return;
-  const snippet = JSON.stringify({ pinsData: state.currentPins }, null, 2);
-  els.pinsJsonBox.value = snippet; // ✅ “copia json” fa anche “incolla” automatico qui
-  await copyToClipboard(snippet);
-  toast('pinsData copiato ✅ (incollalo nel JSON)');
-}
-
-/* ===================== UTIL ===================== */
-function scrollToTop(){
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-
-function absoluteUrl(rel){
-  try{
-    return new URL(rel, location.href).toString();
-  }catch(e){
-    return rel;
+  // ---- Label tool (pins manuali) ----
+  function storageKeyPins() {
+    return `sercuctech_pins_${safeText(vetrina?.id || "noid")}`;
   }
-}
 
-function showError(msg){
-  els.errorCard.hidden = false;
-  els.errorText.textContent = msg;
-}
-
-function escapeHtml(s){
-  return String(s)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#039;');
-}
-
-function deepClone(o){
-  return JSON.parse(JSON.stringify(o || {}));
-}
-
-function loadLS(key, fallback){
-  try{
-    const raw = localStorage.getItem(key);
-    if(raw == null) return fallback;
-    return JSON.parse(raw);
-  }catch(e){
-    return fallback;
+  function loadPinsFromStorage() {
+    try {
+      const raw = localStorage.getItem(storageKeyPins());
+      pinsData = raw ? JSON.parse(raw) : {};
+    } catch {
+      pinsData = {};
+    }
   }
-}
-function saveLS(key, val){
-  try{
-    localStorage.setItem(key, JSON.stringify(val));
-  }catch(e){}
-}
 
-async function copyToClipboard(text){
-  const t = String(text || '');
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    return navigator.clipboard.writeText(t);
+  function savePinsToStorage() {
+    try {
+      localStorage.setItem(storageKeyPins(), JSON.stringify(pinsData));
+    } catch {}
   }
-  // fallback
-  const ta = document.createElement('textarea');
-  ta.value = t;
-  ta.style.position = 'fixed';
-  ta.style.left = '-9999px';
-  document.body.appendChild(ta);
-  ta.select();
-  document.execCommand('copy');
-  document.body.removeChild(ta);
-}
 
-function toast(msg){
-  const d = document.createElement('div');
-  d.textContent = msg;
-  d.style.position = 'fixed';
-  d.style.left = '50%';
-  d.style.transform = 'translateX(-50%)';
-  d.style.bottom = '120px';
-  d.style.zIndex = '999';
-  d.style.padding = '10px 12px';
-  d.style.borderRadius = '14px';
-  d.style.border = '1px solid rgba(255,255,255,.14)';
-  d.style.background = 'rgba(0,0,0,.55)';
-  d.style.color = '#fff';
-  d.style.fontWeight = '900';
-  d.style.boxShadow = '0 14px 30px rgba(0,0,0,.35)';
-  document.body.appendChild(d);
-  setTimeout(()=> d.remove(), 1200);
-}
+  function toggleLabelCard(forceOn) {
+    const on = typeof forceOn === "boolean" ? forceOn : !labelCard.hidden;
+    labelCard.hidden = !on;
+  }
+
+  function setLabelMode(on) {
+    labelMode = !!on;
+    labelModeBadge.textContent = labelMode ? "ON" : "OFF";
+    labelModeBadge.style.color = labelMode ? "rgba(56,210,122,.95)" : "rgba(255,255,255,.6)";
+  }
+
+  function getCurrentPinsEntry() {
+    const item = media[currentIndex];
+    if (!item) return null;
+    const key = item.url;
+    if (!pinsData[key]) {
+      pinsData[key] = { size: pinSize, pins: [] };
+    }
+    if (!pinsData[key].pins) pinsData[key].pins = [];
+    return pinsData[key];
+  }
+
+  function placePinAtClientXY(clientX, clientY) {
+    const rect = heroImg.getBoundingClientRect();
+    const x = (clientX - rect.left) / rect.width;
+    const y = (clientY - rect.top) / rect.height;
+
+    if (x < 0 || x > 1 || y < 0 || y > 1) return;
+
+    const entry = getCurrentPinsEntry();
+    if (!entry) return;
+
+    entry.size = pinSize;
+    const nextN = (entry.pins.length ? Math.max(...entry.pins.map(p => p.n)) : 0) + 1;
+
+    entry.pins.push({ x, y, n: nextN });
+    savePinsToStorage();
+    renderPinsForCurrent();
+  }
+
+  function undoPin() {
+    const entry = getCurrentPinsEntry();
+    if (!entry || !entry.pins.length) return;
+    entry.pins.pop();
+    savePinsToStorage();
+    renderPinsForCurrent();
+  }
+
+  function clearPins() {
+    const item = media[currentIndex];
+    if (!item) return;
+    delete pinsData[item.url];
+    savePinsToStorage();
+    renderPinsForCurrent();
+  }
+
+  function exportPinsJSON() {
+    const out = JSON.stringify(pinsData, null, 2);
+    pinsJsonBox.value = out;
+  }
+
+  async function copyPinsJSON() {
+    exportPinsJSON();
+    try {
+      await navigator.clipboard.writeText(pinsJsonBox.value);
+      alert("JSON copiato!");
+    } catch {
+      pinsJsonBox.select();
+      document.execCommand("copy");
+      alert("JSON copiato!");
+    }
+  }
+
+  // ---- Events ----
+  function bindEvents() {
+    prevBtn.addEventListener("click", prev);
+    nextBtn.addEventListener("click", next);
+
+    heroImg.addEventListener("click", (e) => {
+      if (labelMode) {
+        placePinAtClientXY(e.clientX, e.clientY);
+        return;
+      }
+      toggleFull();
+    });
+
+    heroImg.addEventListener("touchend", (e) => {
+      if (!labelMode) return;
+      const t = e.changedTouches && e.changedTouches[0];
+      if (!t) return;
+      placePinAtClientXY(t.clientX, t.clientY);
+    }, { passive: true });
+
+    attachSwipe();
+
+    shareBtn.addEventListener("click", shareVetrina);
+
+    homeBtn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+    voiceBtn.addEventListener("click", () => speak(buildSpeakText(), vetrina?.voice?.lang || "it-IT"));
+    stopBtn.addEventListener("click", stopSpeech);
+    fullBtn.addEventListener("click", toggleFull);
+
+    enableAudioBtn.addEventListener("click", enableSpeechAndAutoPlay);
+    skipAudioBtn.addEventListener("click", () => showAudioGate(false));
+
+    labelToggleBtn.addEventListener("click", () => setLabelMode(!labelMode));
+    labelUndoBtn.addEventListener("click", undoPin);
+    labelClearBtn.addEventListener("click", () => {
+      if (confirm("Vuoi cancellare tutti i numerini di questa foto?")) clearPins();
+    });
+
+    pinSizeRange.addEventListener("input", () => {
+      pinSize = Number(pinSizeRange.value || 28);
+      pinSizeValue.textContent = String(pinSize);
+      const entry = getCurrentPinsEntry();
+      if (entry) {
+        entry.size = pinSize;
+        savePinsToStorage();
+        renderPinsForCurrent();
+      }
+    });
+
+    exportPinsBtn.addEventListener("click", exportPinsJSON);
+    copyPinsBtn.addEventListener("click", copyPinsJSON);
+
+    document.addEventListener("fullscreenchange", () => {
+      if (!document.fullscreenElement) isFull = false;
+    });
+
+    voicePanel.addEventListener("click", (e) => {
+      const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+      if (tag === "a" || tag === "button") return;
+      speak(buildSpeakText(), vetrina?.voice?.lang || "it-IT");
+    });
+  }
+
+  // ---- Boot ----
+  async function boot() {
+    const id = getIdFromUrl();
+    if (!id) {
+      showError("Manca parametro id. Esempio: vetrina.html?id=renzo11");
+      return;
+    }
+
+    try {
+      vetrina = await loadVetrina(id);
+    } catch (e) {
+      showError(safeText(e.message || e));
+      return;
+    }
+
+    const rawMedia = Array.isArray(vetrina.media) ? vetrina.media : [];
+    media = rawMedia
+      .filter(m => m && m.type === "image" && m.url)
+      .map(m => ({ url: m.url, label: m.label || "" }));
+
+    if (!media.length) {
+      showError("Questa vetrina non ha immagini in 'media'.");
+      return;
+    }
+
+    loadPinsFromStorage();
+
+    renderHeader();
+    renderVoicePanel();
+    renderFiles();
+    renderThumbs();
+    bindEvents();
+
+    showImage(0);
+    showAudioGate(false);
+  }
+
+  boot();
+})();
