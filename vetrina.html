@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Vetrina</title>
-  <link rel="stylesheet" href="style.css?v=3">
+  <title>Vetrina • SerCucTech</title>
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 
 <body>
@@ -20,24 +20,35 @@
       <span id="badgeId" class="idBadge">id: -</span>
     </div>
 
-    <!-- TESTO AUDIO FISSO + CONTATTI (click ovunque = parte audio) -->
-    <section class="voicePanel" id="voicePanel" hidden role="button" tabindex="0" aria-label="Tocca per ascoltare l'audio">
+    <section class="voicePanel" id="voicePanel" hidden>
       <div class="voicePanelInner">
         <div class="voiceTop">
-          <div class="voiceTitle">📣 Messaggio (tocca qui per ascoltare)</div>
-          <div class="voiceHint">Numeri cliccabili: WhatsApp o chiamata</div>
+          <div class="voiceTitle">📣 Messaggio (tocca qui sotto per ascoltare)</div>
+          <button class="miniBtn" id="voicePlayBtn" type="button">🔊 Voice</button>
+          <button class="miniBtn danger" id="voiceStopBtn" type="button">⛔ Stop</button>
         </div>
 
-        <div class="voiceText" id="voiceText"></div>
+        <div class="voiceText clickable" id="voiceText" title="Tocca per ascoltare"></div>
 
         <div class="contactsRow" id="contactsRow"></div>
-        <div class="contactsHint">👉 Tocca un numero per contattare subito</div>
+        <div class="contactsHint">👉 Tocca un contatto per aprire WhatsApp o chiamare</div>
       </div>
     </section>
   </header>
 
   <main class="content">
-    <!-- GALLERIA -->
+
+    <section class="card" id="indexCard">
+      <div class="indexHead">
+        <h2 class="h2" style="margin:0">📚 Altre vetrine</h2>
+        <button class="miniBtn" id="indexReloadBtn" type="button">🔄 Aggiorna</button>
+      </div>
+      <div class="indexList" id="indexList"></div>
+      <div class="smallHint">
+        Questo indice è uguale in tutte le vetrine: così da una vetrina puoi entrare nelle altre.
+      </div>
+    </section>
+
     <section class="card heroCard">
       <div class="hero">
         <button class="navBtn left" id="prevBtn" aria-label="Immagine precedente">‹</button>
@@ -47,14 +58,11 @@
 
           <div class="imgWrap" id="imgWrap">
             <img id="heroImg" class="heroImg" alt="Immagine vetrina">
-
-            <!-- pins overlay -->
             <div id="pinsLayer" class="pinsLayer" aria-hidden="true"></div>
 
-            <!-- WhatsApp overlay su FOTO (sempre 2) -->
-            <div class="waOverlay" id="waOverlay">
-              <button class="waBtnOverlay" id="waPhotoRenzo" type="button">🟢 WhatsApp Renzo (Foto)</button>
-              <button class="waBtnOverlay" id="waPhotoSergio" type="button">🟢 WhatsApp Sergio (Foto)</button>
+            <!-- UNICO TASTO WHATSAPP (sempre su tutte le foto) -->
+            <div class="photoActions single">
+              <button class="waOnPhoto" id="waAllBtn" type="button">🟢 WhatsApp (Foto) • Chiedi info</button>
             </div>
           </div>
 
@@ -67,25 +75,17 @@
       <div class="thumbRow" id="thumbRow"></div>
 
       <div class="smallHint">
-        Swipe sull’immagine • Tap = schermo intero • Tap di nuovo = normale
+        Swipe sulle foto • Tap sulla foto = schermo intero • Tap di nuovo = normale
         <br>
-        <span class="smallHint2">Modalità numerini: tap rapido sul titolo 5 volte (solo sul tuo telefono)</span>
-      </div>
-
-      <!-- WhatsApp vetrina (sotto, sempre 2) -->
-      <div class="waBar">
-        <button class="waBtn" id="waVetrinaRenzo" type="button">🟢 WhatsApp Renzo (Vetrina)</button>
-        <button class="waBtn" id="waVetrinaSergio" type="button">🟢 WhatsApp Sergio (Vetrina)</button>
+        <span class="smallHint2">Modalità numerini: tap sul titolo 5 volte (solo sul tuo telefono)</span>
       </div>
     </section>
 
-    <!-- FILES (se li aggiungi nel JSON) -->
     <section class="card" id="filesCard" hidden>
       <h2 class="h2">Files</h2>
       <div id="filesList" class="filesList"></div>
     </section>
 
-    <!-- LABEL TOOL (NASCOSTO) -->
     <section class="card labelCard" id="labelCard" hidden>
       <div class="labelHead">
         <h2 class="h2" style="margin:0">🧷 Numerini manuali sugli oggetti</h2>
@@ -100,31 +100,30 @@
 
       <div class="labelSliderRow">
         <div class="labelSliderTitle">Grandezza numerino</div>
-        <input type="range" id="pinSizeRange" min="14" max="64" value="28">
+        <input type="range" id="pinSizeRange" min="12" max="70" value="28">
         <div class="labelSliderValue"><span id="pinSizeValue">28</span> px</div>
       </div>
 
       <div class="labelExportRow">
         <button class="labelBtn" id="exportPinsBtn">Export JSON (pins)</button>
         <button class="labelBtn" id="copyPinsBtn">Copia JSON</button>
+        <button class="labelBtn blue" id="copyPastePinsBtn">Copia+Incolla Auto</button>
       </div>
 
       <textarea id="pinsJsonBox" class="pinsJsonBox" placeholder="Qui comparirà il JSON dei pins…"></textarea>
 
       <div class="labelTip">
-        ✅ Quando la modalità è attiva: tocca l’immagine per piazzare un numerino (1,2,3…).<br>
-        ✅ I numerini restano salvati sul tuo telefono (localStorage).<br>
-        ✅ Gli utenti che aprono il link vedono i numerini SOLO se tu li hai esportati e li metti nel JSON.
+        ✅ Modalità ON: tocchi la foto e piazzi 1,2,3…<br>
+        ✅ I numeri si salvano sul tuo telefono.<br>
+        ✅ “Copia+Incolla Auto” prepara il blocco pronto da incollare in <b>pinsData</b> nel JSON della vetrina.
       </div>
     </section>
   </main>
 
-  <!-- SHARE sopra la barra -->
   <div class="shareDock">
-    <button class="shareBtn" id="shareBtn">Condividi su WhatsApp</button>
+    <button class="shareBtn" id="shareBtn">🟢 Condividi questa vetrina su WhatsApp</button>
   </div>
 
-  <!-- BOTTOM BAR fissa -->
   <nav class="bottombar" id="bottombar">
     <button class="barBtn" id="homeBtn">Home</button>
     <button class="barBtn" id="voiceBtn">Voice</button>
@@ -134,7 +133,28 @@
     <button class="barBtn" id="kioskBtn">Kiosk</button>
   </nav>
 
-  <!-- OVERLAY audio sblocco -->
+  <!-- MODALE: invia a Renzo e/o Sergio -->
+  <div class="waModal" id="waModal" hidden>
+    <div class="waModalCard">
+      <div class="waModalTitle">Invia richiesta informazioni</div>
+      <div class="waModalText" id="waModalText"></div>
+
+      <div class="waModalBtns">
+        <button class="waPickBtn" id="waToRenzoBtn" type="button">🟢 Invia a Renzo</button>
+        <button class="waPickBtn" id="waToSergioBtn" type="button">🟢 Invia a Sergio</button>
+      </div>
+
+      <div class="waModalBtns2">
+        <button class="miniBtn" id="waSendBothBtn" type="button">Invia a entrambi (2 tocchi)</button>
+        <button class="miniBtn danger" id="waCloseBtn" type="button">Chiudi</button>
+      </div>
+
+      <div class="smallHint" style="margin-top:10px">
+        Nota: WhatsApp non permette invio a 2 numeri insieme con 1 click. Qui lo fai in modo guidato e veloce.
+      </div>
+    </div>
+  </div>
+
   <div class="audioGate" id="audioGate" hidden>
     <div class="audioGateCard">
       <div class="audioGateTitle">Audio bloccato dal telefono</div>
@@ -146,6 +166,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>
