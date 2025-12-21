@@ -3,145 +3,478 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>SerCucTech — Indice</title>
+  <title>SerCucTech — Indice Link</title>
+
   <style>
     :root{
-      --bg:#0b1220; --card:rgba(255,255,255,.06); --line:rgba(255,255,255,.12);
-      --txt:#eaf0ff; --muted:rgba(234,240,255,.72); --btn:rgba(255,255,255,.10);
+      --bg:#0b1220;
+      --card:rgba(255,255,255,.06);
+      --line:rgba(255,255,255,.12);
+      --txt:#eaf0ff;
+      --muted:rgba(234,240,255,.72);
+      --btn:rgba(255,255,255,.10);
       --green:#23c55e;
+      --amber:#ffcc66;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
     }
     *{box-sizing:border-box}
     body{
-      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background: radial-gradient(900px 600px at 20% -20%, rgba(130,170,255,.20), transparent 60%),
-                  radial-gradient(900px 600px at 90% 10%, rgba(120,255,210,.10), transparent 60%),
-                  var(--bg);
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:
+        radial-gradient(900px 600px at 20% -20%, rgba(130,170,255,.20), transparent 60%),
+        radial-gradient(900px 600px at 90% 10%, rgba(120,255,210,.10), transparent 60%),
+        var(--bg);
       color:var(--txt);
       padding:16px;
+      padding-bottom:120px;
     }
-    .wrap{max-width:900px;margin:0 auto;display:grid;gap:12px}
+    .wrap{max-width:980px;margin:0 auto;display:grid;gap:12px}
     .top{
-      border:1px solid var(--line); background:var(--card); border-radius:18px; padding:14px;
+      border:1px solid var(--line);
+      background:var(--card);
+      border-radius:18px;
+      padding:14px;
+      box-shadow:var(--shadow);
     }
     h1{margin:0;font-size:20px;font-weight:1000;text-align:center}
-    p{margin:8px 0 0; color:var(--muted); text-align:center; font-weight:800}
-    .grid{display:grid; gap:12px; grid-template-columns:1fr;}
-    @media(min-width:820px){ .grid{grid-template-columns:1fr 1fr;} }
+    .sub{margin:8px 0 0;color:var(--muted);text-align:center;font-weight:900;line-height:1.35}
+
+    .grid{display:grid;gap:12px}
+    @media(min-width:900px){ .grid{grid-template-columns:1fr 1fr;} }
+
     .card{
-      border:1px solid var(--line); background:var(--card); border-radius:18px; padding:14px;
+      border:1px solid var(--line);
+      background:var(--card);
+      border-radius:18px;
+      padding:14px;
+      box-shadow:var(--shadow);
     }
+    .titleRow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+    .title{font-weight:1000}
+    .pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      color:var(--muted);
+      font-weight:900;
+      font-size:12px;
+    }
+
+    .row{display:grid;gap:10px}
+    .item{
+      display:grid;
+      grid-template-columns:1fr auto auto;
+      gap:8px;
+      align-items:center;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.18);
+    }
+    .item a{
+      color:var(--txt);
+      text-decoration:none;
+      font-weight:1000;
+      word-break:break-word;
+    }
+    .desc{
+      grid-column:1 / -1;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+      line-height:1.35;
+      margin-top:2px;
+    }
+
     .btn{
-      display:block; width:100%;
-      border:1px solid var(--line); background:var(--btn); color:var(--txt);
-      border-radius:16px; padding:14px 14px; font-weight:1000; text-align:center;
-      text-decoration:none; user-select:none;
+      border:1px solid var(--line);
+      background:var(--btn);
+      color:var(--txt);
+      border-radius:14px;
+      padding:10px 12px;
+      font-weight:1000;
+      cursor:pointer;
+      user-select:none;
+      white-space:nowrap;
     }
     .btn:active{transform:scale(.99)}
-    .btn.primary{background:rgba(35,197,94,.18); border-color:rgba(35,197,94,.35)}
-    .btn.green{background:var(--green); color:#06110a; border-color:rgba(0,0,0,.2)}
-    .row{display:grid; gap:10px}
-    .small{margin-top:10px; font-size:12px; color:var(--muted); font-weight:800; line-height:1.35}
+    .btn.green{background:rgba(35,197,94,.18);border-color:rgba(35,197,94,.35)}
+    .btn.amber{background:rgba(255,204,102,.18);border-color:rgba(255,204,102,.35)}
+    .btnSolid{
+      border:none;
+      background:var(--green);
+      color:#06110a;
+      border-radius:16px;
+      padding:12px 14px;
+      font-weight:1000;
+      cursor:pointer;
+    }
     input{
-      width:100%; padding:12px 12px; border-radius:14px; border:1px solid var(--line);
-      background:rgba(0,0,0,.22); color:var(--txt); font-weight:900; outline:none;
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.22);
+      color:var(--txt);
+      font-weight:900;
+      outline:none;
     }
-    .list{display:grid; gap:10px; margin-top:10px}
-    .item{
-      display:flex; gap:10px; align-items:center; justify-content:space-between;
-      padding:12px; border-radius:16px; border:1px solid var(--line); background:rgba(0,0,0,.18);
+
+    .bar{
+      position:fixed;
+      left:0; right:0; bottom:0;
+      padding:10px 12px;
+      background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.55));
+      backdrop-filter:blur(10px);
+      border-top:1px solid var(--line);
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      z-index:999;
     }
-    .item strong{font-weight:1000}
-    .chips{display:flex; gap:8px; flex-wrap:wrap}
-    .chip{
-      padding:8px 10px; border-radius:999px;
-      border:1px solid var(--line); background:rgba(255,255,255,.06);
-      color:var(--muted); font-weight:900; font-size:12px; text-decoration:none;
+    .bar .btnSolid{width:min(520px,100%)}
+
+    .warn{
+      color:rgba(255,255,255,.86);
+      background:rgba(255,204,102,.12);
+      border:1px solid rgba(255,204,102,.25);
+      padding:10px;
+      border-radius:14px;
+      font-weight:900;
+      font-size:12px;
+      line-height:1.35;
     }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <div class="top">
-      <h1>SerCucTech — Indice</h1>
-      <p>Qui trovi i link Utente/Admin e l’elenco vetrine condivisibili.</p>
+      <h1>SerCucTech — Indice Link</h1>
+      <div class="sub">
+        Tocca un link per aprirlo. Tocca 🔊 per sentire la spiegazione come un ragazzino di 10 anni.
+      </div>
     </div>
 
     <div class="grid">
+
       <div class="card">
-        <div class="row">
-          <a class="btn primary" href="link.html?id=renzo11">👤 Link Utente (RENZO11)</a>
-          <a class="btn primary" href="link.html?id=renzo12">👤 Link Utente (RENZO12)</a>
-          <a class="btn" href="vetrina.html?id=renzo11">Apri direttamente vetrina renzo11</a>
-          <a class="btn" href="admin.html">🔒 Admin</a>
+        <div class="titleRow">
+          <div class="title">🔧 Pagine principali</div>
+          <span class="pill" id="statusPill">carico…</span>
         </div>
-        <div class="small">
-          • Il link da condividere è <b>link.html?id=...</b><br>
-          • Dentro quella pagina l’utente vede: “Apri vetrina” + “Condividi WhatsApp”.
+
+        <div class="row" id="mainLinks"></div>
+
+        <div class="warn" id="audioWarn" style="display:none;margin-top:10px">
+          ⚠️ Su Android/Chrome l’audio può partire solo dopo un tuo tocco.
+          Se non senti la voce, tocca di nuovo il tasto 🔊.
         </div>
       </div>
 
       <div class="card">
-        <div class="row">
-          <div style="font-weight:1000;margin-bottom:6px">Cerca vetrina per ID</div>
-          <input id="idBox" placeholder="es. renzo11 / renzo12" />
-          <a id="goLink" class="btn green" href="link.html?id=renzo11">Apri pagina link (id)</a>
+        <div class="titleRow">
+          <div class="title">🔍 Apri una vetrina per ID</div>
+          <span class="pill">link.html?id=...</span>
         </div>
-        <div class="small">
-          Scrivi l’ID e premi il bottone: ti apre la pagina “indice link” della vetrina.
+
+        <div class="row">
+          <input id="idBox" placeholder="Scrivi ID (es. renzo11)" />
+          <button class="btnSolid" id="openLinkBtn">Apri pagina link della vetrina</button>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <div class="item">
+            <a id="previewLink" href="link.html?id=renzo11">link.html?id=renzo11</a>
+            <button class="btn green" id="copyPreview">Copia</button>
+            <button class="btn amber" id="speakPreview">🔊</button>
+            <div class="desc">Questo è il link che di solito condividi su WhatsApp.</div>
+          </div>
         </div>
       </div>
+
     </div>
 
     <div class="card">
-      <div style="font-weight:1000">Elenco rapido (modifica a mano qui dentro se vuoi)</div>
-      <div class="list" id="list">
-        <!-- popolato da JS -->
+      <div class="titleRow">
+        <div class="title">🧾 Elenco vetrine (automatico da data/vetrine.json)</div>
+        <span class="pill" id="countPill">0</span>
       </div>
-      <div class="small">
-        Se vuoi, in futuro possiamo leggere automaticamente tutti gli ID da <b>data/vetrine.json</b>.
-      </div>
+      <div class="row" id="vetrineList"></div>
     </div>
   </div>
 
+  <div class="bar">
+    <button class="btnSolid" id="stopAudio">⏹️ Ferma voce</button>
+  </div>
+
 <script>
-  const idBox = document.getElementById("idBox");
-  const goLink = document.getElementById("goLink");
-  const list = document.getElementById("list");
+(function(){
+"use strict";
 
-  const vetrine = [
-    { id:"renzo11", title:"Bazar di Bostone con SerCucTech" },
-    { id:"renzo12", title:"Nuova Vetrina" }
-  ];
+const statusPill = document.getElementById("statusPill");
+const countPill  = document.getElementById("countPill");
+const mainLinks  = document.getElementById("mainLinks");
+const vetrineList= document.getElementById("vetrineList");
+const audioWarn  = document.getElementById("audioWarn");
 
-  function setGo(){
-    const id = (idBox.value || "").trim() || "renzo11";
-    goLink.href = `link.html?id=${encodeURIComponent(id)}`;
-    goLink.textContent = `Apri pagina link (${id})`;
+const idBox = document.getElementById("idBox");
+const openLinkBtn = document.getElementById("openLinkBtn");
+const previewLink = document.getElementById("previewLink");
+const copyPreview = document.getElementById("copyPreview");
+const speakPreview= document.getElementById("speakPreview");
+
+const stopAudioBtn= document.getElementById("stopAudio");
+
+const base = location.origin + location.pathname.replace(/index\.html$/,"");
+
+function canSpeak(){ return "speechSynthesis" in window && "SpeechSynthesisUtterance" in window; }
+function stopSpeak(){ try{ speechSynthesis.cancel(); }catch(e){} }
+
+function speak(text){
+  if(!canSpeak()) return alert("Sintesi vocale non disponibile su questo browser.");
+  try{
+    stopSpeak();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = navigator.language || "it-IT";
+    u.rate = 1.03;
+    speechSynthesis.speak(u);
+  }catch(e){
+    audioWarn.style.display = "";
   }
-  idBox.addEventListener("input", setGo);
-  setGo();
+}
 
-  function renderList(){
-    list.innerHTML = "";
-    vetrine.forEach(v=>{
-      const el = document.createElement("div");
-      el.className = "item";
-      el.innerHTML = `
-        <div>
-          <strong>${escapeHtml(v.title)}</strong><div style="color:rgba(234,240,255,.72);font-weight:900;font-size:12px">id: ${escapeHtml(v.id)}</div>
-        </div>
-        <div class="chips">
-          <a class="chip" href="link.html?id=${encodeURIComponent(v.id)}">Pagina link</a>
-          <a class="chip" href="vetrina.html?id=${encodeURIComponent(v.id)}">Vetrina</a>
-        </div>
+stopAudioBtn.addEventListener("click", stopSpeak);
+
+function mkItem({label, href, explain}){
+  const el = document.createElement("div");
+  el.className = "item";
+  el.innerHTML = `
+    <a href="${href}">${label}</a>
+    <button class="btn green copyBtn">Copia</button>
+    <button class="btn amber speakBtn">🔊</button>
+    <div class="desc"></div>
+  `;
+  el.querySelector(".desc").textContent = explain.short;
+  el.querySelector(".copyBtn").addEventListener("click", async ()=>{
+    try{
+      await navigator.clipboard.writeText(href.startsWith("http") ? href : (base + href));
+      alert("Copiato ✅");
+    }catch(e){
+      alert("Copia non riuscita. Tieni premuto sul link e copia manualmente.");
+    }
+  });
+  el.querySelector(".speakBtn").addEventListener("click", ()=>{
+    speak(explain.long);
+  });
+  return el;
+}
+
+const explainers = {
+  home: {
+    short: "Questa è la pagina indice con tutti i link.",
+    long:
+`Immagina che questa sia una mappa. Qui trovi tutti i pulsanti più importanti.
+Se ti perdi, torni qui e scegli dove andare.
+Da qui puoi aprire l’Admin, aprire una vetrina, o copiare un link da condividere su WhatsApp.`
+  },
+  admin: {
+    short: "Pagina per te (crea, duplica, backup).",
+    long:
+`Questa è la stanza dei comandi. Qui lavori tu.
+Con l’Admin puoi creare una nuova vetrina, duplicarne una già pronta, e fare backup.
+Per entrare devi sbloccare con le due parole e poi il PIN, così gli altri non toccano niente.`
+  },
+  linkPage: {
+    short: "Pagina da condividere agli utenti.",
+    long:
+`Questo è il link “giusto” da condividere.
+L’utente lo apre e vede due cose semplici: “Apri vetrina” e “Condividi su WhatsApp”.
+Così non si confonde e non deve sapere come funziona il tuo sistema.`
+  },
+  vetrina: {
+    short: "Pagina pubblica con immagini, numerini e audio.",
+    long:
+`Questa è la vetrina vera e propria.
+Dentro ci sono le foto, i pulsanti, i numerini sugli oggetti e l’audio di benvenuto.
+È la pagina che l’utente guarda per scegliere oggetti e per contattare i numeri che hai messo.`
+  },
+  githubData: {
+    short: "Cartella data: qui metti i file .json delle vetrine.",
+    long:
+`Questa è la cartella “data” su GitHub.
+Qui dentro ci sono i file JSON di ogni vetrina, tipo renzo11.json, renzo12.json.
+Quando l’Admin ti fa scaricare un JSON, tu lo incolli qui e fai Commit, così la vetrina diventa pubblica.`
+  },
+  githubMedia: {
+    short: "Cartella media: qui carichi immagini e video.",
+    long:
+`Questa è la cartella “media” su GitHub.
+Qui carichi le foto e i video della vetrina.
+Consiglio: rinomina i file con l’ID, tipo renzo11-001.jpg, renzo11-002.jpg, così rimane tutto ordinato e non ti perdi.`
+  },
+  githubIndex: {
+    short: "File vetrine.json: lista di tutte le vetrine.",
+    long:
+`Questo file è come un elenco telefonico.
+Dentro ci sono tutti gli ID delle vetrine e i loro titoli.
+L’Admin lo legge per farti vedere la lista e per farti scegliere quale vetrina duplicare.
+Quando aggiungi una vetrina nuova, devi aggiornare anche questo file.`
+  }
+};
+
+function renderMain(){
+  mainLinks.innerHTML = "";
+
+  mainLinks.appendChild(mkItem({
+    label: "🏠 Home (questa pagina)",
+    href: "index.html",
+    explain: explainers.home
+  }));
+
+  mainLinks.appendChild(mkItem({
+    label: "🔒 Admin",
+    href: "admin.html",
+    explain: explainers.admin
+  }));
+
+  mainLinks.appendChild(mkItem({
+    label: "📄 Pagina link vetrina (esempio renzo11)",
+    href: "link.html?id=renzo11",
+    explain: explainers.linkPage
+  }));
+
+  mainLinks.appendChild(mkItem({
+    label: "🖼️ Vetrina diretta (esempio renzo11)",
+    href: "vetrina.html?id=renzo11",
+    explain: explainers.vetrina
+  }));
+
+  mainLinks.appendChild(mkItem({
+    label: "📁 GitHub cartella data",
+    href: `https://github.com/creamiaappsercuctech/SerCucTech/tree/main/data`,
+    explain: explainers.githubData
+  }));
+
+  mainLinks.appendChild(mkItem({
+    label: "🖼️ GitHub cartella media",
+    href: `https://github.com/creamiaappsercuctech/SerCucTech/tree/main/media`,
+    explain: explainers.githubMedia
+  }));
+
+  mainLinks.appendChild(mkItem({
+    label: "🧾 GitHub file data/vetrine.json",
+    href: `https://github.com/creamiaappsercuctech/SerCucTech/blob/main/data/vetrine.json`,
+    explain: explainers.githubIndex
+  }));
+}
+
+function setPreview(id){
+  const clean = (id||"renzo11").trim() || "renzo11";
+  const href = `link.html?id=${encodeURIComponent(clean)}`;
+  previewLink.href = href;
+  previewLink.textContent = href;
+  previewLink.dataset.id = clean;
+}
+
+idBox.addEventListener("input", ()=> setPreview(idBox.value));
+openLinkBtn.addEventListener("click", ()=>{
+  const clean = (idBox.value||"").trim();
+  if(!clean) return alert("Scrivi un ID (es. renzo11)");
+  location.href = `link.html?id=${encodeURIComponent(clean)}`;
+});
+
+copyPreview.addEventListener("click", async ()=>{
+  const id = previewLink.dataset.id || "renzo11";
+  const full = `${base}link.html?id=${encodeURIComponent(id)}`;
+  try{
+    await navigator.clipboard.writeText(full);
+    alert("Copiato ✅");
+  }catch(e){
+    alert("Copia non riuscita.");
+  }
+});
+
+speakPreview.addEventListener("click", ()=>{
+  speak(explainers.linkPage.long);
+});
+
+/* ----------- Elenco vetrine automatico ----------- */
+async function loadIndex(){
+  statusPill.textContent = "carico vetrine…";
+  try{
+    const res = await fetch("data/vetrine.json", {cache:"no-store"});
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const j = await res.json();
+    const list = Array.isArray(j.vetrine) ? j.vetrine : [];
+    countPill.textContent = String(list.length);
+
+    vetrineList.innerHTML = "";
+    list.forEach(v=>{
+      const id = String(v.id||"").trim();
+      if(!id) return;
+      const title = String(v.title||id);
+
+      const linkHref = `link.html?id=${encodeURIComponent(id)}`;
+      const vetrinaHref = `vetrina.html?id=${encodeURIComponent(id)}`;
+
+      const explain = {
+        short: "Apri o condividi questa vetrina.",
+        long:
+`Questa è la vetrina con ID ${id}.
+Se vuoi mandarla a qualcuno su WhatsApp, usa la “pagina link”: ${linkHref}.
+Se invece vuoi vedere direttamente le foto e i numerini, apri la “vetrina diretta”: ${vetrinaHref}.
+Ricorda: la pagina link è più facile per gli utenti.`
+      };
+
+      const box = document.createElement("div");
+      box.className = "item";
+      box.innerHTML = `
+        <a href="${linkHref}">👤 ${title} — (link) ${linkHref}</a>
+        <button class="btn green copyBtn">Copia</button>
+        <button class="btn amber speakBtn">🔊</button>
+        <div class="desc">Apri pagina link (consigliata) • oppure vetrina diretta</div>
       `;
-      list.appendChild(el);
+
+      box.querySelector(".copyBtn").addEventListener("click", async ()=>{
+        const full = `${base}${linkHref}`;
+        try{
+          await navigator.clipboard.writeText(full);
+          alert("Copiato ✅");
+        }catch(e){
+          alert("Copia non riuscita.");
+        }
+      });
+
+      box.querySelector(".speakBtn").addEventListener("click", ()=> speak(explain.long));
+
+      // aggiungo anche un secondo link (vetrina diretta) dentro description
+      const desc = box.querySelector(".desc");
+      desc.innerHTML = `Apri pagina link (consigliata). Vetrina diretta: <span style="text-decoration:underline;cursor:pointer">${vetrinaHref}</span>`;
+      desc.querySelector("span").addEventListener("click", ()=> location.href = vetrinaHref);
+
+      vetrineList.appendChild(box);
     });
+
+    statusPill.textContent = "pronto";
+  }catch(e){
+    statusPill.textContent = "errore";
+    vetrineList.innerHTML = `
+      <div class="warn">
+        Non riesco a leggere <b>data/vetrine.json</b>.<br>
+        Controlla che esista in repo e che sia pubblico.
+      </div>`;
   }
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c]));
-  }
-  renderList();
+}
+
+renderMain();
+setPreview("renzo11");
+loadIndex();
+})();
 </script>
+
 </body>
 </html>
