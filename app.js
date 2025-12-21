@@ -1,493 +1,715 @@
-/* ===================== HELPERS ===================== */
-const $ = (id) => document.getElementById(id);
+/* =========================================================
+   SerCucTech Vetrina - app.js
+   - Carica data/<id>.json
+   - Galleria immagini + thumbs
+   - Voice panel (tap per audio)
+   - WhatsApp per foto corrente (messaggio con numero foto)
+   - Editor numerini su foto: canvas + export PNG
+   - Salvataggio su GitHub (OPZIONALE) via API con token
+   ========================================================= */
 
-function qsParam(name){
-  const u = new URL(location.href);
-  return u.searchParams.get(name);
-}
-function pad2(n){ return String(n).padStart(2,"0"); }
+const qs = new URLSearchParams(location.search);
+const vId = (qs.get("id") || "").trim();
 
-function absUrl(rel){
-  try{
-    return new URL(rel, location.href).toString();
-  }catch(e){
-    return rel;
-  }
-}
+const $ = (s) => document.querySelector(s);
 
-function cleanPhone(phone){
-  return String(phone || "").replace(/[^\d+]/g,"");
-}
-function phoneForSpeech(phone){
-  // +3933329... -> +39 333 292 7842 (spazi = meno pause strane)
-  const p = cleanPhone(phone);
-  if(!p) return "";
-  let s = p.startsWith("+") ? "+" : "";
-  const digits = p.replace(/[^\d]/g,"");
-  // se inizia con 39 metti +39
-  let d = digits;
-  if(d.startsWith("39")){ s = "+39 "; d = d.slice(2); }
-  // raggruppa in blocchi 3-3-4 (italia mobile)
-  const a = d.slice(0,3);
-  const b = d.slice(3,6);
-  const c = d.slice(6);
-  return (s + [a,b,c].filter(Boolean).join(" ")).trim();
-}
+const pageTitle = $("#pageTitle");
+const pageDesc  = $("#pageDesc");
+const badgeId   = $("#badgeId");
 
-function waShareLink(text){
-  return "https://wa.me/?text=" + encodeURIComponent(text);
-}
+const voicePanel = $("#voicePanel");
+const voicePanelInner = $("#voicePanelInner");
+const voiceTextEl = $("#voiceText");
+const contactsRow = $("#contactsRow");
 
-/* ===================== STATE ===================== */
-let currentId = qsParam("id") || "";
-let vetrina = null;
+const indexPanel = $("#indexPanel");
+const indexList  = $("#indexList");
+const indexReloadBtn = $("#indexReloadBtn");
+
+const heroImg = $("#heroImg");
+const imgCounter = $("#imgCounter");
+const imgBadge = $("#imgBadge");
+const prevBtn = $("#prevBtn");
+const nextBtn = $("#nextBtn");
+const thumbRow = $("#thumbRow");
+const pinsLayer = $("#pinsLayer");
+
+const shareBtn = $("#shareBtn");
+const waOnPhotoBtn = $("#waOnPhotoBtn");
+const editPhotoBtn = $("#editPhotoBtn");
+const openImgBtn = $("#openImgBtn");
+
+const homeBtn = $("#homeBtn");
+const voiceBtn = $("#voiceBtn");
+const stopBtn = $("#stopBtn");
+const fullBtn = $("#fullBtn");
+const themeBtn = $("#themeBtn");
+const kioskBtn = $("#kioskBtn");
+
+const audioGate = $("#audioGate");
+const enableAudioBtn = $("#enableAudioBtn");
+const skipAudioBtn = $("#skipAudioBtn");
+
+/* Editor */
+const editModal = $("#editModal");
+const editCanvas = $("#editCanvas");
+const undoPinBtn = $("#undoPinBtn");
+const clearPinsBtn = $("#clearPinsBtn");
+const pinSizeRange = $("#pinSize");
+const pinSizeVal = $("#pinSizeVal");
+const downloadPngBtn = $("#downloadPngBtn");
+const saveGithubBtn = $("#saveGithubBtn");
+const closeEditBtn = $("#closeEditBtn");
+const saveResult = $("#saveResult");
+
+let data = null;
 let media = [];
-let idx = 0;
+let currentIndex = 0;
+let theme = localStorage.getItem("sercuctech_theme") || "dark";
+let kiosk = localStorage.getItem("sercuctech_kiosk") === "1";
 
-let speechUnlocked = false;
-let speaking = false;
+/* ===== Speech (Android gate) ===== */
+let canSpeak = ("speechSynthesis" in window) && ("SpeechSynthesisUtterance" in window);
+let audioUnlocked = localStorage.getItem("sercuctech_audio_unlocked") === "1";
+let lastSpokenText = "";
 
-/* ===================== ELEMENTS ===================== */
-const pageTitle = $("pageTitle");
-const pageDesc  = $("pageDesc");
-const badgeId   = $("badgeId");
-
-const voicePanel = $("voicePanel");
-const voiceText  = $("voiceText");
-const contactsRow = $("contactsRow");
-
-const indexPanel = $("indexPanel");
-const indexLinks = $("indexLinks");
-const refreshIndexBtn = $("refreshIndexBtn");
-
-const heroImg = $("heroImg");
-const imgCounter = $("imgCounter");
-const imgBadge = $("imgBadge");
-const thumbRow = $("thumbRow");
-
-const prevBtn = $("prevBtn");
-const nextBtn = $("nextBtn");
-
-const shareBtn = $("shareBtn");
-const waPhotoBtn = $("waPhotoBtn");
-
-const fullBtn = $("fullBtn");
-const homeBtn = $("homeBtn");
-const voiceBtn = $("voiceBtn");
-const stopBtn = $("stopBtn");
-const themeBtn = $("themeBtn");
-const kioskBtn = $("kioskBtn");
-
-const audioGate = $("audioGate");
-const enableAudioBtn = $("enableAudioBtn");
-const skipAudioBtn = $("skipAudioBtn");
-
-const pinsLayer = $("pinsLayer");
-const labelCard = $("labelCard");
-const labelModeBadge = $("labelModeBadge");
-const labelToggleBtn = $("labelToggleBtn");
-const labelUndoBtn = $("labelUndoBtn");
-const labelClearBtn = $("labelClearBtn");
-const pinSizeRange = $("pinSizeRange");
-const pinSizeValue = $("pinSizeValue");
-const exportPinsBtn = $("exportPinsBtn");
-const copyPinsBtn = $("copyPinsBtn");
-const pinsJsonBox = $("pinsJsonBox");
-
-/* ===================== SPEECH ===================== */
-function canSpeak(){
-  return "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+/* ===== Pins data per foto (local) =====
+   - Non modifica l'immagine originale
+   - Per esportare PNG: disegniamo su canvas
+*/
+function pinKeyFor(url){ return `pins:${vId}:${url}`; }
+function getPins(url){
+  try{ return JSON.parse(localStorage.getItem(pinKeyFor(url))) || []; }catch{ return []; }
+}
+function setPins(url, arr){
+  localStorage.setItem(pinKeyFor(url), JSON.stringify(arr || []));
 }
 
-function speak(text, lang="it-IT"){
-  if(!canSpeak()) return;
-  window.speechSynthesis.cancel();
+/* ===== Helpers ===== */
+function pad2(n){ return String(n).padStart(2,"0"); }
+function baseUrl(){
+  return location.origin + location.pathname.replace(/\/[^\/]*$/, "/");
+}
+function vetrinaLink(id){
+  return baseUrl() + `vetrina.html?id=${encodeURIComponent(id)}`;
+}
+function speak(text, lang){
+  if(!text) return;
+  lastSpokenText = text;
 
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = lang || "it-IT";
-  u.rate = 1;
-  u.pitch = 1;
-  u.onstart = () => { speaking = true; };
-  u.onend = () => { speaking = false; };
-  u.onerror = () => { speaking = false; };
-  window.speechSynthesis.speak(u);
+  // se audio non sbloccato, mostra gate
+  if(!audioUnlocked){
+    audioGate.hidden = false;
+    return;
+  }
+
+  if(!canSpeak) return;
+
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(formatPhonesForSpeech(text));
+    u.lang = lang || (navigator.language || "it-IT");
+    u.rate = 1;
+    speechSynthesis.speak(u);
+  }catch(e){}
 }
 
 function stopSpeak(){
-  if(canSpeak()) window.speechSynthesis.cancel();
-  speaking = false;
+  try{ speechSynthesis.cancel(); }catch(e){}
 }
 
-/* ===================== PINS (manual labels) ===================== */
-function pinsKey(){
-  const url = media[idx]?.url || "noimg";
-  return `pins_${currentId}_${url}`;
-}
-function getPins(){
-  try{ return JSON.parse(localStorage.getItem(pinsKey())) || []; }
-  catch(e){ return []; }
-}
-function setPins(list){
-  localStorage.setItem(pinsKey(), JSON.stringify(list));
-}
-function renderPins(){
-  pinsLayer.innerHTML = "";
-  const pins = (vetrina && vetrina.pinsData && vetrina.pinsData[media[idx]?.url]) ? vetrina.pinsData[media[idx]?.url] : getPins();
-  for(const p of pins){
-    const el = document.createElement("div");
-    el.className = "pin";
-    el.style.left = (p.x*100) + "%";
-    el.style.top  = (p.y*100) + "%";
-    el.textContent = p.n;
-    pinsLayer.appendChild(el);
-  }
-}
-
-let labelMode = false;
-let titleTapCount = 0;
-let titleTapTimer = null;
-
-function setLabelMode(on){
-  labelMode = !!on;
-  labelModeBadge.textContent = labelMode ? "ON" : "OFF";
-  labelModeBadge.style.opacity = labelMode ? "1" : ".7";
-  labelCard.hidden = !labelMode;
-}
-
-function addPinAt(clientX, clientY){
-  const rect = heroImg.getBoundingClientRect();
-  if(rect.width < 50 || rect.height < 50) return;
-  const x = (clientX - rect.left) / rect.width;
-  const y = (clientY - rect.top) / rect.height;
-  if(x < 0 || x > 1 || y < 0 || y > 1) return;
-
-  const pins = getPins();
-  const n = pins.length + 1;
-  pins.push({ n, x, y });
-  setPins(pins);
-  renderPins();
-}
-
-/* ===================== GALLERY ===================== */
-function setIndex(newIdx){
-  if(!media.length) return;
-  idx = (newIdx + media.length) % media.length;
-
-  const m = media[idx];
-  heroImg.src = m.url;
-  heroImg.alt = m.label || `Foto ${idx+1}`;
-
-  imgCounter.textContent = `${pad2(idx+1)}/${pad2(media.length)}`;
-  imgBadge.textContent = pad2(idx+1);
-
-  [...thumbRow.children].forEach((t,i)=>{
-    t.classList.toggle("active", i===idx);
-  });
-
-  renderPins();
-  updateWaPhotoButton();
-}
-
-function buildThumbs(){
-  thumbRow.innerHTML = "";
-  media.forEach((m,i)=>{
-    const b = document.createElement("button");
-    b.className = "thumb";
-    b.type = "button";
-    b.innerHTML = `<img src="${m.url}" alt="${m.label || ("Foto " + (i+1))}">`;
-    b.addEventListener("click", ()=> setIndex(i));
-    thumbRow.appendChild(b);
+/* Migliora pronuncia telefono: spazia cifre */
+function formatPhonesForSpeech(text){
+  return String(text).replace(/(\+?\d[\d\s]{8,}\d)/g, (m) => {
+    const n = String(m).trim().replace(/[^\d+]/g,"");
+    if(n.length < 9) return m;
+    const digits = n.replace("+","").split("").join(" ");
+    return n.startsWith("+") ? "+ " + digits : digits;
   });
 }
 
-function next(){ setIndex(idx+1); }
-function prev(){ setIndex(idx-1); }
+function parsePhonesFromText(text){
+  // trova numeri tipo +39... o 333...
+  const matches = String(text||"").match(/(\+?\d[\d\s]{8,}\d)/g) || [];
+  return matches.map(m => m.trim().replace(/[^\d+]/g,""));
+}
 
-/* Swipe */
-let touchStartX = 0;
-let touchStartY = 0;
-let touchMoved = false;
+function waLink(phone, message){
+  const p = String(phone||"").replace(/[^\d]/g,"");
+  const txt = encodeURIComponent(message || "");
+  return `https://wa.me/${p}?text=${txt}`;
+}
 
-heroImg.addEventListener("touchstart", (e)=>{
-  if(!e.touches || !e.touches[0]) return;
-  touchStartX = e.touches[0].clientX;
-  touchStartY = e.touches[0].clientY;
-  touchMoved = false;
-}, {passive:true});
+function telLink(phone){
+  const p = String(phone||"").replace(/[^\d+]/g,"");
+  return `tel:${p}`;
+}
 
-heroImg.addEventListener("touchmove", (e)=>{
-  if(!e.touches || !e.touches[0]) return;
-  const dx = e.touches[0].clientX - touchStartX;
-  const dy = e.touches[0].clientY - touchStartY;
-  if(Math.abs(dx) > 12 || Math.abs(dy) > 12) touchMoved = true;
-}, {passive:true});
+function safeText(t){ return String(t||"").trim(); }
 
-heroImg.addEventListener("touchend", ()=>{
-  if(!touchMoved) return;
-  const dx = (event.changedTouches && event.changedTouches[0]) ? (event.changedTouches[0].clientX - touchStartX) : 0;
-  if(Math.abs(dx) > 40){
-    dx < 0 ? next() : prev();
-  }
-});
-
-/* Tap = fullscreen (ma se labelMode ON, tap mette un pin) */
-heroImg.addEventListener("click", (e)=>{
-  if(labelMode){
-    addPinAt(e.clientX, e.clientY);
+/* ===== Load data ===== */
+async function loadVetrina(){
+  if(!vId){
+    pageTitle.textContent = "Manca id";
+    pageDesc.textContent = "Apri con ?id=renzo11";
     return;
   }
-  document.body.classList.toggle("fs");
-});
+  badgeId.textContent = "id: " + vId;
 
-/* ===================== WHATSAPP PHOTO BUTTON ===================== */
-function updateWaPhotoButton(){
-  const m = media[idx];
-  if(!m){ waPhotoBtn.disabled = true; return; }
-  waPhotoBtn.disabled = false;
-}
-
-function makePhotoMessage(){
-  const m = media[idx];
-  const title = vetrina?.title || currentId || "Vetrina";
-  const photoNum = idx + 1;
-  const photoLabel = m?.label ? ` (${m.label})` : "";
-  const page = location.href;
-  const img = m?.url ? absUrl(m.url) : "";
-  const contacts = (vetrina?.contacts || []).map(c => `${c.name}: ${cleanPhone(c.phone)}`).join(" | ");
-
-  return `Ciao! Vorrei informazioni.\nVetrina: ${title}\nFoto #${photoNum}${photoLabel}\nImmagine: ${img}\nLink vetrina: ${page}\nContatti: ${contacts}`;
-}
-
-/* ===================== INDEX (ALTRE VETRINE) ===================== */
-async function loadIndex(){
-  // prova data/vetrine.json e poi data/index.json
-  const candidates = ["data/vetrine.json", "data/index.json"];
-  let list = null;
-
-  for(const path of candidates){
-    try{
-      const r = await fetch(path + `?v=${Date.now()}`, {cache:"no-store"});
-      if(!r.ok) continue;
-      const j = await r.json();
-      if(Array.isArray(j?.vetrine)) { list = j.vetrine; break; }
-    }catch(e){}
-  }
-
-  if(!list || !list.length){
-    indexPanel.hidden = true;
+  try{
+    const r = await fetch(`data/${encodeURIComponent(vId)}.json`, { cache:"no-store" });
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    data = await r.json();
+  }catch(e){
+    pageTitle.textContent = "Errore caricamento";
+    pageDesc.textContent = `Non trovo data/${vId}.json`;
     return;
   }
 
-  indexLinks.innerHTML = "";
-  list.forEach(v=>{
-    const a = document.createElement("a");
-    a.className = "indexLink";
-    a.href = `vetrina.html?id=${encodeURIComponent(v.id)}`;
-    a.textContent = v.title ? v.title : v.id;
-    indexLinks.appendChild(a);
-  });
+  pageTitle.textContent = data.title || vId;
+  pageDesc.textContent  = data.description || "";
 
-  indexPanel.hidden = false;
-}
-
-/* ===================== LOAD VETRINA DATA ===================== */
-async function loadVetrina(id){
-  const path = `data/${id}.json?v=${Date.now()}`;
-  const r = await fetch(path, {cache:"no-store"});
-  if(!r.ok) throw new Error("Non riesco a leggere " + path);
-  return await r.json();
-}
-
-function renderHeader(){
-  const title = vetrina?.title || currentId;
-  pageTitle.textContent = title;
-
-  pageDesc.textContent = vetrina?.description || "";
-  badgeId.textContent = `id: ${currentId}`;
-
-  // Voice panel
-  const vt = vetrina?.voice?.text || "";
-  const lang = vetrina?.voice?.lang || "it-IT";
-
-  if(vt.trim()){
-    voiceText.textContent = vt;
+  // voice panel
+  const vtext = safeText(data?.voice?.text);
+  if(vtext){
     voicePanel.hidden = false;
-
-    // click su qualunque parte del testo => parla
-    voiceText.onclick = () => {
-      if(!speechUnlocked){
-        audioGate.hidden = false;
-        return;
-      }
-      // sostituisci numeri contatti con formato “telefono” per parlare meglio
-      let speakText = vt;
-      (vetrina.contacts || []).forEach(c=>{
-        const raw = cleanPhone(c.phone);
-        if(raw){
-          const spoken = phoneForSpeech(raw);
-          // non sempre matcha, quindi aggiungo anche finale con numeri parlati
-          speakText += ` ${c.name}: ${spoken}.`;
-        }
-      });
-      speak(speakText, lang);
-    };
+    voiceTextEl.textContent = vtext;
+    const lang = data?.voice?.lang || "it-IT";
+    voicePanelInner.onclick = () => speak(vtext, lang);
   }else{
     voicePanel.hidden = true;
   }
 
-  // Contacts
-  contactsRow.innerHTML = "";
-  const contacts = Array.isArray(vetrina?.contacts) ? vetrina.contacts : [];
-  if(contacts.length){
-    contacts.forEach(c=>{
-      const p = cleanPhone(c.phone);
-      const wa = document.createElement("a");
-      wa.className = "contactPill";
-      wa.href = `https://wa.me/${p.replace("+","")}`;
-      wa.target = "_blank";
-      wa.rel = "noopener";
-      wa.innerHTML = `🟢 ${c.name} <span>${phoneForSpeech(p)}</span> (WhatsApp)`;
+  // contacts
+  renderContacts();
 
-      const call = document.createElement("a");
-      call.className = "contactPill";
-      call.href = `tel:${p}`;
-      call.innerHTML = `📞 ${c.name} <span>${phoneForSpeech(p)}</span> (Chiama)`;
+  // media
+  media = Array.isArray(data.media) ? data.media.filter(m => m && m.url) : [];
+  if(!media.length){
+    media = [];
+    heroImg.alt = "Nessuna immagine";
+    pageDesc.textContent = (pageDesc.textContent ? pageDesc.textContent + " " : "") + "(Nessuna immagine nel JSON)";
+    return;
+  }
 
-      contactsRow.appendChild(wa);
-      contactsRow.appendChild(call);
-    });
+  // inizializza index
+  renderIndexLinks();
+  indexReloadBtn.onclick = renderIndexLinks;
+
+  // start
+  currentIndex = 0;
+  renderGallery();
+  attachGalleryEvents();
+
+  // share
+  shareBtn.onclick = shareVetrina;
+  homeBtn.onclick = () => location.href = baseUrl() + "link.html";
+  voiceBtn.onclick = () => speak(vtext, data?.voice?.lang || "it-IT");
+  stopBtn.onclick = () => stopSpeak();
+
+  fullBtn.onclick = toggleFullscreenMode;
+  themeBtn.onclick = toggleTheme;
+  kioskBtn.onclick = toggleKiosk;
+
+  applyTheme();
+  applyKiosk();
+
+  // auto audio (tenta)
+  if(vtext){
+    // prova subito: se bloccato, appare gate
+    setTimeout(()=>speak(vtext, data?.voice?.lang || "it-IT"), 350);
   }
 }
 
-/* ===================== BUTTONS ===================== */
-prevBtn.addEventListener("click", prev);
-nextBtn.addEventListener("click", next);
+/* ===== Contacts UI ===== */
+function renderContacts(){
+  contactsRow.innerHTML = "";
+  const contacts = Array.isArray(data?.contacts) ? data.contacts : [];
 
-shareBtn.addEventListener("click", async ()=>{
-  const url = location.href;
-  const title = vetrina?.title || "Vetrina";
-  const text = `Guarda questa vetrina: ${title}\n${url}`;
-  if(navigator.share){
-    try{ await navigator.share({title, text, url}); return; }catch(e){}
+  if(!contacts.length){
+    // fallback: cerca numeri nel voice text
+    const nums = parsePhonesFromText(data?.voice?.text || "");
+    if(nums.length){
+      nums.forEach((p, i) => {
+        const a = document.createElement("a");
+        a.className = "contactChip";
+        a.href = waLink(p, "Ciao! Ti contatto dalla vetrina " + (data?.title || vId));
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.innerHTML = `<b>WhatsApp</b> <span>${p}</span>`;
+        contactsRow.appendChild(a);
+      });
+    }
+    return;
   }
-  window.open(waShareLink(text), "_blank");
-});
 
-waPhotoBtn.addEventListener("click", ()=>{
-  const msg = makePhotoMessage();
-  window.open(waShareLink(msg), "_blank");
-});
+  contacts.forEach(c => {
+    const name = c?.name || "Contatto";
+    const phone = String(c?.phone || "").trim();
+    if(!phone) return;
 
-fullBtn.addEventListener("click", ()=> document.body.classList.toggle("fs"));
-homeBtn.addEventListener("click", ()=> window.scrollTo({top:0, behavior:"smooth"}));
-voiceBtn.addEventListener("click", ()=> {
-  if(!voicePanel.hidden) voiceText.click();
-});
-stopBtn.addEventListener("click", stopSpeak);
-themeBtn.addEventListener("click", ()=> {
-  document.body.classList.toggle("light");
-});
-kioskBtn.addEventListener("click", ()=> {
-  // semplice “kiosk”: nasconde barra
-  document.querySelector(".bottombar")?.classList.toggle("hide");
-});
+    const a = document.createElement("a");
+    a.className = "contactChip";
+    a.href = waLink(phone, `Ciao ${name}! Ti contatto dalla vetrina "${data?.title || vId}".`);
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.innerHTML = `<b>${name}</b> <span>${phone}</span>`;
+    contactsRow.appendChild(a);
 
-refreshIndexBtn.addEventListener("click", loadIndex);
+    // long-press? non gestiamo: ma aggiungiamo anche tel con click secondario non possibile qui.
+  });
+}
 
-enableAudioBtn.addEventListener("click", ()=>{
-  speechUnlocked = true;
-  audioGate.hidden = true;
-  // fai partire subito il messaggio se c’è
-  if(!voicePanel.hidden && vetrina?.voice?.text){
-    voiceText.click();
-  }
-});
-skipAudioBtn.addEventListener("click", ()=>{
-  audioGate.hidden = true;
-});
-
-/* ===================== LABEL MODE (tap titolo 5 volte) ===================== */
-pageTitle.addEventListener("click", ()=>{
-  titleTapCount++;
-  clearTimeout(titleTapTimer);
-  titleTapTimer = setTimeout(()=>{ titleTapCount = 0; }, 900);
-
-  if(titleTapCount >= 5){
-    titleTapCount = 0;
-    setLabelMode(!labelMode);
-  }
-});
-
-labelToggleBtn?.addEventListener("click", ()=> setLabelMode(!labelMode));
-labelUndoBtn?.addEventListener("click", ()=>{
-  const pins = getPins();
-  pins.pop();
-  setPins(pins);
-  renderPins();
-});
-labelClearBtn?.addEventListener("click", ()=>{
-  if(!confirm("Vuoi cancellare TUTTI i numerini di questa foto?")) return;
-  setPins([]);
-  renderPins();
-});
-pinSizeRange?.addEventListener("input", ()=>{
-  const v = Number(pinSizeRange.value || 28);
-  pinSizeValue.textContent = String(v);
-  document.documentElement.style.setProperty("--pinSize", v + "px");
-});
-exportPinsBtn?.addEventListener("click", ()=>{
-  const url = media[idx]?.url;
-  const pins = getPins();
-  const out = { img: url, pins };
-  pinsJsonBox.value = JSON.stringify(out, null, 2);
-});
-copyPinsBtn?.addEventListener("click", async ()=>{
+/* ===== Index links ===== */
+async function renderIndexLinks(){
   try{
-    await navigator.clipboard.writeText(pinsJsonBox.value || "");
-    alert("Copiato ✅");
+    const r = await fetch("data/vetrine.json", { cache:"no-store" });
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+    const list = Array.isArray(j) ? j : (j.vetrine || []);
+    indexList.innerHTML = "";
+
+    list.forEach(v => {
+      if(!v?.id) return;
+      const a = document.createElement("a");
+      a.className = "indexLink";
+      a.href = `vetrina.html?id=${encodeURIComponent(v.id)}`;
+      a.innerHTML = `<span class="dot"></span>${v.title || v.id}`;
+      indexList.appendChild(a);
+    });
+
+    indexPanel.hidden = !(indexList.children.length > 0);
   }catch(e){
-    alert("Non riesco a copiare. Seleziona e copia manualmente.");
+    indexPanel.hidden = true;
   }
-});
+}
 
-/* ===================== INIT ===================== */
-(async function init(){
+/* ===== Gallery ===== */
+function attachGalleryEvents(){
+  prevBtn.onclick = () => { if(!media.length) return; currentIndex = (currentIndex-1+media.length)%media.length; renderGallery(); };
+  nextBtn.onclick = () => { if(!media.length) return; currentIndex = (currentIndex+1)%media.length; renderGallery(); };
+
+  // click immagine => fullscreen
+  heroImg.onclick = () => toggleFullscreenMode();
+
+  // open image
+  openImgBtn.onclick = () => {
+    const url = currentMediaUrlAbs();
+    window.open(url, "_blank");
+  };
+
+  // whatsapp on photo
+  waOnPhotoBtn.onclick = () => openWhatsAppForCurrentPhoto();
+
+  // editor
+  editPhotoBtn.onclick = () => openEditorForCurrentPhoto();
+}
+
+function renderGallery(){
+  const m = media[currentIndex];
+  const url = m.url;
+  heroImg.src = url;
+  heroImg.alt = m.label || `Foto ${currentIndex+1}`;
+
+  imgBadge.textContent = pad2(currentIndex+1);
+  imgCounter.textContent = `${pad2(currentIndex+1)}/${pad2(media.length)}`;
+
+  // thumbs
+  thumbRow.innerHTML = "";
+  media.forEach((x, idx) => {
+    const t = document.createElement("div");
+    t.className = "thumb" + (idx===currentIndex ? " active" : "");
+    const im = document.createElement("img");
+    im.src = x.url;
+    im.alt = x.label || ("Foto " + (idx+1));
+    t.appendChild(im);
+    t.onclick = () => { currentIndex = idx; renderGallery(); };
+    thumbRow.appendChild(t);
+  });
+
+  // pins overlay (solo visualizzazione)
+  renderPinsOverlayForCurrent();
+}
+
+/* overlay pins (solo view) */
+function renderPinsOverlayForCurrent(){
+  pinsLayer.innerHTML = "";
+  const url = media[currentIndex]?.url;
+  const pins = getPins(url);
+  pins.forEach(p => {
+    const d = document.createElement("div");
+    d.className = "pin";
+    d.textContent = String(p.n);
+    d.style.left = (p.x*100) + "%";
+    d.style.top  = (p.y*100) + "%";
+    d.style.width = p.size + "px";
+    d.style.height = p.size + "px";
+    pinsLayer.appendChild(d);
+  });
+}
+
+/* ===== WhatsApp foto corrente ===== */
+function openWhatsAppForCurrentPhoto(){
+  const m = media[currentIndex];
+  if(!m) return;
+
+  const photoNum = currentIndex + 1;
+  const photoUrl = currentMediaUrlAbs();
+
+  const contacts = Array.isArray(data?.contacts) ? data.contacts.filter(c=>c?.phone) : [];
+  if(!contacts.length){
+    alert("Mancano contatti nel JSON (contacts[])");
+    return;
+  }
+
+  const msg = `Ciao! Vorrei informazioni sulla FOTO #${photoNum} della vetrina "${data?.title || vId}".\nLink foto: ${photoUrl}`;
+
+  // Qui NON si può mandare “a due numeri insieme” con un solo click:
+  // WhatsApp apre 1 chat alla volta. Quindi scegliamo un contatto.
+  if(contacts.length === 1){
+    window.open(waLink(contacts[0].phone, msg), "_blank");
+    return;
+  }
+
+  // mini scelta
+  const choice = prompt(
+    `A chi vuoi scrivere?\n1 = ${contacts[0].name}\n2 = ${contacts[1].name}\nScrivi 1 o 2`,
+    "1"
+  );
+  const idx = (choice === "2") ? 1 : 0;
+  window.open(waLink(contacts[idx].phone, msg), "_blank");
+}
+
+function currentMediaUrlAbs(){
+  const rel = media[currentIndex]?.url || "";
+  if(rel.startsWith("http")) return rel;
+  return baseUrl() + rel.replace(/^\//,"");
+}
+
+/* ===== Share vetrina ===== */
+async function shareVetrina(){
+  const link = vetrinaLink(vId);
+  const title = data?.title || "Vetrina";
+  const text = (data?.voice?.text || data?.description || "").slice(0,140);
+
   try{
-    if(!currentId){
-      // se non c’è id, prova a prendere il primo da data/vetrine.json
-      try{
-        const r = await fetch("data/vetrine.json?v="+Date.now(), {cache:"no-store"});
-        const j = await r.json();
-        if(j?.vetrine?.[0]?.id) currentId = j.vetrine[0].id;
-      }catch(e){}
-    }
-    if(!currentId) currentId = "renzo11";
-
-    vetrina = await loadVetrina(currentId);
-
-    // media
-    media = Array.isArray(vetrina?.media) ? vetrina.media.filter(x=>x && x.type==="image" && x.url) : [];
-    if(!media.length){
-      // fallback: se hai messo immagini in altro campo
-      media = [];
-    }
-
-    renderHeader();
-    await loadIndex();
-
-    if(media.length){
-      buildThumbs();
-      setIndex(0);
+    if(navigator.share){
+      await navigator.share({ title, text, url: link });
     }else{
-      heroImg.alt = "Nessuna immagine";
-      imgCounter.textContent = "00/00";
-      imgBadge.textContent = "--";
+      await navigator.clipboard.writeText(link);
+      alert("Link copiato:\n" + link);
+    }
+  }catch(e){
+    // fallback
+    try{
+      await navigator.clipboard.writeText(link);
+      alert("Link copiato:\n" + link);
+    }catch(_){
+      prompt("Copia link:", link);
+    }
+  }
+}
+
+/* ===== Fullscreen CSS-mode ===== */
+function toggleFullscreenMode(){
+  document.body.classList.toggle("fs");
+}
+
+/* ===== Theme ===== */
+function applyTheme(){
+  // semplice: salva preferenza (tu puoi espandere)
+  localStorage.setItem("sercuctech_theme", theme);
+}
+function toggleTheme(){
+  theme = (theme === "dark") ? "light" : "dark";
+  // qui non cambio i colori (già gestiti in css), ma salvo lo stato
+  applyTheme();
+  alert("Tema salvato: " + theme + " (se vuoi lo rendiamo reale con variabili CSS)");
+}
+
+/* ===== Kiosk ===== */
+function applyKiosk(){
+  localStorage.setItem("sercuctech_kiosk", kiosk ? "1" : "0");
+  // in kiosk: blocchiamo gesture indietro? no. solo indicazione
+}
+function toggleKiosk(){
+  kiosk = !kiosk;
+  applyKiosk();
+  alert("Kiosk: " + (kiosk ? "ON" : "OFF"));
+}
+
+/* ===== Audio gate ===== */
+enableAudioBtn.onclick = () => {
+  audioUnlocked = true;
+  localStorage.setItem("sercuctech_audio_unlocked","1");
+  audioGate.hidden = true;
+  if(lastSpokenText) speak(lastSpokenText, data?.voice?.lang || "it-IT");
+};
+skipAudioBtn.onclick = () => {
+  audioGate.hidden = true;
+};
+
+/* =========================================================
+   EDITOR NUMERINI su CANVAS
+   ========================================================= */
+let ed = {
+  img: null,
+  url: "",
+  pins: [],
+  size: 28
+};
+
+function openEditorForCurrentPhoto(){
+  const m = media[currentIndex];
+  if(!m) return;
+
+  ed.url = m.url;
+  ed.pins = getPins(ed.url);
+  ed.size = Number(pinSizeRange.value || 28);
+
+  pinSizeVal.textContent = ed.size + "px";
+  saveResult.textContent = "";
+
+  editModal.hidden = false;
+  loadImageToCanvas(currentMediaUrlAbs());
+}
+
+closeEditBtn.onclick = () => {
+  editModal.hidden = true;
+};
+
+pinSizeRange.oninput = () => {
+  ed.size = Number(pinSizeRange.value || 28);
+  pinSizeVal.textContent = ed.size + "px";
+  redrawCanvas();
+};
+
+undoPinBtn.onclick = () => {
+  ed.pins.pop();
+  setPins(ed.url, ed.pins);
+  redrawCanvas();
+  renderPinsOverlayForCurrent();
+};
+clearPinsBtn.onclick = () => {
+  if(!confirm("Vuoi cancellare tutti i numerini su questa foto?")) return;
+  ed.pins = [];
+  setPins(ed.url, ed.pins);
+  redrawCanvas();
+  renderPinsOverlayForCurrent();
+};
+
+downloadPngBtn.onclick = async () => {
+  try{
+    const blob = await canvasToPngBlob(editCanvas);
+    const filename = buildOutputName(ed.url, "labeled");
+    downloadBlob(blob, filename);
+    saveResult.textContent = "✅ PNG scaricato: " + filename + " (ora caricalo tu in /media su GitHub).";
+  }catch(e){
+    alert("Errore export PNG.");
+  }
+};
+
+saveGithubBtn.onclick = async () => {
+  try{
+    const token = getGithubToken();
+    if(!token){
+      const t = prompt("Incolla il tuo GitHub Token (PAT) con permesso repo (contents write). Verrà salvato SOLO sul tuo telefono.", "");
+      if(!t) return;
+      localStorage.setItem("sercuctech_github_token", t.trim());
     }
 
-  }catch(err){
-    pageTitle.textContent = "Errore";
-    pageDesc.textContent = (err && err.message) ? err.message : "Errore sconosciuto";
-    badgeId.textContent = `id: ${currentId || "-"}`;
-    console.error(err);
+    const cfg = getGithubConfig();
+    if(!cfg){
+      const owner = prompt("GitHub owner (username):", "creamiaappsercuctech");
+      const repo  = prompt("Repo name:", "SerCucTech");
+      const branch= prompt("Branch:", "main") || "main";
+      if(!owner || !repo) return;
+      localStorage.setItem("sercuctech_github_cfg", JSON.stringify({ owner, repo, branch }));
+    }
+
+    const blob = await canvasToPngBlob(editCanvas);
+    const b64 = await blobToBase64(blob);
+
+    // nome nuovo: renzo11-010-labeled.png
+    const outName = buildOutputName(ed.url, "labeled").replace(/\.jpg$/i,".png");
+
+    const path = "media/" + outName.split("/").pop(); // forziamo in media/
+    const res = await githubPutFile(path, b64);
+
+    saveResult.textContent =
+      "✅ Salvato su GitHub: " + path + "\n" +
+      "Link immagine: " + (baseUrl() + path);
+
+    // aggiorna overlay e rimani
+  }catch(e){
+    alert("Salvataggio su GitHub fallito.\n\n" + (e?.message || e));
   }
-})();
+};
+
+function buildOutputName(originalUrl, suffix){
+  // media/renzo11-010.jpg => renzo11-010-labeled.png
+  const base = originalUrl.split("/").pop() || "foto.jpg";
+  const parts = base.split(".");
+  const ext = parts.length>1 ? parts.pop() : "jpg";
+  const name = parts.join(".");
+  return `${name}-${suffix}.${ext}`;
+}
+
+function loadImageToCanvas(url){
+  const img = new Image();
+  img.crossOrigin = "anonymous"; // per GitHub raw va ok; se blocca, export può fallire
+  img.onload = () => {
+    ed.img = img;
+    // canvas dimensioni reali
+    editCanvas.width = img.naturalWidth;
+    editCanvas.height = img.naturalHeight;
+
+    // click/tap per aggiungere pin
+    editCanvas.onclick = (ev) => {
+      const rect = editCanvas.getBoundingClientRect();
+      const x = (ev.clientX - rect.left) / rect.width;
+      const y = (ev.clientY - rect.top) / rect.height;
+      const n = (ed.pins.length ? ed.pins[ed.pins.length-1].n + 1 : 1);
+      ed.pins.push({ n, x, y, size: ed.size });
+      setPins(ed.url, ed.pins);
+      redrawCanvas();
+      renderPinsOverlayForCurrent();
+    };
+
+    redrawCanvas();
+  };
+  img.onerror = () => {
+    alert("Non riesco a caricare l'immagine. Controlla che esista in /media.");
+  };
+  img.src = url;
+}
+
+function redrawCanvas(){
+  if(!ed.img) return;
+  const ctx = editCanvas.getContext("2d");
+  ctx.clearRect(0,0,editCanvas.width, editCanvas.height);
+  ctx.drawImage(ed.img, 0, 0);
+
+  // disegna pins
+  ed.pins.forEach(p => drawPin(ctx, p));
+}
+
+function drawPin(ctx, p){
+  const x = p.x * editCanvas.width;
+  const y = p.y * editCanvas.height;
+  const r = (p.size || 28) / 2;
+
+  // cerchio
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI*2);
+  ctx.fillStyle = "rgba(0,0,0,0.45)";
+  ctx.fill();
+  ctx.lineWidth = Math.max(2, r*0.14);
+  ctx.strokeStyle = "rgba(255,255,255,0.92)";
+  ctx.stroke();
+
+  // numero
+  ctx.fillStyle = "#fff";
+  ctx.font = `900 ${Math.max(14, r*1.15)}px system-ui, Arial`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(String(p.n), x, y);
+  ctx.restore();
+}
+
+function canvasToPngBlob(canvas){
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((b) => {
+      if(!b) reject(new Error("toBlob failed"));
+      else resolve(b);
+    }, "image/png", 0.92);
+  });
+}
+
+function downloadBlob(blob, filename){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(a.href);
+    a.remove();
+  }, 800);
+}
+
+function blobToBase64(blob){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const dataUrl = r.result; // data:image/png;base64,...
+      const b64 = String(dataUrl).split(",")[1] || "";
+      resolve(b64);
+    };
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(blob);
+  });
+}
+
+/* =========================================================
+   GitHub API (OPZIONALE)
+   - salva file in repo con commit
+   ========================================================= */
+function getGithubToken(){
+  return localStorage.getItem("sercuctech_github_token") || "";
+}
+function getGithubConfig(){
+  try{ return JSON.parse(localStorage.getItem("sercuctech_github_cfg") || "null"); }catch{ return null; }
+}
+
+async function githubGetSha(path){
+  const cfg = getGithubConfig();
+  const token = getGithubToken();
+  const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}?ref=${encodeURIComponent(cfg.branch)}`;
+  const r = await fetch(url, {
+    headers: {
+      "Authorization": `token ${token}`,
+      "Accept": "application/vnd.github+json"
+    }
+  });
+  if(r.status === 404) return null;
+  if(!r.ok) throw new Error("GitHub read error: " + r.status);
+  const j = await r.json();
+  return j.sha || null;
+}
+
+async function githubPutFile(path, base64Content){
+  const cfg = getGithubConfig();
+  const token = getGithubToken();
+  const sha = await githubGetSha(path);
+
+  const body = {
+    message: `Update ${path} (labeled)`,
+    content: base64Content,
+    branch: cfg.branch
+  };
+  if(sha) body.sha = sha;
+
+  const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`;
+  const r = await fetch(url, {
+    method: "PUT",
+    headers: {
+      "Authorization": `token ${token}`,
+      "Accept": "application/vnd.github+json",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  });
+
+  if(!r.ok){
+    const t = await r.text();
+    throw new Error("GitHub write error: " + r.status + "\n" + t.slice(0,300));
+  }
+  return await r.json();
+}
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+loadVetrina();
