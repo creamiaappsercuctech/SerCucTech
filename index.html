@@ -1,115 +1,22 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-
-  <!-- VIEWPORT: ZOOM CONSENTITO -->
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-
-  <title>SerCucTech – Viewer</title>
-
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>SerCucTech</title>
+  <meta http-equiv="refresh" content="0; url=vetrina.html?id=renzo11">
   <style>
-    *{ box-sizing:border-box; }
-
-    body{
-      margin:0;
-      background:#0b1220;
-      color:#fff;
-      font-family:system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
-    header{
-      padding:12px;
-      text-align:center;
-      font-size:18px;
-      font-weight:600;
-      background:#0e1730;
-    }
-
-    /* CONTENITORE IMMAGINE */
-    .viewer{
-      width:100%;
-      height:calc(100vh - 56px);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      overflow:auto;              /* 🔑 permette di rimpicciolire/scrollare */
-    }
-
-    /* IMMAGINE */
-    .viewer img{
-      max-width:100%;
-      max-height:100%;
-      object-fit:contain;         /* 🔑 non si “incastra” */
-      border-radius:14px;
-      transition:all .25s ease;
-    }
-
-    /* MODALITÀ FULLSCREEN */
-    .fullscreen{
-      position:fixed;
-      inset:0;
-      background:#000;
-      z-index:9999;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .fullscreen img{
-      max-width:100vw;
-      max-height:100vh;
-      object-fit:contain;
-    }
-
-    /* SUGGERIMENTO */
-    .hint{
-      position:fixed;
-      bottom:12px;
-      left:50%;
-      transform:translateX(-50%);
-      background:rgba(0,0,0,.7);
-      padding:8px 14px;
-      border-radius:20px;
-      font-size:13px;
-      opacity:.9;
-    }
+    body{margin:0;font-family:system-ui;background:#0b1220;color:#fff;display:flex;min-height:100vh;align-items:center;justify-content:center}
+    a{color:#8fd3ff}
+    .box{max-width:520px;padding:18px;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(255,255,255,.04)}
   </style>
 </head>
-
 <body>
-
-<header>SerCucTech – Visualizzatore</header>
-
-<div class="viewer" id="viewer">
-  <!-- CAMBIA QUI IL FILE SE VUOI -->
-  <img id="photo"
-       src="media/renzo11-010.jpg"
-       alt="Immagine"
-       onclick="toggleFullscreen()">
-</div>
-
-<div class="hint">
-  Tocca l’immagine → schermo intero / Tocca di nuovo → normale
-</div>
-
-<script>
-  let isFull = false;
-
-  function toggleFullscreen(){
-    const viewer = document.getElementById("viewer");
-    const img = document.getElementById("photo");
-
-    if(!isFull){
-      viewer.classList.add("fullscreen");
-      isFull = true;
-    }else{
-      viewer.classList.remove("fullscreen");
-      isFull = false;
-    }
-  }
-</script>
-
+  <div class="box">
+    <h2>SerCucTech</h2>
+    <p>Reindirizzamento alla vetrina…</p>
+    <p>Se non parte, apri:</p>
+    <p><a href="vetrina.html?id=renzo11">vetrina.html?id=renzo11</a></p>
+  </div>
 </body>
 </html>
