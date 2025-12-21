@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Vetrina</title>
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
 
   <style>
     .waDock2{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:980px;margin:0 auto}
@@ -28,6 +28,7 @@
     .archBtn{border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.22);color:#fff;padding:10px 12px;border-radius:14px;font-weight:1000;cursor:pointer;user-select:none}
     .archBtn:active{transform:scale(.99)}
     .archBtn.danger{border-color:rgba(255,90,90,.35);background:rgba(255,90,90,.12)}
+    .archBtn.ok{border-color:rgba(35,197,94,.35);background:rgba(35,197,94,.14)}
 
     .archSearch{
       width:100%;margin-top:12px;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.16);
@@ -62,6 +63,8 @@
       padding:10px;border-radius:16px;margin-top:10px
     }
     .adminState{font-weight:1000;opacity:.95}
+
+    .fileInp{display:none}
   </style>
 </head>
 
@@ -129,7 +132,10 @@
 
     <div class="adminBar">
       <div class="adminState" id="adminState">Stato admin: BLOCCATO</div>
-      <button class="archBtn danger" id="adminLockBtn">🔒 Blocca admin</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="archBtn ok" id="archImportBtn">⬆️ Import JSON</button>
+        <button class="archBtn danger" id="adminLockBtn">🔒 Blocca admin</button>
+      </div>
     </div>
 
     <div class="smallHint" id="archHint">
@@ -151,6 +157,8 @@
     </div>
 
     <div class="archList" id="archList"></div>
+
+    <input id="archImportFile" class="fileInp" type="file" accept="application/json">
   </section>
 
   <!-- INDICE ALTRE VETRINE -->
@@ -233,7 +241,7 @@
   </div>
 </div>
 
-<script src="app.js?v=7"></script>
+<script src="app.js?v=8"></script>
 
 <script>
 (function(){
@@ -253,18 +261,13 @@
     }
     return id;
   }
-
   function isAdminUnlocked(){
     const dev = getDeviceId();
-    const v = localStorage.getItem(ADMIN_UNLOCK_KEY);
-    return v === dev;
+    return localStorage.getItem(ADMIN_UNLOCK_KEY) === dev;
   }
-
   function setAdminUnlocked(){
-    const dev = getDeviceId();
-    localStorage.setItem(ADMIN_UNLOCK_KEY, dev);
+    localStorage.setItem(ADMIN_UNLOCK_KEY, getDeviceId());
   }
-
   function clearAdminUnlocked(){
     localStorage.removeItem(ADMIN_UNLOCK_KEY);
   }
@@ -284,7 +287,7 @@
   const badge = document.getElementById("badgeId");
   if(badge) badge.textContent = "id: " + id;
 
-  // ===== Archivio (sempre salvato, visibile solo admin) =====
+  // ===== Archivio =====
   const ARCH_KEY = `sercuctech_requests_${id}`;
   let ARCH_QUERY = "";
 
@@ -297,10 +300,12 @@
   }
   function nowStamp(){
     const d = new Date();
-    const day = daysIT[d.getDay()];
-    const date = d.toLocaleDateString("it-IT");
-    const time = d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
-    return { day, date, time, iso: d.toISOString() };
+    return {
+      day: daysIT[d.getDay()],
+      date: d.toLocaleDateString("it-IT"),
+      time: d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit",second:"2-digit"}),
+      iso: d.toISOString()
+    };
   }
   function addArchiveEntry(entry){
     const list = loadArchive();
@@ -408,6 +413,7 @@
     ARCH_QUERY = e.target.value || "";
     renderArchive();
   });
+
   document.getElementById("archCopyBtn")?.addEventListener("click", async ()=>{
     const list = loadArchive();
     const q = (ARCH_QUERY || "").trim().toLowerCase();
@@ -418,22 +424,118 @@
     const ok = await copyText(txt || "");
     alert(ok ? "Copiato ✅" : "Copia non riuscita");
   });
+
   document.getElementById("archExportBtn")?.addEventListener("click", ()=>{
     const list = loadArchive();
     const q = (ARCH_QUERY || "").trim().toLowerCase();
     const rows = list.filter(r=>matchesQuery(r,q));
     exportJsonFile(`richieste-${id}.json`, rows);
   });
+
   document.getElementById("archExportCsvBtn")?.addEventListener("click", ()=>{
     const list = loadArchive();
     const q = (ARCH_QUERY || "").trim().toLowerCase();
     const rows = list.filter(r=>matchesQuery(r,q));
     exportCsvFile(`richieste-${id}.csv`, rows);
   });
+
   document.getElementById("archClearBtn")?.addEventListener("click", ()=>{
     if(confirm("Sicuro di cancellare TUTTO l’archivio?")){
       saveArchive([]);
       renderArchive();
+    }
+  });
+
+  // ✅ IMPORT JSON
+  const importBtn = document.getElementById("archImportBtn");
+  const importFile = document.getElementById("archImportFile");
+
+  function sanitizeImportedRows(rows){
+    const out = [];
+    for(const r of rows){
+      if(!r || typeof r !== "object") continue;
+      // accettiamo solo campi attesi
+      const row = {
+        type: String(r.type || "RICHIESTA"),
+        day: String(r.day || ""),
+        date: String(r.date || ""),
+        time: String(r.time || ""),
+        iso: String(r.iso || ""),
+        toName: String(r.toName || ""),
+        toPhone: String(r.toPhone || ""),
+        message: String(r.message || "")
+      };
+      // minimo: deve avere message
+      if(!row.message) continue;
+      out.push(row);
+    }
+    return out;
+  }
+
+  async function handleImportFile(file){
+    const text = await file.text();
+    let parsed = null;
+    try{ parsed = JSON.parse(text); }catch(e){ parsed = null; }
+    if(!parsed){
+      alert("File JSON non valido ❌");
+      return;
+    }
+    if(!Array.isArray(parsed)){
+      alert("Il JSON deve essere un ARRAY di righe (come export) ❌");
+      return;
+    }
+
+    const rows = sanitizeImportedRows(parsed);
+    if(!rows.length){
+      alert("Nessuna riga valida nel file ❌");
+      return;
+    }
+
+    const mode = prompt(
+      "Import: scrivi 1 o 2\n" +
+      "1) UNISCI (aggiunge alle richieste esistenti)\n" +
+      "2) SOSTITUISCI (cancella e mette solo quelle importate)"
+    );
+
+    const old = loadArchive();
+    let merged = [];
+    if(String(mode).trim() === "2"){
+      merged = rows;
+    }else{
+      merged = rows.concat(old);
+    }
+
+    // dedup semplice: iso+toPhone+type+message
+    const seen = new Set();
+    const finalList = [];
+    for(const r of merged){
+      const k = `${r.iso}|${r.toPhone}|${r.type}|${r.message.slice(0,80)}`;
+      if(seen.has(k)) continue;
+      seen.add(k);
+      finalList.push(r);
+    }
+
+    saveArchive(finalList);
+    renderArchive();
+    alert("Import completato ✅");
+  }
+
+  importBtn?.addEventListener("click", ()=>{
+    if(!isAdminUnlocked()){
+      alert("Devi essere admin per importare.");
+      return;
+    }
+    importFile.value = "";
+    importFile.click();
+  });
+
+  importFile?.addEventListener("change", async ()=>{
+    const f = importFile.files && importFile.files[0];
+    if(!f) return;
+    try{
+      await handleImportFile(f);
+    }catch(e){
+      alert("Errore durante import ❌");
     }
   });
 
@@ -566,7 +668,6 @@ ${photoLine}
     const toPhone = contact?.phone || "";
     const msg = (kind === "FOTO") ? makeMsgFoto(toName) : makeMsgVetrina(toName);
 
-    // Salva SEMPRE (ma lo vedi solo se admin sbloccato)
     const stamp = nowStamp();
     addArchiveEntry({ type: kind, ...stamp, toName, toPhone, message: msg });
 
@@ -704,7 +805,7 @@ ${photoLine}
     }
   }
 
-  // ===== Admin unlock gesture: 7 tap sul pallino =====
+  // ===== Admin unlock: 7 tap sul pallino =====
   const brandDot = document.getElementById("brandDot");
   const gate = document.getElementById("adminGate");
   const w1 = document.getElementById("w1");
@@ -752,7 +853,7 @@ ${photoLine}
   getDeviceId();
   loadVetrinaData();
   loadIndex();
-  renderArchive();     // mostra archivio solo se admin già sbloccato
+  renderArchive();
 })();
 </script>
 </body>
