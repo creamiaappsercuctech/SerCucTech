@@ -2,180 +2,539 @@
 <html lang="it">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Indice Link SerCucTech</title>
 
 <style>
-body{
-  margin:0;
-  padding:16px;
-  font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
-  background:#0e0e11;
-  color:#fff;
-}
+  :root{
+    --bg:#0e0e11;
+    --card:#1b1b23;
+    --card2:#13131a;
+    --txt:#ffffff;
+    --muted:rgba(255,255,255,.75);
+    --accent:#25d366;
+    --warn:#ffcc00;
+    --danger:#ff5b5b;
+    --stroke:rgba(255,255,255,.12);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    padding:16px;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:linear-gradient(180deg,#0b0b10 0%, #12121a 60%, #0b0b10 100%);
+    color:var(--txt);
+  }
+  .wrap{max-width:980px;margin:0 auto}
+  h1{
+    margin:6px 0 12px;
+    text-align:center;
+    font-size:1.25rem;
+    letter-spacing:.2px;
+  }
 
-h1{
-  text-align:center;
-  margin-bottom:12px;
-}
+  .searchRow{
+    display:flex; gap:10px; align-items:center;
+    background:rgba(255,255,255,.06);
+    border:1px solid var(--stroke);
+    border-radius:14px;
+    padding:10px;
+  }
+  .searchRow input{
+    flex:1;
+    border:none;
+    outline:none;
+    background:transparent;
+    color:var(--txt);
+    font-size:1rem;
+    padding:6px 2px;
+  }
+  .pill{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:8px 10px;
+    border-radius:999px;
+    background:rgba(255,255,255,.08);
+    border:1px solid var(--stroke);
+    color:var(--muted);
+    font-size:.85rem;
+    white-space:nowrap;
+  }
 
-input{
-  width:100%;
-  padding:12px;
-  border-radius:10px;
-  border:none;
-  margin-bottom:16px;
-  font-size:1em;
-}
+  /* Consiglio ricerca */
+  .hintBox{
+    margin:12px 0;
+    background:rgba(37,211,102,.08);
+    border:1px solid rgba(37,211,102,.35);
+    border-radius:14px;
+    padding:12px;
+    display:none;
+  }
+  .hintTitle{
+    display:flex; gap:10px; align-items:center;
+    font-weight:700;
+    color:#c9ffd9;
+    margin-bottom:6px;
+  }
+  .hintText{color:rgba(255,255,255,.85); font-size:.95rem; line-height:1.35}
 
-.list{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
+  /* Lista */
+  .list{display:flex; flex-direction:column; gap:12px; margin-top:10px}
+  .item{
+    background:rgba(255,255,255,.06);
+    border:1px solid var(--stroke);
+    border-radius:16px;
+    padding:12px;
+    display:flex;
+    gap:12px;
+  }
+  .num{
+    width:42px;
+    min-width:42px;
+    height:42px;
+    border-radius:14px;
+    display:grid;
+    place-items:center;
+    background:rgba(37,211,102,.12);
+    border:1px solid rgba(37,211,102,.35);
+    color:var(--accent);
+    font-weight:800;
+    font-size:1.05rem;
+  }
+  .col{flex:1; min-width:0}
+  .title{
+    font-weight:800;
+    font-size:1.02rem;
+    margin-bottom:4px;
+  }
+  .desc{
+    color:var(--muted);
+    font-size:.92rem;
+    line-height:1.35;
+  }
+  .tags{
+    margin-top:8px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .tag{
+    font-size:.78rem;
+    color:rgba(255,255,255,.85);
+    padding:4px 8px;
+    border-radius:999px;
+    background:rgba(255,255,255,.08);
+    border:1px solid var(--stroke);
+  }
 
-.item{
-  background:#1c1c24;
-  border-radius:12px;
-  padding:12px;
-  display:flex;
-  gap:12px;
-}
+  .btnRow{
+    margin-top:10px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  button{
+    border:none;
+    border-radius:12px;
+    padding:9px 12px;
+    font-size:.9rem;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .open{background:var(--accent); color:#001d0b;}
+  .audio{background:#2a2a36; color:#fff; border:1px solid var(--stroke);}
+  .copy{background:#232331;color:#fff;border:1px solid var(--stroke);}
+  .open:active,.audio:active,.copy:active{transform:scale(.99)}
+  .smallUrl{
+    margin-top:8px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    font-size:.8rem;
+    color:rgba(255,255,255,.55);
+    word-break:break-all;
+  }
 
-.num{
-  font-size:1.4em;
-  font-weight:bold;
-  color:#25d366;
-  width:32px;
-}
+  /* Evidenziazione */
+  .pulse{
+    outline:3px solid rgba(255,204,0,.8);
+    box-shadow:0 0 0 6px rgba(255,204,0,.15);
+    animation:pulse 1.2s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 6px rgba(255,204,0,.12)}
+    50%{box-shadow:0 0 0 10px rgba(255,204,0,.20)}
+    100%{box-shadow:0 0 0 6px rgba(255,204,0,.12)}
+  }
 
-.title{
-  font-weight:600;
-}
+  /* Popup testo */
+  .popup{
+    position:fixed;
+    left:50%;
+    transform:translateX(-50%);
+    bottom:90px;
+    max-width:min(760px,92vw);
+    background:rgba(0,0,0,.75);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:16px;
+    padding:14px;
+    display:none;
+    z-index:50;
+    backdrop-filter: blur(6px);
+  }
+  .popup .pTitle{font-weight:800;margin-bottom:6px}
+  .popup .pText{color:rgba(255,255,255,.88);line-height:1.35}
 
-.desc{
-  font-size:0.9em;
-  opacity:.85;
-}
-
-.buttons{
-  margin-top:8px;
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
-
-button{
-  border:none;
-  border-radius:8px;
-  padding:6px 10px;
-  font-size:.85em;
-}
-
-.open{background:#25d366;color:#000;}
-.audio{background:#444;color:#fff;}
-
-.popup{
-  position:fixed;
-  bottom:20px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#222;
-  padding:14px;
-  border-radius:14px;
-  display:none;
-  max-width:90%;
-}
+  /* Player audio fisso */
+  .player{
+    position:fixed;
+    left:0; right:0; bottom:0;
+    padding:10px 12px;
+    background:rgba(10,10,14,.92);
+    border-top:1px solid rgba(255,255,255,.12);
+    z-index:60;
+  }
+  .playerInner{max-width:980px;margin:0 auto; display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  .playerNow{
+    flex:1;
+    min-width:180px;
+    color:rgba(255,255,255,.85);
+    font-size:.9rem;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .pBtn{
+    background:#20202b;
+    color:#fff;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:12px;
+    padding:8px 10px;
+    font-weight:800;
+  }
+  .pBtn.danger{background:#2b2020;border-color:rgba(255,91,91,.35)}
+  .speed{
+    display:flex; align-items:center; gap:8px;
+    padding:8px 10px;
+    border-radius:12px;
+    background:#20202b;
+    border:1px solid rgba(255,255,255,.12);
+    color:#fff;
+    font-weight:800;
+  }
+  .speed input{width:140px}
 </style>
 </head>
 
 <body>
+<div class="wrap">
+  <h1>📌 Indice Link SerCucTech</h1>
 
-<h1>📌 Indice Link SerCucTech</h1>
+  <div class="searchRow">
+    <input id="search" placeholder="Scrivi cosa devi fare… es. numerare oggetti foto renzo11 / creare vetrina / admin">
+    <span class="pill" id="countPill">0 link</span>
+  </div>
 
-<input id="search" placeholder="Scrivi cosa devi fare… es. numerare oggetti foto">
+  <div class="hintBox" id="hintBox">
+    <div class="hintTitle">✅ Consiglio rapido</div>
+    <div class="hintText" id="hintText"></div>
+  </div>
 
-<div id="list" class="list"></div>
+  <div class="list" id="list"></div>
+</div>
 
-<div id="popup" class="popup"></div>
+<!-- Popup testo -->
+<div class="popup" id="popup">
+  <div class="pTitle" id="popupTitle">Spiegazione</div>
+  <div class="pText" id="popupText"></div>
+</div>
+
+<!-- Player -->
+<div class="player" id="player">
+  <div class="playerInner">
+    <div class="playerNow" id="now">Pronto. Tocca 🔊 su un link per ascoltare la spiegazione.</div>
+    <button class="pBtn" id="btnPlay">▶️ Play</button>
+    <button class="pBtn" id="btnPause">⏸ Pausa</button>
+    <button class="pBtn" id="btnRepeat">🔁 Repeat</button>
+    <button class="pBtn danger" id="btnMute">🔇 Mute</button>
+    <div class="speed">
+      Velocità
+      <input id="rate" type="range" min="0.7" max="1.3" step="0.1" value="1.0">
+      <span id="rateVal">1.0</span>x
+    </div>
+  </div>
+</div>
 
 <script>
-/* ===== DATI SICURI ===== */
+/* ===================== DATI LINK (aggiorna qui) ===================== */
 const LINKS = [
   {
-    title: "Vetrina Renzo11",
+    title: "Vetrina Renzo11 (pubblico)",
     url: "vetrina.html?id=renzo11",
-    desc: "Apri la vetrina Renzo11, guarda le foto, numeri gli oggetti e ricevi richieste WhatsApp.",
-    keywords: "vetrina foto numerare oggetti renzo"
+    desc: "Qui apri la vetrina Renzo11: scorri le foto, vedi il testo fisso e puoi inviare richieste WhatsApp per informazioni.",
+    keywords: ["renzo11","vetrina","foto","whatsapp","scorrere","pubblico","cliente","richieste info"]
   },
   {
-    title: "Admin Vetrine",
+    title: "Admin (gestione vetrine)",
     url: "admin.html",
-    desc: "Gestisci vetrine, crea nuove schede e carica immagini.",
-    keywords: "admin creare modificare vetrine"
+    desc: "Qui gestisci le vetrine: crei nuove vetrine, modifichi titolo e testo, e aggiorni i file JSON.",
+    keywords: ["admin","creare","modificare","vetrine","json","gestione","privato"]
   },
   {
-    title: "Contatore Oggetti",
+    title: "Strumento numerini oggetti (contatore)",
     url: "tools/contatore.html",
-    desc: "Strumento per mettere numeri manuali sugli oggetti nelle foto.",
-    keywords: "contatore numerare oggetti foto"
+    desc: "Qui puoi mettere numeri manuali sugli oggetti in una foto, scegli la grandezza e poi esporti i dati.",
+    keywords: ["numerare","numerini","oggetti","foto","contatore","pins","export","grandezza"]
+  },
+  {
+    title: "Rinomina file sequenziale",
+    url: "rename.html",
+    desc: "Qui rinomini i file in sequenza (utile per foto e cartelle) e poi li carichi in media.",
+    keywords: ["rinominare","rinomina","file","sequenza","sequenziale","media","foto"]
+  },
+  {
+    title: "Home progetto (indice generale)",
+    url: "index.html",
+    desc: "Questa è la pagina principale del progetto SerCucTech: da qui puoi entrare negli strumenti principali.",
+    keywords: ["home","indice","principale","sercuctech","progetto"]
   }
 ];
 
-const list = document.getElementById("list");
-const popup = document.getElementById("popup");
+/* ===================== UTILS ===================== */
+const $ = s => document.querySelector(s);
+const listEl = $("#list");
+const searchEl = $("#search");
+const countPill = $("#countPill");
+const hintBox = $("#hintBox");
+const hintText = $("#hintText");
 
-/* ===== RENDER SEMPRE ===== */
-function render(data){
-  list.innerHTML = "";
-  data.forEach((l,i)=>{
-    const el = document.createElement("div");
-    el.className="item";
-    el.innerHTML = `
-      <div class="num">${i+1}</div>
-      <div>
-        <div class="title">${l.title}</div>
-        <div class="desc">${l.desc}</div>
-        <div class="buttons">
-          <button class="open">Apri</button>
-          <button class="audio">🔊 Spiega</button>
-        </div>
-      </div>
-    `;
-    el.querySelector(".open").onclick=()=>location.href=l.url;
-    el.querySelector(".audio").onclick=()=>speak(l.desc);
-    list.appendChild(el);
-  });
+const popup = $("#popup");
+const popupTitle = $("#popupTitle");
+const popupText = $("#popupText");
+
+const now = $("#now");
+const rate = $("#rate");
+const rateVal = $("#rateVal");
+
+const btnPlay = $("#btnPlay");
+const btnPause = $("#btnPause");
+const btnRepeat = $("#btnRepeat");
+const btnMute = $("#btnMute");
+
+let currentUtterance = null;
+let lastSpoken = "";
+let lastTitle = "";
+let isMuted = false;
+
+/* ===================== AUDIO SAFE ===================== */
+function canSpeak(){
+  return !!window.speechSynthesis && typeof SpeechSynthesisUtterance !== "undefined";
 }
+function showPopup(title, text){
+  popupTitle.textContent = title || "Spiegazione";
+  popupText.textContent = text || "";
+  popup.style.display = "block";
+}
+function hidePopup(){
+  popup.style.display = "none";
+}
+function stopSpeak(){
+  try{ if(canSpeak()) speechSynthesis.cancel(); }catch(e){}
+  currentUtterance = null;
+}
+function speak(title, text){
+  lastTitle = title || "Spiegazione";
+  lastSpoken = text || "";
+  now.textContent = "🔊 " + lastTitle;
 
-/* ===== AUDIO SAFE ===== */
-function speak(text){
-  popup.innerText=text;
-  popup.style.display="block";
+  showPopup(lastTitle, lastSpoken);
 
-  if(!window.speechSynthesis){
-    setTimeout(()=>popup.style.display="none",3000);
+  if(isMuted || !canSpeak()){
+    // fallback solo testo (non blocca nulla)
+    setTimeout(()=>hidePopup(), 4500);
     return;
   }
 
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang="it-IT";
-  u.onend=()=>popup.style.display="none";
-  speechSynthesis.speak(u);
+  stopSpeak();
+
+  const u = new SpeechSynthesisUtterance(lastSpoken);
+  u.lang = "it-IT";
+  u.rate = parseFloat(rate.value) || 1.0;
+  u.onend = () => { hidePopup(); };
+  u.onerror = () => { setTimeout(()=>hidePopup(), 3000); };
+
+  currentUtterance = u;
+  try{ speechSynthesis.speak(u); }catch(e){ setTimeout(()=>hidePopup(), 3000); }
 }
 
-/* ===== SEARCH ===== */
-document.getElementById("search").addEventListener("input",e=>{
-  const q=e.target.value.toLowerCase();
-  if(!q){ render(LINKS); return; }
-  render(LINKS.filter(l=>l.keywords.includes(q)));
-});
+/* Controlli player */
+btnMute.onclick = () => {
+  isMuted = !isMuted;
+  btnMute.textContent = isMuted ? "🔇 Muted" : "🔇 Mute";
+  if(isMuted) stopSpeak();
+};
+btnPause.onclick = () => {
+  if(!canSpeak()) return;
+  try{ speechSynthesis.pause(); }catch(e){}
+};
+btnPlay.onclick = () => {
+  if(!canSpeak()) {
+    if(lastSpoken) showPopup(lastTitle, lastSpoken);
+    return;
+  }
+  try{
+    // se era in pausa -> riprende
+    if(speechSynthesis.paused) speechSynthesis.resume();
+    else if(lastSpoken) speak(lastTitle, lastSpoken);
+  }catch(e){}
+};
+btnRepeat.onclick = () => { if(lastSpoken) speak(lastTitle, lastSpoken); };
+rate.oninput = () => { rateVal.textContent = rate.value; };
 
-/* ===== AVVIO ===== */
+/* ===================== RENDER ===================== */
+function render(data){
+  listEl.innerHTML = "";
+
+  data.forEach((l, idx) => {
+    const n = idx + 1;
+
+    const item = document.createElement("div");
+    item.className = "item";
+
+    const tags = (l.keywords || []).slice(0,6).map(k => `<span class="tag">${k}</span>`).join("");
+
+    item.innerHTML = `
+      <div class="num">${n}</div>
+      <div class="col">
+        <div class="title">${escapeHtml(l.title)}</div>
+        <div class="desc">${escapeHtml(l.desc)}</div>
+
+        <div class="btnRow">
+          <button class="open" data-action="open">Apri</button>
+          <button class="audio" data-action="audio">🔊 Spiega</button>
+          <button class="copy" data-action="copy">Copia link</button>
+        </div>
+
+        <div class="tags">${tags}</div>
+        <div class="smallUrl">${escapeHtml(fullUrl(l.url))}</div>
+      </div>
+    `;
+
+    const openBtn = item.querySelector('[data-action="open"]');
+    const audioBtn = item.querySelector('[data-action="audio"]');
+    const copyBtn = item.querySelector('[data-action="copy"]');
+
+    audioBtn.onclick = () => speak("Come usare: " + l.title, l.desc);
+
+    copyBtn.onclick = async () => {
+      const u = fullUrl(l.url);
+      try{
+        await navigator.clipboard.writeText(u);
+        speak("Link copiato", "Ho copiato il link negli appunti. Ora puoi incollarlo su WhatsApp o dove vuoi.");
+      }catch(e){
+        // fallback
+        prompt("Copia questo link:", u);
+      }
+    };
+
+    openBtn.onclick = () => {
+      // guida rapida prima di aprire
+      highlight(openBtn);
+      speak("Apro " + l.title,
+        "Ora apro questa pagina. Se vuoi ricordarti come si usa, quando si apre cerca i pulsanti principali e segui le istruzioni in alto. Adesso apro il link.");
+      // attendo un pelo per far partire audio/popup, poi apro
+      setTimeout(()=>{ location.href = l.url; }, 600);
+    };
+
+    listEl.appendChild(item);
+  });
+
+  countPill.textContent = data.length + (data.length === 1 ? " link" : " link");
+}
+
+function highlight(el){
+  clearHighlights();
+  el.classList.add("pulse");
+  setTimeout(()=>el.classList.remove("pulse"), 2400);
+}
+function clearHighlights(){
+  document.querySelectorAll(".pulse").forEach(x=>x.classList.remove("pulse"));
+}
+
+/* ===================== SEARCH INTELLIGENTE ===================== */
+function scoreLink(link, query){
+  const q = query.toLowerCase().trim();
+  if(!q) return 0;
+  const words = q.split(/\s+/).filter(Boolean);
+  const bag = (link.keywords || []).join(" ").toLowerCase() + " " + (link.title||"").toLowerCase() + " " + (link.desc||"").toLowerCase();
+
+  let score = 0;
+  for(const w of words){
+    if(bag.includes(w)) score += 2;
+    // bonus se match su keyword esatta
+    if((link.keywords||[]).map(x=>x.toLowerCase()).includes(w)) score += 3;
+  }
+  // bonus se query contiene id tipo renzo11
+  if(q.includes("renzo11") && bag.includes("renzo11")) score += 6;
+  if(q.includes("admin") && bag.includes("admin")) score += 6;
+  if((q.includes("numer") || q.includes("oggetti") || q.includes("pins")) && bag.includes("contatore")) score += 5;
+
+  return score;
+}
+
+function applySearch(){
+  const q = searchEl.value.trim();
+  if(!q){
+    hintBox.style.display = "none";
+    render(LINKS);
+    return;
+  }
+
+  // ordina per punteggio
+  const scored = LINKS.map(l => ({ l, s: scoreLink(l, q) }))
+    .sort((a,b)=>b.s - a.s);
+
+  const best = scored[0];
+  const filtered = scored.filter(x => x.s > 0).map(x => x.l);
+
+  render(filtered.length ? filtered : LINKS);
+
+  if(best && best.s > 0){
+    hintBox.style.display = "block";
+    const idx = (filtered.length ? filtered.indexOf(best.l) : LINKS.indexOf(best.l)) + 1;
+    hintText.innerHTML = `
+      Hai scritto: <b>${escapeHtml(q)}</b><br>
+      Ti conviene usare: <b>Link #${idx}</b> → <b>${escapeHtml(best.l.title)}</b><br>
+      <span style="color:rgba(255,255,255,.85)">Suggerimento: premi “🔊 Spiega” oppure “Apri”.</span>
+    `;
+    // piccola guida automatica (solo se non è mutato)
+    if(!isMuted){
+      speak("Consiglio automatico",
+        "In base a quello che hai scritto, ti conviene usare " + best.l.title + ". Nella lista premi il tasto Spiega per sentirlo, oppure premi Apri per aprirlo.");
+    }
+  }else{
+    hintBox.style.display = "none";
+  }
+}
+
+/* ===================== HELPERS ===================== */
+function fullUrl(path){
+  // genera link assoluto in GitHub Pages
+  const base = location.origin + location.pathname.replace(/\/[^\/]*$/, "/");
+  return base + path;
+}
+function escapeHtml(str){
+  return (str||"").replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+  }[m]));
+}
+
+/* ===================== START ===================== */
 render(LINKS);
-</script>
+countPill.textContent = LINKS.length + " link";
 
+let t = null;
+searchEl.addEventListener("input", () => {
+  clearTimeout(t);
+  t = setTimeout(applySearch, 220);
+});
+</script>
 </body>
 </html>
