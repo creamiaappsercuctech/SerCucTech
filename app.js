@@ -1,413 +1,874 @@
-/* ===================== SERCUCTECH VETRINA APP.JS (v3) ===================== */
-(() => {
-  "use strict";
+/* ===================== VETRINA APP (SerCucTech) ===================== */
 
-  const $ = (id) => document.getElementById(id);
-  const qs = new URLSearchParams(location.search);
-  const VETRINA_ID = (qs.get("id") || "").trim() || "renzo11";
+const qs = (s, el=document) => el.querySelector(s);
+const qsa = (s, el=document) => Array.from(el.querySelectorAll(s));
 
-  const BASE = location.origin + location.pathname.replace(/\/[^\/]*$/, "/");
-  const LINK_PUBLIC = `${BASE}link.html?id=${encodeURIComponent(VETRINA_ID)}`;
-  const DATA_URL = `data/${encodeURIComponent(VETRINA_ID)}.json`;
+const els = {
+  pageTitle: qs('#pageTitle'),
+  pageDesc: qs('#pageDesc'),
+  badgeId: qs('#badgeId'),
 
-  // UI
-  const pageTitle = $("pageTitle");
-  const pageDesc  = $("pageDesc");
-  const badgeId   = $("badgeId");
+  voicePanel: qs('#voicePanel'),
+  voiceText: qs('#voiceText'),
+  voiceClickable: qs('#voiceClickable'),
+  contactsRow: qs('#contactsRow'),
 
-  const heroImg   = $("heroImg");
-  const imgCounter= $("imgCounter");
-  const imgBadge  = $("imgBadge");
-  const thumbRow  = $("thumbRow");
-  const prevBtn   = $("prevBtn");
-  const nextBtn   = $("nextBtn");
+  indexPanel: qs('#indexPanel'),
+  indexList: qs('#indexList'),
+  indexRefreshBtn: qs('#indexRefreshBtn'),
 
-  const voicePanel= $("voicePanel");
-  const voiceTextEl = $("voiceText");
-  const contactsRow = $("contactsRow");
+  heroImg: qs('#heroImg'),
+  imgWrap: qs('#imgWrap'),
+  imgCounter: qs('#imgCounter'),
+  imgBadge: qs('#imgBadge'),
+  prevBtn: qs('#prevBtn'),
+  nextBtn: qs('#nextBtn'),
+  thumbRow: qs('#thumbRow'),
+  pinsLayer: qs('#pinsLayer'),
 
-  const voiceBtn  = $("voiceBtn");
-  const stopBtn   = $("stopBtn");
-  const fullBtn   = $("fullBtn");
-  const themeBtn  = $("themeBtn");
-  const kioskBtn  = $("kioskBtn");
-  const homeBtn   = $("homeBtn");
+  waPhotoBtn: qs('#waPhotoBtn'),
+  shareBtn: qs('#shareBtn'),
 
-  const waPhotoRenzo = $("waPhotoRenzo");
-  const waPhotoSergio= $("waPhotoSergio");
-  const waVetrinaRenzo = $("waVetrinaRenzo");
-  const waVetrinaSergio= $("waVetrinaSergio");
+  filesCard: qs('#filesCard'),
+  filesList: qs('#filesList'),
 
-  const audioGate = $("audioGate");
-  const enableAudioBtn = $("enableAudioBtn");
-  const skipAudioBtn = $("skipAudioBtn");
+  homeBtn: qs('#homeBtn'),
+  voiceBtn: qs('#voiceBtn'),
+  stopBtn: qs('#stopBtn'),
+  fullBtn: qs('#fullBtn'),
+  themeBtn: qs('#themeBtn'),
+  kioskBtn: qs('#kioskBtn'),
 
-  const shareBtn = $("shareBtn");
+  audioGate: qs('#audioGate'),
+  enableAudioBtn: qs('#enableAudioBtn'),
+  skipAudioBtn: qs('#skipAudioBtn'),
 
-  // State
-  let data = null;
-  let media = [];
-  let idx = 0;
-  let isFull = false;
-  let kiosk = false;
-  let contacts = []; // {name, phone}
+  waModal: qs('#waModal'),
+  waModalText: qs('#waModalText'),
+  waOpenSecondBtn: qs('#waOpenSecondBtn'),
+  waCloseBtn: qs('#waCloseBtn'),
 
-  // Theme
-  const THEME_KEY = "sercuctech_theme";
-  function setTheme(mode){
-    document.documentElement.dataset.theme = mode;
-    localStorage.setItem(THEME_KEY, mode);
+  labelCard: qs('#labelCard'),
+  labelModeBadge: qs('#labelModeBadge'),
+  labelToggleBtn: qs('#labelToggleBtn'),
+  labelUndoBtn: qs('#labelUndoBtn'),
+  labelClearBtn: qs('#labelClearBtn'),
+  pinSizeRange: qs('#pinSizeRange'),
+  pinSizeValue: qs('#pinSizeValue'),
+  exportPinsBtn: qs('#exportPinsBtn'),
+  copyPinsBtn: qs('#copyPinsBtn'),
+  pinsJsonBox: qs('#pinsJsonBox'),
+
+  adminCard: qs('#adminCard'),
+  adminBadge: qs('#adminBadge'),
+  exportRequestsBtn: qs('#exportRequestsBtn'),
+  copyRequestsBtn: qs('#copyRequestsBtn'),
+  clearRequestsBtn: qs('#clearRequestsBtn'),
+  requestsBox: qs('#requestsBox'),
+
+  errorCard: qs('#errorCard'),
+  errorText: qs('#errorText'),
+};
+
+const params = new URLSearchParams(location.search);
+const VETRINA_ID = (params.get('id') || 'renzo11').trim();
+
+const DATA_URL = `data/${encodeURIComponent(VETRINA_ID)}.json?v=${Date.now()}`;
+const INDEX_URL = `data/vetrine.json?v=${Date.now()}`; // formato A
+
+const LS_PINS_KEY = (id)=> `sercuctech_pins_${id}`;
+const LS_REQ_KEY  = (id)=> `sercuctech_requests_${id}`;
+const LS_THEME_KEY = `sercuctech_theme`;
+const LS_KIOSK_KEY = `sercuctech_kiosk`;
+const LS_ADMIN_KEY = `sercuctech_admin_enabled`;
+
+let state = {
+  data: null,
+  media: [],
+  idx: 0,
+
+  // audio
+  speaking: false,
+  audioUnlocked: false,
+
+  // fullscreen
+  isFull: false,
+
+  // pins admin
+  adminEnabled: false,
+  labelMode: false,
+  pinSize: 28,
+  currentPins: {}, // per immagine: { "media/xxx.jpg": [{x,y,n,size}] }
+
+  // whatsapp dual send
+  pendingSecondWaUrl: null,
+};
+
+init().catch(err => showError(String(err || 'Errore sconosciuto')));
+
+/* ===================== INIT ===================== */
+async function init(){
+  applyTheme(loadLS(LS_THEME_KEY, 'dark'));
+  state.adminEnabled = loadLS(LS_ADMIN_KEY, '0') === '1';
+  updateAdminUI();
+
+  els.badgeId.textContent = `id: ${VETRINA_ID}`;
+
+  // carico vetrina
+  const data = await fetchJson(DATA_URL);
+  state.data = data;
+
+  // titolo + descrizione
+  els.pageTitle.textContent = data.title || VETRINA_ID;
+  els.pageDesc.textContent = data.description || '';
+  document.title = data.title ? `Vetrina • ${data.title}` : `Vetrina • ${VETRINA_ID}`;
+
+  // voice panel
+  const voiceText = (data.voice && data.voice.text) ? String(data.voice.text) : '';
+  if(voiceText.trim()){
+    els.voicePanel.hidden = false;
+    els.voiceText.textContent = voiceText.trim();
+  }else{
+    els.voicePanel.hidden = true;
   }
-  function toggleTheme(){
-    const cur = localStorage.getItem(THEME_KEY) || "dark";
-    setTheme(cur === "dark" ? "light" : "dark");
+
+  // contatti
+  renderContacts(data.contacts || []);
+
+  // indice altre vetrine
+  await loadIndex(); // non blocca se manca
+
+  // media
+  state.media = Array.isArray(data.media) ? data.media.filter(m => m && m.type === 'image' && m.url) : [];
+  if(state.media.length === 0){
+    showError(`Nessuna immagine trovata in media[].\nControlla il file data/${VETRINA_ID}.json`);
+    return;
   }
 
-  // Fullscreen image (in-page)
-  function setFull(on){
-    isFull = !!on;
-    document.body.classList.toggle("imgFull", isFull);
-  }
-  function toggleFull(){
-    setFull(!isFull);
-  }
-
-  // Kiosk
-  function setKiosk(on){
-    kiosk = !!on;
-    document.body.classList.toggle("kiosk", kiosk);
-    try{
-      if(kiosk){
-        document.documentElement.requestFullscreen?.().catch(()=>{});
-        screen.orientation?.lock?.("portrait").catch(()=>{});
-      }else{
-        document.exitFullscreen?.().catch(()=>{});
-        screen.orientation?.unlock?.();
-      }
-    }catch(e){}
+  // pins (dal JSON se presenti, altrimenti da localStorage)
+  state.currentPins = deepClone(data.pinsData || {});
+  const lsPins = loadLS(LS_PINS_KEY(VETRINA_ID), null);
+  if(lsPins && typeof lsPins === 'object' && !data.pinsData){
+    // se non hai pinsData nel json, usa quelli locali (solo per te)
+    state.currentPins = lsPins;
   }
 
-  // -------- Speech helpers --------
-  function stopSpeak(){
-    try{ speechSynthesis.cancel(); }catch(e){}
+  // files
+  renderFiles(data.files || []);
+
+  // galleria
+  buildThumbs();
+  setIndex(0);
+
+  // handlers
+  wireUI();
+
+  // richieste info (solo tu)
+  refreshRequestsBox();
+
+  // kiosk
+  const kiosk = loadLS(LS_KIOSK_KEY, '0') === '1';
+  if(kiosk) document.body.classList.add('kioskMode');
+
+  // hint: non autoplay, ma click su testo/Voice fa partire
+}
+
+/* ===================== FETCH ===================== */
+async function fetchJson(url){
+  const res = await fetch(url, {cache:'no-store'});
+  if(!res.ok){
+    throw new Error(`Non riesco a leggere ${url.replace(/\?.*$/,'')}\nHTTP ${res.status}`);
+  }
+  const txt = await res.text();
+  try{
+    return JSON.parse(txt);
+  }catch(e){
+    throw new Error(`JSON non valido in ${url.replace(/\?.*$/,'')}\n${e.message}`);
+  }
+}
+
+/* ===================== UI WIRING ===================== */
+function wireUI(){
+  els.prevBtn.addEventListener('click', ()=> step(-1));
+  els.nextBtn.addEventListener('click', ()=> step(+1));
+
+  // swipe
+  let startX = 0, startY = 0;
+  els.imgWrap.addEventListener('touchstart', (e)=>{
+    const t = e.touches[0];
+    startX = t.clientX; startY = t.clientY;
+  }, {passive:true});
+  els.imgWrap.addEventListener('touchend', (e)=>{
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+    if(Math.abs(dx) > 42 && Math.abs(dx) > Math.abs(dy)){
+      step(dx < 0 ? +1 : -1);
+    }
+  }, {passive:true});
+
+  // tap foto = fullscreen toggle
+  els.heroImg.addEventListener('click', ()=> toggleFull());
+
+  // bottoni barra
+  els.homeBtn.addEventListener('click', ()=> scrollToTop());
+  els.voiceBtn.addEventListener('click', ()=> speakVoice());
+  els.stopBtn.addEventListener('click', ()=> stopVoice());
+  els.fullBtn.addEventListener('click', ()=> toggleFull(true));
+  els.themeBtn.addEventListener('click', ()=> toggleTheme());
+  els.kioskBtn.addEventListener('click', ()=> toggleKiosk());
+
+  // clic su testo audio = parte audio
+  els.voiceClickable.addEventListener('click', ()=> speakVoice());
+
+  // share vetrina su WhatsApp
+  els.shareBtn.addEventListener('click', ()=> shareVetrinaWhatsApp());
+
+  // WhatsApp su foto (unico) -> manda a 2 numeri (con passaggio anti-blocco)
+  els.waPhotoBtn.addEventListener('click', ()=> askInfoWhatsAppForCurrentPhoto());
+
+  // audio gate
+  els.enableAudioBtn.addEventListener('click', ()=>{
+    state.audioUnlocked = true;
+    els.audioGate.hidden = true;
+    speakVoice();
+  });
+  els.skipAudioBtn.addEventListener('click', ()=>{
+    els.audioGate.hidden = true;
+  });
+
+  // modal per 2° numero
+  els.waCloseBtn.addEventListener('click', ()=> closeWaModal());
+  els.waOpenSecondBtn.addEventListener('click', ()=>{
+    if(state.pendingSecondWaUrl){
+      window.open(state.pendingSecondWaUrl, '_blank');
+      state.pendingSecondWaUrl = null;
+    }
+    closeWaModal();
+  });
+
+  // indice refresh
+  els.indexRefreshBtn.addEventListener('click', loadIndex);
+
+  // admin: attiva con 5 tap sul titolo
+  enableFiveTapAdmin();
+
+  // label tool
+  els.pinSizeRange.addEventListener('input', ()=>{
+    state.pinSize = Number(els.pinSizeRange.value || 28);
+    els.pinSizeValue.textContent = String(state.pinSize);
+  });
+
+  els.labelToggleBtn.addEventListener('click', ()=>{
+    state.labelMode = !state.labelMode;
+    updateLabelModeUI();
+  });
+
+  els.labelUndoBtn.addEventListener('click', undoPin);
+  els.labelClearBtn.addEventListener('click', clearPinsForCurrentImage);
+
+  els.exportPinsBtn.addEventListener('click', exportPinsData);
+  els.copyPinsBtn.addEventListener('click', copyPinsData);
+
+  // click su immagine per piazzare pin in label mode (solo admin)
+  els.imgWrap.addEventListener('click', (e)=>{
+    if(!state.adminEnabled || !state.labelMode) return;
+
+    // evita che il click sul bottone WA o su altri overlay metta pin
+    const target = e.target;
+    if(target && (target.id === 'waPhotoBtn' || target.closest('.waOnPhoto'))) return;
+
+    // click su immagine -> coordinate relative al wrap
+    const rect = els.imgWrap.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+
+    addPinForCurrentImage(x, y);
+  });
+
+  // richieste admin
+  els.exportRequestsBtn.addEventListener('click', exportRequests);
+  els.copyRequestsBtn.addEventListener('click', copyRequests);
+  els.clearRequestsBtn.addEventListener('click', clearRequests);
+}
+
+/* ===================== GALLERY ===================== */
+function buildThumbs(){
+  els.thumbRow.innerHTML = '';
+  state.media.forEach((m, i)=>{
+    const b = document.createElement('button');
+    b.className = 'thumb';
+    b.type = 'button';
+    b.title = m.label || `Foto ${i+1}`;
+    b.addEventListener('click', ()=> setIndex(i));
+
+    const img = document.createElement('img');
+    img.loading = 'lazy';
+    img.src = m.url;
+    img.alt = m.label || `Foto ${i+1}`;
+
+    b.appendChild(img);
+    els.thumbRow.appendChild(b);
+  });
+  markThumbActive();
+}
+
+function markThumbActive(){
+  qsa('.thumb', els.thumbRow).forEach((t, i)=> t.classList.toggle('active', i === state.idx));
+}
+
+function setIndex(i){
+  const n = state.media.length;
+  state.idx = ((i % n) + n) % n;
+
+  const item = state.media[state.idx];
+  els.heroImg.src = item.url;
+  els.heroImg.alt = item.label || `Foto ${state.idx+1}`;
+
+  const a = String(state.idx + 1).padStart(2,'0');
+  const b = String(n).padStart(2,'0');
+  els.imgCounter.textContent = `${a}/${b}`;
+  els.imgBadge.textContent = a;
+
+  markThumbActive();
+  renderPinsForCurrentImage();
+}
+
+function step(delta){
+  setIndex(state.idx + delta);
+}
+
+/* ===================== FULLSCREEN ===================== */
+async function toggleFull(forceOn){
+  const wantOn = (typeof forceOn === 'boolean') ? forceOn : !state.isFull;
+
+  // prefer Fullscreen API if available, else CSS fallback
+  try{
+    if(wantOn){
+      state.isFull = true;
+      document.body.classList.add('fullscreenMode');
+      if(els.imgWrap.requestFullscreen) await els.imgWrap.requestFullscreen().catch(()=>{});
+    }else{
+      state.isFull = false;
+      document.body.classList.remove('fullscreenMode');
+      if(document.fullscreenElement) await document.exitFullscreen().catch(()=>{});
+    }
+  }catch(e){
+    // fallback already applied
+    state.isFull = wantOn;
+    document.body.classList.toggle('fullscreenMode', wantOn);
+  }
+}
+
+/* ===================== THEME / KIOSK ===================== */
+function applyTheme(name){
+  // semplice: dark only (ma lasciamo la struttura)
+  saveLS(LS_THEME_KEY, name || 'dark');
+}
+function toggleTheme(){
+  // (per ora teniamo dark, ma così non rompiamo nulla)
+  applyTheme('dark');
+}
+function toggleKiosk(){
+  const on = !document.body.classList.contains('kioskMode');
+  document.body.classList.toggle('kioskMode', on);
+  saveLS(LS_KIOSK_KEY, on ? '1' : '0');
+}
+
+/* ===================== VOICE ===================== */
+function stopVoice(){
+  try{
+    window.speechSynthesis.cancel();
+  }catch(e){}
+  state.speaking = false;
+}
+
+function speakVoice(){
+  const txt = (state.data && state.data.voice && state.data.voice.text) ? String(state.data.voice.text) : '';
+  if(!txt.trim()) return;
+
+  // se il telefono blocca, mostra gate SOLO se non sbloccato ancora
+  if(!state.audioUnlocked){
+    // proviamo comunque: se fallisce, mostriamo il gate
+    const ok = trySpeak(txt);
+    if(!ok){
+      els.audioGate.hidden = false;
+      return;
+    }
+    state.audioUnlocked = true;
+    return;
   }
 
-  // Trasforma numeri telefono in "3 3 3 2 9 2 7 8 4 2"
-  function phoneDigitsSpaced(digits){
-    const s = String(digits||"").replace(/\D/g,"");
-    return s.split("").join(" ");
+  trySpeak(txt);
+}
+
+function trySpeak(text){
+  try{
+    stopVoice();
+    const u = new SpeechSynthesisUtterance(formatForPhoneSpeech(text));
+    u.lang = (state.data && state.data.voice && state.data.voice.lang) ? state.data.voice.lang : 'it-IT';
+    u.rate = 1.0;
+    u.pitch = 1.0;
+    u.onend = ()=> { state.speaking = false; };
+    u.onerror = ()=> { state.speaking = false; };
+
+    state.speaking = true;
+    window.speechSynthesis.speak(u);
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+/* Trasforma numeri telefono in “dette a cifra” */
+function formatForPhoneSpeech(s){
+  let out = String(s);
+
+  // Normalizza: +39 333... / 333... -> spazio tra cifre
+  out = out.replace(/(\+?\d[\d\s]{6,}\d)/g, (m)=>{
+    const raw = m.replace(/\s+/g,'');
+    if(raw.length < 7) return m;
+
+    // +39...
+    if(raw.startsWith('+')){
+      const digits = raw.slice(1).replace(/\D/g,'').split('').join(' ');
+      return `più ${digits}`;
+    }
+    // 333...
+    const digits = raw.replace(/\D/g,'').split('').join(' ');
+    return digits;
+  });
+
+  return out;
+}
+
+/* ===================== CONTACTS ===================== */
+function renderContacts(list){
+  els.contactsRow.innerHTML = '';
+
+  if(!Array.isArray(list) || list.length === 0){
+    // fallback: se non c'è array contacts, prova a estrarre numeri dal testo
+    const fromText = extractPhonesFromText((state.data && state.data.voice && state.data.voice.text) ? state.data.voice.text : '');
+    fromText.forEach((p, i)=> list.push({name:`Contatto ${i+1}`, phone:p}));
   }
 
-  function normalizeForSpeech(text){
-    const raw = String(text || "");
+  (list || []).forEach(c=>{
+    const name = (c && c.name) ? String(c.name) : 'Contatto';
+    const phone = (c && c.phone) ? String(c.phone) : '';
+    if(!phone) return;
 
-    // trova sequenze che sembrano telefoni (anche con spazi / +)
-    return raw.replace(/(\+?\d[\d\s]{7,}\d)/g, (m) => {
-      const digits = m.replace(/\D/g,"");
-      if(digits.length < 8 || digits.length > 15) return m;
-      // per farlo leggere bene: "numero 3 3 3 ..."
-      return ` numero ${phoneDigitsSpaced(digits)} `;
+    const norm = normalizePhone(phone);
+    const wa = `https://wa.me/${norm.replace(/^\+/, '')}`;
+    const tel = `tel:${norm}`;
+
+    const a = document.createElement('a');
+    a.className = 'contactChip';
+    a.href = wa;
+    a.target = '_blank';
+    a.rel = 'noopener';
+
+    a.innerHTML = `<span>🟢</span><b>${escapeHtml(name)}</b><span>${escapeHtml(prettyPhone(norm))}</span>`;
+    a.addEventListener('click', (e)=>{
+      // tap breve -> WhatsApp
+      // tap lungo -> user può copiare
     });
+
+    // aggiungo anche chiamata (secondo chip)
+    const b = document.createElement('a');
+    b.className = 'contactChip';
+    b.href = tel;
+    b.innerHTML = `<span>📞</span><b>${escapeHtml(name)}</b><span>Chiama</span>`;
+
+    els.contactsRow.appendChild(a);
+    els.contactsRow.appendChild(b);
+  });
+}
+
+function normalizePhone(p){
+  let s = String(p).trim();
+  if(!s) return '';
+  s = s.replace(/[^\d+]/g,'');
+  if(s.startsWith('00')) s = '+' + s.slice(2);
+  if(!s.startsWith('+') && s.length >= 9){
+    // se è italiano e non ha prefisso, metti +39
+    if(s.startsWith('3') || s.startsWith('0')) s = '+39' + s;
   }
+  return s;
+}
+function prettyPhone(p){
+  // +393332... -> +39 333 292 7842
+  const s = String(p);
+  if(!s.startsWith('+')) return s;
+  const cc = s.slice(0,3); // +39
+  const rest = s.slice(3);
+  if(rest.length <= 3) return s;
+  const a = rest.slice(0,3);
+  const b = rest.slice(3,6);
+  const c = rest.slice(6);
+  return `${cc} ${a} ${b} ${c}`.trim();
+}
 
-  function speak(text, lang){
-    if(!text) return false;
-    if(!("speechSynthesis" in window)) return false;
+function extractPhonesFromText(t){
+  const s = String(t || '');
+  const matches = s.match(/(\+?\d[\d\s]{6,}\d)/g) || [];
+  return matches.map(m=> normalizePhone(m)).filter(Boolean);
+}
 
-    try{
-      stopSpeak();
-      const u = new SpeechSynthesisUtterance(normalizeForSpeech(text));
-      u.lang = lang || (navigator.language || "it-IT");
-      u.rate = 1;
-      u.pitch = 1;
-      u.volume = 1;
-      speechSynthesis.speak(u);
-      return true;
-    }catch(e){
-      return false;
-    }
-  }
+/* ===================== INDEX (ALTRE VETRINE) ===================== */
+async function loadIndex(){
+  els.indexList.innerHTML = '';
+  els.indexPanel.hidden = true;
 
-  function tryAutoVoice(){
-    const t = data?.voice?.text || "";
-    const lang = data?.voice?.lang || "it-IT";
-    if(!t) return;
+  try{
+    const idx = await fetchJson(INDEX_URL);
+    const arr = (idx && Array.isArray(idx.vetrine)) ? idx.vetrine : [];
+    if(arr.length === 0) return;
 
-    const ok = speak(t, lang);
-    if(!ok && audioGate) audioGate.hidden = false;
-  }
-
-  // -------- WhatsApp helpers --------
-  function waUrl(phone, msg){
-    const digits = String(phone||"").replace(/\D/g,"");
-    return `https://wa.me/${digits}?text=${encodeURIComponent(msg||"")}`;
-  }
-
-  function msgForVetrina(name){
-    return `Ciao ${name || ""}! 👋
-Ti mando la vetrina con foto e numeri degli oggetti.
-
-✅ Apri qui:
-${LINK_PUBLIC}
-
-📌 Dimmi il numero dell’oggetto che ti interessa.`;
-  }
-
-  function msgForFoto(name){
-    const n = String((idx+1)).padStart(2,"0");
-    const cur = media[idx];
-    const photo = cur?.url ? (BASE + cur.url.replace(/^\/+/,"")) : "";
-    return `Ciao ${name || ""}! 👋
-Vorrei informazioni per il numero ${n}.
-
-🏷️ Vetrina: ${data?.title || VETRINA_ID}
-🔗 Link vetrina: ${LINK_PUBLIC}
-📷 Foto: ${photo}
-
-✅ Se disponibile, mandatemi prezzo e disponibilità.`;
-  }
-
-  // -------- Contacts --------
-  function extractPhonesFromText(text){
-    const raw = String(text||"");
-    // prende sequenze numeriche anche se ci sono punti/virgole vicino
-    const matches = raw.match(/(\+?\d[\d\s]{7,}\d)/g) || [];
-    const phones = [];
-    for(const m of matches){
-      const digits = m.replace(/\D/g,"");
-      if(digits.length >= 8 && digits.length <= 15) phones.push(digits);
-    }
-    return [...new Set(phones)];
-  }
-
-  function formatPhonePretty(digits){
-    const s = String(digits||"").replace(/\D/g,"");
-    if(s.length === 10) return s.replace(/(\d{3})(\d{3})(\d{4})/,"$1 $2 $3");
-    return s;
-  }
-
-  function buildContacts(){
-    // 1) se JSON ha contacts -> usa quelli
-    if(Array.isArray(data?.contacts) && data.contacts.length){
-      return data.contacts
-        .filter(c => c && c.phone)
-        .map(c => ({ name: c.name || "Contatto", phone: String(c.phone) }));
-    }
-
-    // 2) fallback: estrai da voice.text e metti nomi di default
-    const phones = extractPhonesFromText(data?.voice?.text || "");
-    const out = [];
-    if(phones[0]) out.push({name:"Renzo", phone: phones[0]});
-    if(phones[1]) out.push({name:"Sergio", phone: phones[1]});
-
-    // 3) fallback estremo (solo per renzo11)
-    if(!out.length && VETRINA_ID === "renzo11"){
-      out.push({name:"Renzo", phone:"3332927842"});
-      out.push({name:"Sergio", phone:"3208852858"});
-    }
-
-    return out;
-  }
-
-  function renderContacts(){
-    if(!contactsRow) return;
-    contactsRow.innerHTML = "";
-
-    contacts = buildContacts();
-    const c1 = contacts[0] || {name:"Renzo", phone:"3332927842"};
-    const c2 = contacts[1] || {name:"Sergio", phone:"3208852858"};
-
-    // contatti cliccabili (WhatsApp + Call)
-    [c1,c2].forEach((c)=>{
-      const wrap = document.createElement("div");
-      wrap.style.display = "flex";
-      wrap.style.gap = "10px";
-      wrap.style.flexWrap = "wrap";
-
-      const wa = document.createElement("button");
-      wa.className = "contactBtn wa";
-      wa.textContent = `WhatsApp ${c.name} (${formatPhonePretty(c.phone)})`;
-      wa.onclick = (ev) => { ev.stopPropagation(); window.open(waUrl(c.phone, msgForVetrina(c.name)), "_blank"); };
-
-      const call = document.createElement("a");
-      call.className = "contactBtn";
-      call.href = "tel:" + String(c.phone).replace(/\D/g,"");
-      call.textContent = `Chiama ${c.name}`;
-      call.onclick = (ev) => ev.stopPropagation();
-
-      wrap.appendChild(wa);
-      wrap.appendChild(call);
-      contactsRow.appendChild(wrap);
+    // render
+    arr.forEach(v=>{
+      if(!v || !v.id) return;
+      const a = document.createElement('a');
+      a.className = 'indexLink';
+      a.href = `vetrina.html?id=${encodeURIComponent(v.id)}`;
+      a.innerHTML = `<span class="dot"></span><span>${escapeHtml(v.title || v.id)}</span>`;
+      els.indexList.appendChild(a);
     });
 
-    // 4 bottoni fissi (vetrina + foto)
-    function wire(btn, label, phone, msgFn){
-      if(!btn) return;
-      btn.textContent = label;
-      btn.disabled = false;
-      btn.classList.remove("gray");
-      btn.onclick = () => window.open(waUrl(phone, msgFn()), "_blank");
+    els.indexPanel.hidden = false;
+  }catch(e){
+    // se manca il file, non mostriamo errore (solo silenzioso)
+    els.indexPanel.hidden = true;
+  }
+}
+
+/* ===================== FILES ===================== */
+function renderFiles(files){
+  const arr = Array.isArray(files) ? files : [];
+  if(arr.length === 0){
+    els.filesCard.hidden = true;
+    return;
+  }
+  els.filesCard.hidden = false;
+  els.filesList.innerHTML = '';
+  arr.forEach(f=>{
+    if(!f || !f.url) return;
+    const a = document.createElement('a');
+    a.className = 'fileLink';
+    a.href = f.url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.innerHTML = `<span>${escapeHtml(f.label || f.url)}</span><span>Apri</span>`;
+    els.filesList.appendChild(a);
+  });
+}
+
+/* ===================== WHATSAPP (FOTO + DUE NUMERI) ===================== */
+function askInfoWhatsAppForCurrentPhoto(){
+  const contacts = Array.isArray(state.data.contacts) ? state.data.contacts : [];
+  const renzo = contacts.find(c => (c.name||'').toLowerCase().includes('renzo')) || contacts[0];
+  const sergio = contacts.find(c => (c.name||'').toLowerCase().includes('sergio')) || contacts[1];
+
+  const item = state.media[state.idx];
+  const photoUrl = absoluteUrl(item.url);
+  const vLink = absoluteUrl(`vetrina.html?id=${encodeURIComponent(VETRINA_ID)}`);
+
+  const msg =
+`Ciao! Chiedo informazioni per questa foto.
+
+Vetrina: ${vLink}
+Foto: ${photoUrl}
+
+Per favore dimmi prezzo/dettagli e disponibilità. Grazie!`;
+
+  // salva richiesta (solo per te, ma l'evento viene registrato sempre nel tuo telefono)
+  archiveRequest({
+    id: VETRINA_ID,
+    photoIndex: state.idx + 1,
+    photoUrl,
+    message: msg
+  });
+
+  const first = renzo ? makeWaUrl(renzo.phone, msg) : null;
+  const second = sergio ? makeWaUrl(sergio.phone, msg) : null;
+
+  // copia messaggio per sicurezza
+  copyToClipboard(msg).catch(()=>{});
+
+  // apri primo
+  if(first){
+    window.open(first, '_blank');
+  }
+
+  // prepara secondo con click “anti blocco”
+  if(second){
+    state.pendingSecondWaUrl = second;
+    openWaModal(
+      `Ho aperto WhatsApp per ${renzo ? renzo.name : 'primo contatto'}.\n\nOra tocca “Apri Sergio” per inviare lo stesso messaggio anche al secondo numero.\n\n(Messaggio già copiato negli appunti, se serve incollare.)`
+    );
+  }
+}
+
+function makeWaUrl(phone, message){
+  const norm = normalizePhone(phone);
+  const to = norm.replace(/^\+/, '');
+  return `https://wa.me/${to}?text=${encodeURIComponent(message)}`;
+}
+
+function shareVetrinaWhatsApp(){
+  const link = absoluteUrl(`vetrina.html?id=${encodeURIComponent(VETRINA_ID)}`);
+  const title = state.data && state.data.title ? state.data.title : VETRINA_ID;
+  const msg = `Guarda questa vetrina: ${title}\n${link}`;
+  const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
+
+function openWaModal(text){
+  els.waModalText.textContent = text;
+  els.waModal.hidden = false;
+}
+function closeWaModal(){
+  els.waModal.hidden = true;
+}
+
+/* ===================== REQUESTS ARCHIVE (SOLO TU) ===================== */
+function archiveRequest({id, photoIndex, photoUrl, message}){
+  try{
+    const now = new Date();
+    const entry = {
+      atISO: now.toISOString(),
+      atLocal: now.toLocaleString(),
+      id,
+      photoIndex,
+      photoUrl,
+      message
+    };
+
+    const arr = loadLS(LS_REQ_KEY(id), []);
+    arr.push(entry);
+    saveLS(LS_REQ_KEY(id), arr);
+    refreshRequestsBox();
+  }catch(e){}
+}
+
+function refreshRequestsBox(){
+  if(!state.adminEnabled) return;
+  const arr = loadLS(LS_REQ_KEY(VETRINA_ID), []);
+  els.requestsBox.value = JSON.stringify(arr, null, 2);
+}
+
+function exportRequests(){
+  if(!state.adminEnabled) return;
+  refreshRequestsBox();
+  els.requestsBox.focus();
+}
+async function copyRequests(){
+  if(!state.adminEnabled) return;
+  refreshRequestsBox();
+  await copyToClipboard(els.requestsBox.value || '[]');
+  toast('Copiato ✅');
+}
+function clearRequests(){
+  if(!state.adminEnabled) return;
+  if(!confirm('Vuoi cancellare TUTTO l’archivio richieste su questo telefono?')) return;
+  saveLS(LS_REQ_KEY(VETRINA_ID), []);
+  refreshRequestsBox();
+}
+
+/* ===================== ADMIN: 5 TAP TITLE ===================== */
+function enableFiveTapAdmin(){
+  let taps = 0;
+  let tmr = null;
+
+  els.pageTitle.addEventListener('click', ()=>{
+    taps++;
+    clearTimeout(tmr);
+    tmr = setTimeout(()=>{ taps = 0; }, 1200);
+
+    if(taps >= 5){
+      taps = 0;
+      state.adminEnabled = !state.adminEnabled;
+      saveLS(LS_ADMIN_KEY, state.adminEnabled ? '1' : '0');
+      updateAdminUI();
+      toast(state.adminEnabled ? 'Admin ON 🔒' : 'Admin OFF');
     }
+  });
+}
 
-    wire(waVetrinaRenzo, "🟢 WhatsApp Renzo (Vetrina)", c1.phone, () => msgForVetrina("Renzo"));
-    wire(waVetrinaSergio,"🟢 WhatsApp Sergio (Vetrina)", c2.phone, () => msgForVetrina("Sergio"));
+function updateAdminUI(){
+  els.labelCard.hidden = !state.adminEnabled;
+  els.adminCard.hidden = !state.adminEnabled;
+  els.adminBadge.textContent = state.adminEnabled ? 'ON' : 'OFF';
 
-    wire(waPhotoRenzo, "🟢 WhatsApp Renzo (Foto)", c1.phone, () => msgForFoto("Renzo"));
-    wire(waPhotoSergio,"🟢 WhatsApp Sergio (Foto)", c2.phone, () => msgForFoto("Sergio"));
-  }
-
-  // -------- Media slider --------
-  function setImage(i){
-    if(!media.length) return;
-    idx = (i + media.length) % media.length;
-
-    const item = media[idx];
-    const url = item.url || item.src || "";
-    heroImg.src = url;
-    heroImg.alt = item.label || `Foto ${idx+1}`;
-
-    const cur = String(idx+1).padStart(2,"0");
-    const tot = String(media.length).padStart(2,"0");
-    if(imgCounter) imgCounter.textContent = `${cur}/${tot}`;
-    if(imgBadge) imgBadge.textContent = cur;
-
-    if(thumbRow){
-      [...thumbRow.querySelectorAll(".thumb")].forEach((el, n)=>{
-        el.classList.toggle("active", n === idx);
-      });
+  if(state.adminEnabled){
+    // carica pins locali sempre (per te)
+    const lsPins = loadLS(LS_PINS_KEY(VETRINA_ID), null);
+    if(lsPins && typeof lsPins === 'object'){
+      state.currentPins = lsPins;
     }
+    refreshRequestsBox();
+  }else{
+    state.labelMode = false;
+    updateLabelModeUI();
   }
 
-  function renderThumbs(){
-    if(!thumbRow) return;
-    thumbRow.innerHTML = "";
-    media.forEach((m, i)=>{
-      const b = document.createElement("button");
-      b.className = "thumb";
-      b.type = "button";
-      b.title = m.label || `Foto ${i+1}`;
-      b.innerHTML = `<img src="${m.url}" alt="">`;
-      b.onclick = ()=>setImage(i);
-      thumbRow.appendChild(b);
-    });
+  updateLabelModeUI();
+  renderPinsForCurrentImage();
+}
+
+/* ===================== PINS (NUMERINI) ===================== */
+function updateLabelModeUI(){
+  els.labelModeBadge.textContent = state.labelMode ? 'ON' : 'OFF';
+  els.pinSizeValue.textContent = String(state.pinSize);
+  els.pinSizeRange.value = String(state.pinSize);
+}
+
+function currentMediaKey(){
+  const item = state.media[state.idx];
+  return item ? item.url : '';
+}
+
+function addPinForCurrentImage(x, y){
+  const key = currentMediaKey();
+  if(!key) return;
+
+  if(!state.currentPins[key]) state.currentPins[key] = [];
+  const list = state.currentPins[key];
+
+  const n = list.length + 1;
+  list.push({ x, y, n, size: state.pinSize });
+
+  saveLS(LS_PINS_KEY(VETRINA_ID), state.currentPins);
+  renderPinsForCurrentImage();
+}
+
+function undoPin(){
+  const key = currentMediaKey();
+  if(!key || !state.currentPins[key] || state.currentPins[key].length === 0) return;
+  state.currentPins[key].pop();
+  saveLS(LS_PINS_KEY(VETRINA_ID), state.currentPins);
+  renderPinsForCurrentImage();
+}
+
+function clearPinsForCurrentImage(){
+  const key = currentMediaKey();
+  if(!key) return;
+  if(!confirm('Vuoi rimuovere tutti i numerini da QUESTA foto?')) return;
+  state.currentPins[key] = [];
+  saveLS(LS_PINS_KEY(VETRINA_ID), state.currentPins);
+  renderPinsForCurrentImage();
+}
+
+function renderPinsForCurrentImage(){
+  els.pinsLayer.innerHTML = '';
+  const key = currentMediaKey();
+  if(!key) return;
+
+  const list = Array.isArray(state.currentPins[key]) ? state.currentPins[key] : [];
+  list.forEach(p=>{
+    const d = document.createElement('div');
+    d.className = 'pin';
+    const size = Number(p.size || 28);
+    d.style.width = `${size}px`;
+    d.style.height = `${size}px`;
+    d.style.left = `${(p.x * 100).toFixed(3)}%`;
+    d.style.top = `${(p.y * 100).toFixed(3)}%`;
+    d.style.fontSize = `${Math.max(10, Math.floor(size * 0.52))}px`;
+    d.textContent = String(p.n || '');
+    els.pinsLayer.appendChild(d);
+  });
+}
+
+function exportPinsData(){
+  if(!state.adminEnabled) return;
+  const snippet = JSON.stringify({ pinsData: state.currentPins }, null, 2);
+  els.pinsJsonBox.value = snippet;
+}
+
+async function copyPinsData(){
+  if(!state.adminEnabled) return;
+  const snippet = JSON.stringify({ pinsData: state.currentPins }, null, 2);
+  els.pinsJsonBox.value = snippet; // ✅ “copia json” fa anche “incolla” automatico qui
+  await copyToClipboard(snippet);
+  toast('pinsData copiato ✅ (incollalo nel JSON)');
+}
+
+/* ===================== UTIL ===================== */
+function scrollToTop(){
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function absoluteUrl(rel){
+  try{
+    return new URL(rel, location.href).toString();
+  }catch(e){
+    return rel;
   }
+}
 
-  function bindNav(){
-    prevBtn?.addEventListener("click", ()=>setImage(idx-1));
-    nextBtn?.addEventListener("click", ()=>setImage(idx+1));
+function showError(msg){
+  els.errorCard.hidden = false;
+  els.errorText.textContent = msg;
+}
 
-    // swipe
-    let x0 = null;
-    heroImg?.addEventListener("touchstart", (e)=>{
-      x0 = e.touches?.[0]?.clientX ?? null;
-    }, {passive:true});
-    heroImg?.addEventListener("touchend", (e)=>{
-      if(x0==null) return;
-      const x1 = e.changedTouches?.[0]?.clientX ?? null;
-      if(x1==null) return;
-      const dx = x1 - x0;
-      if(Math.abs(dx) > 40){
-        if(dx < 0) setImage(idx+1);
-        else setImage(idx-1);
-      }
-      x0 = null;
-    }, {passive:true});
+function escapeHtml(s){
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
 
-    // tap immagine = toggle full
-    heroImg?.addEventListener("click", ()=>toggleFull());
+function deepClone(o){
+  return JSON.parse(JSON.stringify(o || {}));
+}
+
+function loadLS(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    if(raw == null) return fallback;
+    return JSON.parse(raw);
+  }catch(e){
+    return fallback;
   }
+}
+function saveLS(key, val){
+  try{
+    localStorage.setItem(key, JSON.stringify(val));
+  }catch(e){}
+}
 
-  // -------- Load JSON --------
-  async function load(){
-    if(badgeId) badgeId.textContent = "id: " + VETRINA_ID;
-
-    try{
-      const res = await fetch(DATA_URL, {cache:"no-store"});
-      if(!res.ok) throw new Error("HTTP " + res.status);
-      data = await res.json();
-
-      // titolo/desc (più evidenti via CSS)
-      if(pageTitle) pageTitle.textContent = data.title || VETRINA_ID;
-      if(pageDesc) pageDesc.textContent  = data.description || "";
-
-      // voice panel: testo sempre visibile e cliccabile
-      if(data.voice?.text){
-        if(voiceTextEl) voiceTextEl.textContent = data.voice.text;
-        if(voicePanel) voicePanel.hidden = false;
-      }else{
-        if(voicePanel) voicePanel.hidden = true;
-      }
-
-      // media
-      media = Array.isArray(data.media) ? data.media.filter(m=>m && (m.url||m.src)) : [];
-      if(media.length){
-        renderThumbs();
-        setImage(0);
-      }else{
-        if(heroImg){ heroImg.removeAttribute("src"); heroImg.alt = "Nessuna immagine"; }
-        if(imgCounter) imgCounter.textContent = "00/00";
-        if(imgBadge) imgBadge.textContent = "--";
-      }
-
-      // contatti + bottoni WA
-      renderContacts();
-
-      // nav
-      bindNav();
-
-      // bottom bar
-      voiceBtn?.addEventListener("click", ()=>{
-        const t = data?.voice?.text || "";
-        const lang = data?.voice?.lang || "it-IT";
-        const ok = speak(t, lang);
-        if(!ok && audioGate) audioGate.hidden = false;
-      });
-      stopBtn?.addEventListener("click", ()=>stopSpeak());
-      fullBtn?.addEventListener("click", ()=>toggleFull());
-      themeBtn?.addEventListener("click", ()=>toggleTheme());
-      kioskBtn?.addEventListener("click", ()=>setKiosk(!kiosk));
-      homeBtn?.addEventListener("click", ()=>location.href = LINK_PUBLIC);
-
-      // CLICK OVUNQUE sul pannello testo = parte audio (senza bloccare click ai bottoni)
-      const playVoiceFromPanel = () => voiceBtn?.click();
-      voicePanel?.addEventListener("click", (e)=>{
-        // se clicchi su un bottone/link dentro, non far partire l'audio
-        const t = e.target;
-        if(t && (t.closest("button") || t.closest("a"))) return;
-        playVoiceFromPanel();
-      });
-      voicePanel?.addEventListener("keydown", (e)=>{
-        if(e.key === "Enter" || e.key === " "){
-          e.preventDefault();
-          playVoiceFromPanel();
-        }
-      });
-
-      // audio gate
-      enableAudioBtn?.addEventListener("click", ()=>{
-        audioGate.hidden = true;
-        tryAutoVoice();
-      });
-      skipAudioBtn?.addEventListener("click", ()=>{ audioGate.hidden = true; });
-
-      // share WhatsApp (link vetrina)
-      shareBtn?.addEventListener("click", ()=>{
-        const msg = `Guarda questa vetrina:\n${LINK_PUBLIC}\n\nDimmi il numero dell’oggetto che ti interessa.`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
-      });
-
-      // theme init
-      setTheme(localStorage.getItem(THEME_KEY) || "dark");
-
-      // autoplay voice on open (best effort)
-      tryAutoVoice();
-
-    }catch(e){
-      if(pageTitle) pageTitle.textContent = "Errore";
-      if(pageDesc) pageDesc.textContent = "Non riesco a leggere " + DATA_URL;
-      console.error(e);
-    }
+async function copyToClipboard(text){
+  const t = String(text || '');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    return navigator.clipboard.writeText(t);
   }
+  // fallback
+  const ta = document.createElement('textarea');
+  ta.value = t;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+}
 
-  load();
-})();
+function toast(msg){
+  const d = document.createElement('div');
+  d.textContent = msg;
+  d.style.position = 'fixed';
+  d.style.left = '50%';
+  d.style.transform = 'translateX(-50%)';
+  d.style.bottom = '120px';
+  d.style.zIndex = '999';
+  d.style.padding = '10px 12px';
+  d.style.borderRadius = '14px';
+  d.style.border = '1px solid rgba(255,255,255,.14)';
+  d.style.background = 'rgba(0,0,0,.55)';
+  d.style.color = '#fff';
+  d.style.fontWeight = '900';
+  d.style.boxShadow = '0 14px 30px rgba(0,0,0,.35)';
+  document.body.appendChild(d);
+  setTimeout(()=> d.remove(), 1200);
+}
