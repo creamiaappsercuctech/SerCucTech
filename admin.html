@@ -1,153 +1,280 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>SerCucTech – Admin</title>
-  <link rel="stylesheet" href="stile.css" />
-  <meta name="theme-color" content="#0b1220">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Admin SerCucTech</title>
+
   <style>
-    /* mini extra UI */
-    .grid2{ display:grid; grid-template-columns:1fr; gap:12px; }
-    @media (min-width:900px){ .grid2{ grid-template-columns:1fr 1fr; } }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-    .small{ min-height:40px; padding:9px 10px; border-radius:12px; width:auto; }
-    .pill{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#13204a; border:1px solid #22345f; font-size:13px; }
-    .mut2{ opacity:.85; font-size:13px; }
-    ul.clean{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+    :root{
+      --bg:#0b1220;
+      --card:rgba(255,255,255,.06);
+      --line:rgba(255,255,255,.12);
+      --txt:#eaf0ff;
+      --muted:rgba(234,240,255,.72);
+      --green:#23c55e;
+      --red:#ff4d4d;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--txt);
+      padding-bottom:120px;
+    }
+
+    header{
+      position:sticky;
+      top:0;
+      z-index:10;
+      padding:14px;
+      background:linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,.15));
+      backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--line);
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size:20px;
+      font-weight:1000;
+      text-align:center;
+    }
+
+    /* 🔥 TASTO CREA NUOVA VETRINA */
+    .createBtn{
+      display:block;
+      width:100%;
+      padding:18px 16px;
+      font-size:18px;
+      font-weight:1000;
+      text-align:center;
+      border-radius:18px;
+      background:var(--green);
+      color:#06110a;
+      border:none;
+      cursor:pointer;
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+
+    .createBtn:active{transform:scale(.98)}
+
+    main{
+      padding:16px;
+      display:grid;
+      gap:14px;
+      max-width:900px;
+      margin:0 auto;
+    }
+
+    .card{
+      border:1px solid var(--line);
+      background:var(--card);
+      border-radius:18px;
+      padding:14px;
+    }
+
+    .row{
+      display:grid;
+      gap:10px;
+    }
+
+    input{
+      width:100%;
+      padding:14px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.25);
+      color:var(--txt);
+      font-size:16px;
+      font-weight:900;
+    }
+
+    .btn{
+      padding:14px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.10);
+      color:var(--txt);
+      font-weight:900;
+      font-size:14px;
+      cursor:pointer;
+    }
+
+    .btn.green{
+      background:var(--green);
+      color:#06110a;
+      border-color:rgba(0,0,0,.2);
+    }
+
+    .btn.red{
+      background:rgba(255,77,77,.18);
+      color:#fff;
+    }
+
+    .small{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+      line-height:1.35;
+    }
+
+    .list{
+      display:grid;
+      gap:10px;
+    }
+
+    .item{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.18);
+    }
+
+    .item strong{font-weight:1000}
+
+    .itemBtns{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    a.linkBtn{
+      text-decoration:none;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.08);
+      color:var(--txt);
+      font-size:12px;
+      font-weight:900;
+    }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <div>
-          <div class="brand">SerCucTech – Admin</div>
-          <div class="mut">Area tecnica (protetta). Sessione 24 ore legata al dispositivo.</div>
-        </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <a class="btn sec small" href="index.html">🏠 Home</a>
-          <a class="btn sec small" href="vetrina.html">🌐 Vetrine</a>
-          <button class="btn danger small" id="logoutBtn">Esci</button>
-        </div>
+
+<header>
+  <h1>🔧 Admin SerCucTech</h1>
+
+  <!-- 🔥 TASTO PRINCIPALE -->
+  <button class="createBtn" onclick="openCreate()">
+    ➕ CREA NUOVA VETRINA
+  </button>
+</header>
+
+<main>
+
+  <!-- CREAZIONE -->
+  <section class="card" id="createBox" hidden>
+    <div class="row">
+      <div style="font-weight:1000">ID nuova vetrina</div>
+      <input id="newId" placeholder="es. renzo13 / scalvini11">
+      <button class="btn green" onclick="createVetrina()">Crea ora</button>
+      <div class="small">
+        Verrà creato un JSON base.<br>
+        Poi carichi immagini e personalizzi.
       </div>
     </div>
+  </section>
 
-    <!-- LOCK BOX -->
-    <div class="card" id="lockBox" style="display:none">
-      <h2>🔒 Sblocco Admin</h2>
-      <div class="mut2">Frase obbligatoria: deve contenere le parole <b>SerCucTech</b> e <b>qualsiasi</b> (in qualsiasi ordine).</div>
+  <!-- ELENCO -->
+  <section class="card">
+    <div style="font-weight:1000;margin-bottom:8px">Vetrine esistenti</div>
+    <div class="list" id="list"></div>
+  </section>
 
-      <div class="grid2" style="margin-top:12px">
+</main>
+
+<script>
+  const list = document.getElementById("list");
+  const createBox = document.getElementById("createBox");
+  const newId = document.getElementById("newId");
+
+  const vetrine = [
+    "renzo11",
+    "renzo12"
+  ];
+
+  function openCreate(){
+    createBox.hidden = !createBox.hidden;
+    if(!createBox.hidden) newId.focus();
+  }
+
+  function createVetrina(){
+    const id = newId.value.trim();
+    if(!id){
+      alert("Inserisci un ID valido");
+      return;
+    }
+
+    const json = {
+      id,
+      title: "Nuova Vetrina",
+      description: "Descrizione vetrina",
+      voice: {
+        lang: "it-IT",
+        text: "Benvenuto nella nuova vetrina."
+      },
+      tags: ["vetrina"],
+      media: [],
+      files: [],
+      pinsData: {
+        pinSize: 28,
+        byImage: {}
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // download JSON base
+    const blob = new Blob([JSON.stringify(json,null,2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${id}.json`;
+    a.click();
+
+    // apri pagina link vetrina
+    const link = `link.html?id=${encodeURIComponent(id)}`;
+    window.open(link, "_blank");
+
+    alert(
+      "JSON base creato.\n\n" +
+      "1) Carica il file in data/" + id + ".json\n" +
+      "2) Aggiungi immagini in media/\n" +
+      "3) Apri il link e lavora sulla vetrina"
+    );
+
+    newId.value = "";
+  }
+
+  function renderList(){
+    list.innerHTML = "";
+    vetrine.forEach(id=>{
+      const el = document.createElement("div");
+      el.className = "item";
+      el.innerHTML = `
         <div>
-          <label>Frase di sblocco</label>
-          <input id="unlockPhrase" placeholder="Scrivi una frase che contiene: SerCucTech + qualsiasi" />
-          <div class="mut2" style="margin-top:6px">
-            Esempio: <span class="pill">SerCucTech … qualsiasi …</span>
-          </div>
+          <strong>${id}</strong><br>
+          <span class="small">data/${id}.json</span>
         </div>
-
-        <div>
-          <label>Recovery code (emergenza)</label>
-          <input id="recoveryCode" placeholder="SERCUCTECH-RECOVER-...." />
-          <div class="mut2" style="margin-top:6px">
-            Se perdi/rompi il telefono, usa il recovery code per autorizzare il nuovo dispositivo.
-          </div>
+        <div class="itemBtns">
+          <a class="linkBtn" href="link.html?id=${id}">Link</a>
+          <a class="linkBtn" href="vetrina.html?id=${id}">Vetrina</a>
         </div>
-      </div>
+      `;
+      list.appendChild(el);
+    });
+  }
 
-      <div class="btns" style="margin-top:12px">
-        <button class="btn ok big" id="unlockBtn">✅ Sblocca</button>
-      </div>
-    </div>
+  renderList();
+</script>
 
-    <!-- ADMIN BOX -->
-    <div id="adminBox" style="display:none">
-
-      <!-- Selezione vetrina + link pubblico -->
-      <div class="card">
-        <h2>🌐 Link pubblico vetrina</h2>
-
-        <label>Seleziona vetrina</label>
-        <select id="vetrinaSelect"></select>
-
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px">
-          <span class="pill">ID: <b class="mono" id="selectedId">—</b></span>
-        </div>
-
-        <label style="margin-top:10px">Link pubblico</label>
-        <input id="publicLink" readonly />
-
-        <div class="btns" style="margin-top:10px">
-          <button class="btn ok" id="openPublicBtn" disabled>Apri</button>
-          <button class="btn sec" id="copyPublicBtn" disabled>Copia Link</button>
-          <button class="btn sec" id="waBtn" disabled>WhatsApp</button>
-        </div>
-
-        <div class="btns" style="margin-top:10px">
-          <button class="btn sec" id="openRenameBtn" disabled>🧰 Tool Rinomina + JSON</button>
-          <button class="btn sec" id="openGithubJsonBtn" disabled>✍️ Apri data/ID.json su GitHub</button>
-        </div>
-      </div>
-
-      <!-- Dispositivi autorizzati -->
-      <div class="card">
-        <h2>📱 Dispositivi autorizzati</h2>
-        <div class="mut2">Massimo 3 dispositivi. Se un dispositivo si rompe: rimuovilo e aggiungi quello nuovo (o usa il recovery code).</div>
-
-        <div class="grid2" style="margin-top:12px">
-          <div>
-            <div class="pill">Questo dispositivo:</div>
-            <div class="mono" id="myDeviceId" style="margin-top:6px">—</div>
-
-            <div class="btns" style="margin-top:10px">
-              <button class="btn sec" id="copyDeviceIdBtn">Copia Device ID</button>
-            </div>
-          </div>
-
-          <div>
-            <div class="pill">Codice da condividere (per autorizzare)</div>
-            <input id="myDeviceCode" class="mono" readonly style="margin-top:6px" />
-
-            <div class="btns" style="margin-top:10px">
-              <button class="btn sec" id="copyDeviceCodeBtn">Copia Codice</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="hr"></div>
-
-        <label>Aggiungi dispositivo con codice</label>
-        <input id="addDeviceInput" placeholder="Incolla qui il codice dispositivo..." class="mono" />
-        <div class="btns" style="margin-top:10px">
-          <button class="btn ok" id="addDeviceBtn">➕ Aggiungi</button>
-        </div>
-
-        <div class="hr"></div>
-
-        <h3>Lista dispositivi</h3>
-        <ul class="clean" id="deviceList"></ul>
-      </div>
-
-      <!-- Backup -->
-      <div class="card">
-        <h2>📦 Backup completo</h2>
-        <div class="mut2">
-          Scarica un file JSON con <b>index + tutte le vetrine</b> e link pubblici.  
-          Conservalo su Drive/email per emergenza.
-        </div>
-
-        <div class="btns" style="margin-top:12px">
-          <button class="btn ok big" id="exportBackupBtn">📦 Esporta Backup</button>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- IMPORTANT: app.js prima di admin.js -->
-  <script src="app.js"></script>
-  <script src="admin.js"></script>
 </body>
 </html>
