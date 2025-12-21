@@ -2,447 +2,76 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1220" />
-  <title>SerCucTech — Vetrina</title>
-  <link rel="stylesheet" href="stile.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Vetrina</title>
+  <link rel="stylesheet" href="style.css?v=1">
 </head>
 
 <body>
-  <header class="topBar">
-    <a class="chipBtn" href="index.html">🏠 Home</a>
-    <div class="topTitle">SerCucTech</div>
-    <span class="chip" id="chipId">id: —</span>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brandDot" aria-hidden="true"></div>
+      <div class="titleWrap">
+        <h1 id="pageTitle" class="pageTitle">Caricamento…</h1>
+        <p id="pageDesc" class="pageDesc"></p>
+      </div>
+      <span id="badgeId" class="idBadge">id: -</span>
+    </div>
   </header>
 
-  <main class="page">
-    <section class="hero">
-      <h1 class="heroTitle" id="heroTitle">Caricamento…</h1>
-      <p class="heroDesc" id="heroDesc"></p>
-    </section>
+  <main class="content">
+    <!-- GALLERIA -->
+    <section class="card heroCard">
+      <div class="hero">
+        <button class="navBtn left" id="prevBtn" aria-label="Immagine precedente">‹</button>
 
-    <!-- QR + Share -->
-    <section class="card" id="shareCard" hidden>
-      <div class="cardTitle">Condividi</div>
-      <div class="shareBox">
-        <div class="qrBox">
-          <img id="qrImg" alt="QR Code" />
-          <div class="muted" id="shareLinkText"></div>
+        <div class="mediaStage" id="mediaStage">
+          <div class="imgCounter" id="imgCounter">01/01</div>
+          <img id="heroImg" class="heroImg" alt="Immagine vetrina">
+          <div class="imgBadge" id="imgBadge">01</div>
         </div>
 
-        <div class="shareBtns">
-          <button class="shareBtn" id="btnShareNative">📲 Condividi</button>
-          <button class="shareBtn wa" id="btnShareWA2">🟢 WhatsApp</button>
-          <button class="shareBtn" id="btnCopy">📋 Copia link</button>
-        </div>
+        <button class="navBtn right" id="nextBtn" aria-label="Immagine successiva">›</button>
       </div>
+
+      <div class="thumbRow" id="thumbRow"></div>
+      <div class="smallHint">Swipe sull’immagine • Tap = schermo intero • Tap di nuovo = normale</div>
     </section>
 
-    <!-- GALLERY -->
-    <section class="galleryWrap" id="galleryWrap" hidden>
-      <div class="gallery" id="gallery"></div>
-      <div class="galleryDots" id="galleryDots"></div>
-    </section>
-
-    <!-- FILES -->
+    <!-- FILES (se li aggiungi nel JSON) -->
     <section class="card" id="filesCard" hidden>
-      <div class="cardTitle">File</div>
-      <div class="list" id="filesList"></div>
+      <h2 class="h2">Files</h2>
+      <div id="filesList" class="filesList"></div>
     </section>
   </main>
 
-  <!-- SHARE WHATSAPP FLOAT -->
-  <div class="shareWhatsApp" id="shareWhatsApp" hidden>
-    <button id="btnShareWA">📲 Condividi questa vetrina su WhatsApp</button>
+  <!-- SHARE sopra la barra -->
+  <div class="shareDock">
+    <button class="shareBtn" id="shareBtn">Condividi su WhatsApp</button>
   </div>
 
-  <!-- AUDIO GATE -->
-  <div class="audioGate" id="audioGate" hidden aria-hidden="true">
-    <div class="audioGateBackdrop" id="audioGateBackdrop"></div>
+  <!-- BOTTOM BAR fissa -->
+  <nav class="bottombar" id="bottombar">
+    <button class="barBtn" id="homeBtn">Home</button>
+    <button class="barBtn" id="voiceBtn">Voice</button>
+    <button class="barBtn danger" id="stopBtn">Stop</button>
+    <button class="barBtn" id="fullBtn">Full</button>
+    <button class="barBtn" id="themeBtn">Tema</button>
+    <button class="barBtn" id="kioskBtn">Kiosk</button>
+  </nav>
 
-    <div class="audioGateCard" role="dialog" aria-modal="true" aria-label="Audio bloccato">
-      <div class="audioGateTitle">Audio bloccato</div>
-      <div class="audioGateText">Tocca per attivare la voce (poi partirà automaticamente).</div>
-      <button id="btnEnableAudio">Attiva audio</button>
-      <button id="btnSkipAudio" class="ghost">Non ora</button>
+  <!-- OVERLAY audio sblocco (non blocca i bottoni sotto) -->
+  <div class="audioGate" id="audioGate" hidden>
+    <div class="audioGateCard">
+      <div class="audioGateTitle">Audio bloccato dal telefono</div>
+      <div class="audioGateText">Tocca “Attiva audio”. Poi partirà automaticamente.</div>
+      <div class="audioGateBtns">
+        <button class="primary" id="enableAudioBtn">Attiva audio</button>
+        <button class="ghost" id="skipAudioBtn">Non ora</button>
+      </div>
     </div>
   </div>
 
-  <!-- BOTTOM BAR -->
-  <nav class="bottomBar">
-    <button class="navBtn" id="btnVoice">🔊<span>Voce</span></button>
-    <button class="navBtn" id="btnStop">⏹️<span>Stop</span></button>
-    <button class="navBtn" id="btnFull">⛶<span>Full</span></button>
-    <button class="navBtn" id="btnTheme">🌓<span>Tema</span></button>
-    <button class="navBtn" id="btnKiosk">📌<span>Kiosk</span></button>
-  </nav>
-
-<script>
-/* ===================== UTIL ===================== */
-function qs(n){ return new URL(location.href).searchParams.get(n); }
-function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
-
-/* ===================== THEME ===================== */
-const THEME_KEY="sercuctech_theme";
-function applyTheme(t){
-  document.documentElement.setAttribute("data-theme",t);
-  localStorage.setItem(THEME_KEY,t);
-}
-(function(){
-  const s=localStorage.getItem(THEME_KEY);
-  applyTheme(s==="light"||s==="dark"?s:"dark");
-})();
-
-/* ===================== FULLSCREEN / KIOSK ===================== */
-let kiosk=false;
-async function toggleFull(){
-  if(document.fullscreenElement) await document.exitFullscreen();
-  else await document.documentElement.requestFullscreen();
-}
-
-/* ===================== SPEECH ===================== */
-let isSpeaking=false;
-
-function stopSpeech(){
-  try{ speechSynthesis.cancel(); }catch(e){}
-  isSpeaking=false;
-}
-
-/* Numeri a coppie: 3332927842 -> ". 33 32 92 78 42" */
-function formatPhonesPairsForSpeech(txt){
-  return String(txt||"").replace(/\b\d{7,12}\b/g, m => {
-    const pairs = m.match(/.{1,2}/g) || [m];
-    return " . " + pairs.join(" ");
-  });
-}
-
-/* lingua auto: it / en / ua */
-function detectLang(){
-  const nav = (navigator.language || "it").toLowerCase();
-  if(nav.startsWith("uk") || nav.startsWith("ua")) return "ua";
-  if(nav.startsWith("en")) return "en";
-  return "it";
-}
-
-function speakOnce(text, lang){
-  if(!("speechSynthesis" in window)) return false;
-  if(!text) return false;
-  try{
-    stopSpeech();
-    const u=new SpeechSynthesisUtterance(text);
-    u.lang=lang || "it-IT";
-    u.rate=1.02;
-    u.pitch=1;
-    u.volume=1;
-    u.onend=()=>isSpeaking=false;
-    u.onerror=()=>isSpeaking=false;
-    isSpeaking=true;
-    speechSynthesis.speak(u);
-    return true;
-  }catch(e){ return false; }
-}
-
-/* ===================== SHARE + QR ===================== */
-function makeShareUrl(){ return location.href; }
-
-function setQr(url){
-  const qr = document.getElementById("qrImg");
-  qr.src = "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" + encodeURIComponent(url);
-}
-
-async function copyText(txt){
-  try{
-    await navigator.clipboard.writeText(txt);
-    return true;
-  }catch(e){
-    const ta=document.createElement("textarea");
-    ta.value=txt;
-    document.body.appendChild(ta);
-    ta.select();
-    try{ document.execCommand("copy"); }catch(e2){}
-    ta.remove();
-    return true;
-  }
-}
-
-async function shareNative(title, url){
-  const msg = `${title}\n${url}`;
-  if(navigator.share){
-    try{
-      await navigator.share({title, text: msg, url});
-      return true;
-    }catch(e){}
-  }
-  return false;
-}
-
-function shareWhatsApp(title, url){
-  const msg = `${title}\nGuarda la vetrina:\n${url}`;
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank", "noopener");
-}
-
-/* ===================== GALLERY (ULTIMA VISTA) ===================== */
-function buildGallery(media){
-  const wrap=document.getElementById("galleryWrap");
-  const g=document.getElementById("gallery");
-  const d=document.getElementById("galleryDots");
-  g.innerHTML=""; d.innerHTML="";
-
-  const imgs=(media||[]).filter(x=>x&&x.url);
-  if(!imgs.length){ wrap.hidden=true; return; }
-  wrap.hidden=false;
-
-  const vid=qs("id")||"vetrina";
-  const KEY="sercuctech_last_"+vid;
-
-  imgs.forEach((m,i)=>{
-    const it=document.createElement("div");
-    it.className="gItem";
-    const im=document.createElement("img");
-    im.src=m.url; im.loading=i? "lazy":"eager";
-    it.appendChild(im);
-    g.appendChild(it);
-
-    const dot=document.createElement("span");
-    dot.className="dot";
-    dot.onclick=()=>{ g.scrollTo({left:i*g.clientWidth,behavior:"smooth"}); };
-    d.appendChild(dot);
-  });
-
-  let t=null;
-  g.addEventListener("scroll",()=>{
-    const i=clamp(Math.round(g.scrollLeft/g.clientWidth),0,imgs.length-1);
-    [...d.children].forEach((x,k)=>x.classList.toggle("on",k===i));
-    if(t) clearTimeout(t);
-    t=setTimeout(()=>{ try{ localStorage.setItem(KEY,String(i)); }catch(e){} }, 200);
-  },{passive:true});
-
-  requestAnimationFrame(()=>{
-    const last=clamp(parseInt(localStorage.getItem(KEY)||"0",10),0,imgs.length-1);
-    g.scrollLeft=last*g.clientWidth;
-    [...d.children].forEach((x,k)=>x.classList.toggle("on",k===last));
-  });
-
-  window.addEventListener("resize",()=>{
-    const last=clamp(parseInt(localStorage.getItem(KEY)||"0",10),0,imgs.length-1);
-    g.scrollLeft=last*g.clientWidth;
-    [...d.children].forEach((x,k)=>x.classList.toggle("on",k===last));
-  },{passive:true});
-}
-
-/* ===================== FILES ===================== */
-function buildFiles(files){
-  const c=document.getElementById("filesCard");
-  const l=document.getElementById("filesList");
-  l.innerHTML="";
-  if(!files||!files.length){ c.hidden=true; return; }
-  c.hidden=false;
-  files.forEach(f=>{
-    const a=document.createElement("a");
-    a.className="fileRow";
-    a.href=f.url; a.target="_blank"; a.rel="noopener";
-    a.textContent=f.label||f.url;
-    l.appendChild(a);
-  });
-}
-
-/* ===================== AUDIO GATE (FIX BLOCCO BOTTONI) ===================== */
-let gateOpen=false;
-function openGate(){
-  const gate=document.getElementById("audioGate");
-  gate.hidden=false;
-  gate.setAttribute("aria-hidden","false");
-  gateOpen=true;
-}
-function closeGate(){
-  const gate=document.getElementById("audioGate");
-  gate.hidden=true;
-  gate.setAttribute("aria-hidden","true");
-  gateOpen=false;
-}
-
-function withGateClose(fn){
-  // se overlay aperto, chiudilo e poi esegui
-  if(gateOpen) closeGate();
-  fn && fn();
-}
-
-/* ===================== LOAD ===================== */
-async function load(){
-  const id=qs("id");
-  document.getElementById("chipId").textContent="id: "+(id||"—");
-  if(!id){
-    document.getElementById("heroTitle").textContent="Manca id";
-    document.getElementById("heroDesc").textContent="Apri così: vetrina.html?id=renzo11";
-    return;
-  }
-
-  const r=await fetch(`data/${encodeURIComponent(id)}.json`,{cache:"no-store"});
-  const data=await r.json();
-
-  const title=(id==="renzo11")
-    ? "Bazar di Bostone con SerCucTech"
-    : `${data.title||id} con SerCucTech`;
-
-  document.title=title;
-  document.getElementById("heroTitle").textContent=title;
-  document.getElementById("heroDesc").textContent=data.description||"";
-
-  buildGallery(data.media||[]);
-  buildFiles(data.files||[]);
-
-  const shareUrl = makeShareUrl();
-  document.getElementById("shareCard").hidden = false;
-  document.getElementById("shareLinkText").textContent = shareUrl;
-  setQr(shareUrl);
-
-  document.getElementById("btnShareWA").onclick = ()=>shareWhatsApp(title, shareUrl);
-  document.getElementById("btnShareWA2").onclick = ()=>shareWhatsApp(title, shareUrl);
-
-  document.getElementById("btnCopy").onclick = async ()=>{
-    await copyText(shareUrl);
-    alert("Link copiato!");
-  };
-
-  document.getElementById("btnShareNative").onclick = async ()=>{
-    const ok = await shareNative(title, shareUrl);
-    if(!ok) shareWhatsApp(title, shareUrl);
-  };
-
-  const L = detectLang();
-  const ttsLang = (L==="ua") ? "uk-UA" : (L==="en") ? "en-US" : "it-IT";
-
-  const rawText = (data.voice?.text || "").trim()
-    ? data.voice.text.trim()
-    : (L==="en")
-      ? `Welcome to the showcase. ${data.description||""}`
-      : (L==="ua")
-        ? `Ласкаво просимо до вітрини. ${data.description||""}`
-        : `Benvenuto nella vetrina. ${data.description||""}`;
-
-  const voiceText = formatPhonesPairsForSpeech(rawText);
-
-  // Autoplay solo prima volta: se bloccato apriamo gate
-  const autoKey="sercuctech_autoplay_done_"+id;
-  const wantAuto = !localStorage.getItem(autoKey);
-  if(wantAuto){
-    localStorage.setItem(autoKey,"1");
-    const ok = speakOnce(voiceText, ttsLang);
-    setTimeout(()=>{
-      if(!ok || !isSpeaking){
-        openGate();
-      }
-    }, 500);
-  }
-
-  // Gate buttons (sempre cliccabili ora)
-  document.getElementById("btnEnableAudio").onclick = ()=>{
-    closeGate();
-    speakOnce(voiceText, ttsLang);
-  };
-  document.getElementById("btnSkipAudio").onclick = ()=>closeGate();
-  document.getElementById("audioGateBackdrop").onclick = ()=>closeGate();
-
-  // Bottom buttons: se gate aperto, chiude e poi esegue
-  document.getElementById("btnVoice").onclick = ()=>withGateClose(()=> {
-    const ok = speakOnce(voiceText, ttsLang);
-    if(!ok) openGate();
-  });
-
-  document.getElementById("btnStop").onclick = ()=>withGateClose(()=>stopSpeech());
-  document.getElementById("btnFull").onclick = ()=>withGateClose(()=>toggleFull());
-  document.getElementById("btnTheme").onclick = ()=>withGateClose(()=>{
-    const c=document.documentElement.getAttribute("data-theme");
-    applyTheme(c==="dark"?"light":"dark");
-  });
-
-  document.getElementById("btnKiosk").onclick = ()=>withGateClose(async()=>{
-    kiosk=!kiosk;
-    document.body.classList.toggle("kioskOn",kiosk);
-    if(kiosk && !document.fullscreenElement){
-      try{ await document.documentElement.requestFullscreen(); }catch(e){}
-    }
-  });
-}
-
-load();
-</script>
-
-<!-- FIX overlay: z-index + pointer-events garantiti -->
-<style>
-/* Share + QR */
-.shareBox{ padding: 12px 14px 14px; }
-.qrBox{ display:flex; flex-direction:column; align-items:center; gap:10px; }
-#qrImg{
-  width: 220px; height: 220px;
-  border-radius: 18px;
-  border: 1px solid var(--line, rgba(255,255,255,.12));
-  background: var(--card, rgba(255,255,255,.06));
-}
-.shareBtns{ display:grid; grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
-.shareBtn{
-  width:100%;
-  border-radius: 16px;
-  border: 1px solid var(--line, rgba(255,255,255,.12));
-  background: var(--card2, rgba(255,255,255,.08));
-  color: var(--txt, #fff);
-  font-weight: 950;
-  padding: 12px 14px;
-}
-.shareBtn:active{ transform: scale(.99); }
-.shareBtn.wa{ background:#25D366; border:none; color:#fff; }
-
-/* AUDIO GATE (IMPORTANTE) */
-.audioGate{
-  position: fixed;
-  inset: 0;
-  z-index: 99999;           /* sopra tutto */
-  display: grid;
-  place-items: center;
-  pointer-events: auto;     /* prende i tocchi */
-}
-.audioGate[hidden]{ display:none !important; }
-
-.audioGateBackdrop{
-  position:absolute;
-  inset:0;
-  background: rgba(0,0,0,.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  pointer-events: auto;
-}
-
-.audioGateCard{
-  position: relative;
-  z-index: 100000;          /* sopra backdrop */
-  width: min(92vw, 420px);
-  border-radius: 18px;
-  padding: 14px;
-  background: rgba(20,28,44,.92);
-  border: 1px solid rgba(255,255,255,.14);
-  color: #fff;
-  pointer-events: auto;     /* bottoni cliccabili */
-}
-
-.audioGateTitle{ font-weight: 950; font-size: 18px; margin-bottom: 6px; }
-.audioGateText{ opacity:.9; font-size: 14px; margin-bottom: 10px; line-height: 1.3; }
-
-#audioGate button{
-  width:100%;
-  margin-top:10px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.10);
-  color:#fff;
-  font-weight: 900;
-}
-
-#audioGate button.ghost{
-  background: transparent;
-  opacity: .9;
-}
-</style>
-
+  <script src="app.js?v=1"></script>
 </body>
 </html>
