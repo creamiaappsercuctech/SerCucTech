@@ -27,7 +27,7 @@
         var(--bg);
       color:var(--txt);
       padding:16px;
-      padding-bottom:140px;
+      padding-bottom:170px;
     }
     .wrap{max-width:980px;margin:0 auto;display:grid;gap:12px}
     .top{
@@ -182,6 +182,30 @@
       font-weight:900;
       line-height:1.35;
     }
+
+    .checklist{
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;
+      padding:12px;
+      background:rgba(0,0,0,.18);
+      display:grid;
+      gap:10px;
+    }
+    .steps{
+      margin:0;
+      padding-left:18px;
+      color:rgba(255,255,255,.88);
+      font-weight:900;
+      line-height:1.4;
+      font-size:13px;
+    }
+    .steps li{margin:6px 0}
+    .steps b{color:#fff}
+    .steps code{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size:12px;
+      color:rgba(234,240,255,.9);
+    }
   </style>
 </head>
 
@@ -193,23 +217,42 @@
         Tocca un link per aprirlo. Tocca 🔊 per sentire la spiegazione (livello 10 anni).
       </div>
 
-      <div class="guideBox">
+      <!-- ✅ CHECKLIST SEMPRE VISIBILE -->
+      <div class="checklist">
         <div class="guideTitle">
-          <div>🎧 Guida completa (audio)</div>
+          <div>✅ Checklist veloce (1–2–3–4)</div>
           <span class="pill" id="guideState">pronto</span>
         </div>
-        <button class="btnSolid btnWide" id="playFullGuide">▶️ Ascolta guida completa</button>
+
+        <ol class="steps" id="stepsText">
+          <li>
+            <b>Crea o duplica</b> la vetrina in <b>Admin</b> → scarichi <code>ID.json</code>.
+          </li>
+          <li>
+            Vai su GitHub → cartella <b>data</b> → incolla il contenuto dentro <code>data/ID.json</code> → <b>Commit</b>.
+          </li>
+          <li>
+            Vai su GitHub → cartella <b>media</b> → carica foto/video (consigliato: <code>ID-001.jpg</code>, <code>ID-002.jpg</code>).
+          </li>
+          <li>
+            Aggiorna <code>data/vetrine.json</code> (lista vetrine) con l’Admin → copia/incolla su GitHub → <b>Commit</b>.
+            Poi condividi su WhatsApp: <code>link.html?id=ID</code>.
+          </li>
+        </ol>
+
+        <div class="row" style="grid-template-columns:1fr 1fr;gap:10px">
+          <button class="btnSolid" id="readChecklist">🔊 Leggi checklist</button>
+          <button class="btn" id="readFullGuide">🎧 Guida completa</button>
+        </div>
+
         <div class="row" style="grid-template-columns:1fr 1fr;gap:10px">
           <button class="btn" id="pauseGuide">⏸️ Pausa</button>
           <button class="btn" id="resumeGuide">▶️ Riprendi</button>
         </div>
-        <div class="mini">
-          Questa guida spiega tutto: cos’è una vetrina, cosa fa l’Admin, cosa condividere su WhatsApp,
-          e come mettere JSON e media su GitHub.
-        </div>
+
         <div class="warn" id="audioWarn" style="display:none">
           ⚠️ Su Android/Chrome l’audio può partire solo dopo un tuo tocco.
-          Se non senti la voce, tocca di nuovo “Ascolta guida completa”.
+          Se non senti la voce, tocca di nuovo un pulsante 🔊.
         </div>
       </div>
     </div>
@@ -285,10 +328,11 @@ const stopAudioBtn= document.getElementById("stopAudio");
 const speakWhatToShareBtn = document.getElementById("speakWhatToShare");
 const speakIfBrokenBtn = document.getElementById("speakIfBroken");
 
-const playFullGuideBtn = document.getElementById("playFullGuide");
+const guideState = document.getElementById("guideState");
+const readChecklistBtn = document.getElementById("readChecklist");
+const readFullGuideBtn = document.getElementById("readFullGuide");
 const pauseGuideBtn = document.getElementById("pauseGuide");
 const resumeGuideBtn = document.getElementById("resumeGuide");
-const guideState = document.getElementById("guideState");
 
 const base = location.origin + location.pathname.replace(/index\.html$/,"");
 
@@ -315,15 +359,8 @@ function speak(text){
 }
 
 stopAudioBtn.addEventListener("click", ()=>{ stopSpeak(); guideState.textContent="pronto"; });
-
-pauseGuideBtn.addEventListener("click", ()=>{
-  pauseSpeak();
-  guideState.textContent = "in pausa";
-});
-resumeGuideBtn.addEventListener("click", ()=>{
-  resumeSpeak();
-  guideState.textContent = "parlo…";
-});
+pauseGuideBtn.addEventListener("click", ()=>{ pauseSpeak(); guideState.textContent="in pausa"; });
+resumeGuideBtn.addEventListener("click", ()=>{ resumeSpeak(); guideState.textContent="parlo…"; });
 
 function mkItem({label, href, explain}){
   const el = document.createElement("div");
@@ -343,9 +380,7 @@ function mkItem({label, href, explain}){
       alert("Copia non riuscita. Tieni premuto sul link e copia manualmente.");
     }
   });
-  el.querySelector(".speakBtn").addEventListener("click", ()=>{
-    speak(explain.long);
-  });
+  el.querySelector(".speakBtn").addEventListener("click", ()=> speak(explain.long));
   return el;
 }
 
@@ -376,7 +411,7 @@ Così non si perde e tu lavori più veloce.`
     short: "Pagina pubblica con immagini, numerini e audio.",
     long:
 `La vetrina è la pagina dove si vede tutto: foto, numerini sugli oggetti, e il testo fisso.
-Quando una persona guarda la vetrina, capisce cosa c’è in vendita e può contattarti.`
+Quando una persona guarda la vetrina, capisce cosa c’è e può contattarti.`
   },
   githubData: {
     short: "Cartella data: qui metti i file .json delle vetrine.",
@@ -390,7 +425,6 @@ Quando crei una vetrina, devi mettere il file dentro data e fare Commit.`
     short: "Cartella media: qui carichi immagini e video.",
     long:
 `Nella cartella media metti le foto e i video.
-È come una scatola di immagini.
 Se vuoi ordine, usa nomi tipo: renzo11-001.jpg, renzo11-002.jpg.
 Così capisci subito di quale vetrina sono.`
   },
@@ -403,6 +437,18 @@ Quando aggiungi una vetrina, devi aggiungere anche una riga qui.`
   }
 };
 
+const checklistSpeak =
+`Ecco la checklist veloce:
+
+Uno. Vai nell’Admin e crea o duplica una vetrina. Ti scarichi il file ID punto json.
+
+Due. Vai su GitHub, cartella data. Apri o crea data barra ID punto json. Incolla il contenuto e fai Commit.
+
+Tre. Vai su GitHub, cartella media. Carica le foto e i video. Meglio se li chiami ID trattino zero zero uno, ID trattino zero zero due.
+
+Quattro. Aggiorna data barra vetrine punto json con l’Admin, poi incolla su GitHub e fai Commit.
+Poi condividi su WhatsApp: link punto html punto interrogativo id uguale ID.`;
+
 const fullGuideText =
 `Ciao! Ora ti spiego tutto come se avessi dieci anni, ma in modo completo.
 
@@ -413,90 +459,41 @@ Ci sono tre cose importanti:
 
 Uno: la pagina “vetrina”.
 Questa è la pagina dove si vedono le immagini, i numerini sugli oggetti, e l’audio di benvenuto.
-È la pagina più ricca.
 
 Due: la pagina “link”.
-Questa è una pagina semplice che serve solo per aiutare le persone.
-Quando tu condividi un link su WhatsApp, è meglio condividere la pagina link,
-perché chi la apre capisce subito cosa deve fare e non si perde.
+Questa è la pagina da condividere su WhatsApp.
+È più facile per chi la apre: vede subito dove cliccare.
 
 Tre: la pagina “admin”.
 Quella è solo per te. È protetta.
 Dentro l’admin puoi creare una vetrina nuova, duplicare una vetrina, e fare backup.
 
-Ora come funziona quando crei una vetrina nuova?
+Come pubblichi una vetrina nuova?
 
-Passo uno: vai in Admin e premi “Crea nuova vetrina”.
-L’admin ti fa scaricare un file che si chiama con l’ID, per esempio renzo13 punto json.
-Quel file contiene tutte le informazioni: titolo, testo fisso, lista immagini e numerini.
+Passo uno: Admin → crea o duplica → scarichi ID punto json.
 
-Passo due: devi mettere quel file su GitHub nella cartella data.
-Apri GitHub, vai su data, apri o crea data/renzo13.json, incolli il contenuto, e fai Commit.
-Questo rende la vetrina pubblica online.
+Passo due: GitHub → cartella data → incolli dentro data/ID.json → Commit.
 
-Passo tre: devi caricare le foto nella cartella media su GitHub.
-Carichi i file e li nomini bene, tipo renzo13-001.jpg, renzo13-002.jpg.
-Poi nel JSON metti gli URL delle immagini.
+Passo tre: GitHub → cartella media → carichi foto e video, meglio con nomi tipo ID-001.
 
-Passo quattro: aggiorni l’elenco delle vetrine.
-C’è un file che si chiama data/vetrine.json.
-Dentro ci sono tutti gli ID delle vetrine.
-Se aggiungi renzo13, devi aggiungere anche una riga lì, e fare Commit.
-Così l’Admin vede la nuova vetrina nell’elenco.
+Passo quattro: aggiorni data/vetrine.json, perché è l’elenco delle vetrine.
+Poi condividi su WhatsApp: link.html?id=ID.
 
-Ora cosa condividi su WhatsApp?
-Condividi sempre: link punto html punto interrogativo id uguale renzo13.
-Per esempio: link.html?id=renzo13.
-Quello è il link facile per gli utenti.
+Se ti si rompe il telefono, recuperi tutto da GitHub.
+E per sicurezza puoi fare anche un backup ZIP dall’Admin.`;
 
-E se ti si rompe il telefono?
-Non è un problema grosso se hai salvato tutto su GitHub.
-Perché GitHub tiene i tuoi file online.
-Con un altro telefono, apri la repo e ritrovi data e media.
-E puoi anche fare un backup ZIP dall’Admin per sicurezza.
-
-Fine.
-Se vuoi, posso aggiungere anche una guida ancora più passo passo con numeri: 1,2,3,4,
-così segui come una checklist.`;
+readChecklistBtn.addEventListener("click", ()=> speak(checklistSpeak));
+readFullGuideBtn.addEventListener("click", ()=> speak(fullGuideText));
 
 function renderMain(){
   mainLinks.innerHTML = "";
-
-  mainLinks.appendChild(mkItem({
-    label: "🏠 Home (questa pagina)",
-    href: "index.html",
-    explain: explainers.home
-  }));
-  mainLinks.appendChild(mkItem({
-    label: "🔒 Admin",
-    href: "admin.html",
-    explain: explainers.admin
-  }));
-  mainLinks.appendChild(mkItem({
-    label: "📄 Pagina link vetrina (esempio renzo11)",
-    href: "link.html?id=renzo11",
-    explain: explainers.linkPage
-  }));
-  mainLinks.appendChild(mkItem({
-    label: "🖼️ Vetrina diretta (esempio renzo11)",
-    href: "vetrina.html?id=renzo11",
-    explain: explainers.vetrina
-  }));
-  mainLinks.appendChild(mkItem({
-    label: "📁 GitHub cartella data",
-    href: `https://github.com/creamiaappsercuctech/SerCucTech/tree/main/data`,
-    explain: explainers.githubData
-  }));
-  mainLinks.appendChild(mkItem({
-    label: "🖼️ GitHub cartella media",
-    href: `https://github.com/creamiaappsercuctech/SerCucTech/tree/main/media`,
-    explain: explainers.githubMedia
-  }));
-  mainLinks.appendChild(mkItem({
-    label: "🧾 GitHub file data/vetrine.json",
-    href: `https://github.com/creamiaappsercuctech/SerCucTech/blob/main/data/vetrine.json`,
-    explain: explainers.githubIndex
-  }));
+  mainLinks.appendChild(mkItem({ label:"🏠 Home (questa pagina)", href:"index.html", explain: explainers.home }));
+  mainLinks.appendChild(mkItem({ label:"🔒 Admin", href:"admin.html", explain: explainers.admin }));
+  mainLinks.appendChild(mkItem({ label:"📄 Pagina link vetrina (esempio renzo11)", href:"link.html?id=renzo11", explain: explainers.linkPage }));
+  mainLinks.appendChild(mkItem({ label:"🖼️ Vetrina diretta (esempio renzo11)", href:"vetrina.html?id=renzo11", explain: explainers.vetrina }));
+  mainLinks.appendChild(mkItem({ label:"📁 GitHub cartella data", href:`https://github.com/creamiaappsercuctech/SerCucTech/tree/main/data`, explain: explainers.githubData }));
+  mainLinks.appendChild(mkItem({ label:"🖼️ GitHub cartella media", href:`https://github.com/creamiaappsercuctech/SerCucTech/tree/main/media`, explain: explainers.githubMedia }));
+  mainLinks.appendChild(mkItem({ label:"🧾 GitHub file data/vetrine.json", href:`https://github.com/creamiaappsercuctech/SerCucTech/blob/main/data/vetrine.json`, explain: explainers.githubIndex }));
 }
 
 function setPreview(id){
@@ -517,38 +514,16 @@ openLinkBtn.addEventListener("click", ()=>{
 copyPreview.addEventListener("click", async ()=>{
   const id = previewLink.dataset.id || "renzo11";
   const full = `${base}link.html?id=${encodeURIComponent(id)}`;
-  try{
-    await navigator.clipboard.writeText(full);
-    alert("Copiato ✅");
-  }catch(e){
-    alert("Copia non riuscita.");
-  }
+  try{ await navigator.clipboard.writeText(full); alert("Copiato ✅"); }
+  catch(e){ alert("Copia non riuscita."); }
 });
-
-speakPreview.addEventListener("click", ()=>{
-  speak(explainers.linkPage.long);
-});
-
-playFullGuideBtn.addEventListener("click", ()=>{
-  speak(fullGuideText);
-});
+speakPreview.addEventListener("click", ()=> speak(explainers.linkPage.long));
 
 speakWhatToShareBtn.addEventListener("click", ()=>{
-  speak(
-`Cosa condividere su WhatsApp?
-Condividi sempre la pagina link, non la vetrina diretta.
-Per esempio: link.html?id=renzo11.
-Perché è più semplice per gli utenti: entrano, capiscono, e trovano subito i pulsanti giusti.`
-  );
+  speak(`Condividi su WhatsApp la pagina link: link.html?id=ID. È più semplice per gli utenti.`);
 });
-
 speakIfBrokenBtn.addEventListener("click", ()=>{
-  speak(
-`Se ti si rompe il telefono, recuperi tutto da GitHub.
-Perché i file veri stanno online: la cartella data con i JSON e la cartella media con foto e video.
-Apri GitHub da un altro telefono e ritrovi tutto.
-Per sicurezza puoi anche fare un backup ZIP dall’Admin.`
-  );
+  speak(`Se ti si rompe il telefono recuperi tutto da GitHub. I JSON sono in data, e le foto in media. Puoi anche fare backup ZIP dall’Admin.`);
 });
 
 /* ----------- Elenco vetrine automatico ----------- */
@@ -566,15 +541,14 @@ async function loadIndex(){
       const id = String(v.id||"").trim();
       if(!id) return;
       const title = String(v.title||id);
-
       const linkHref = `link.html?id=${encodeURIComponent(id)}`;
       const vetrinaHref = `vetrina.html?id=${encodeURIComponent(id)}`;
 
       const explainLong =
 `Questa è la vetrina con ID ${id}.
-Per condividerla su WhatsApp usa: ${linkHref}.
-Se vuoi vedere direttamente foto e numeri, apri: ${vetrinaHref}.
-La pagina link è consigliata per gli utenti, perché è più semplice.`;
+Per condividerla usa: ${linkHref}.
+Per vedere direttamente foto e numeri: ${vetrinaHref}.
+La pagina link è consigliata per gli utenti.`;
 
       const box = document.createElement("div");
       box.className = "item";
@@ -584,17 +558,11 @@ La pagina link è consigliata per gli utenti, perché è più semplice.`;
         <button class="btn amber speakBtn">🔊</button>
         <div class="desc"></div>
       `;
-
       box.querySelector(".copyBtn").addEventListener("click", async ()=>{
         const full = `${base}${linkHref}`;
-        try{
-          await navigator.clipboard.writeText(full);
-          alert("Copiato ✅");
-        }catch(e){
-          alert("Copia non riuscita.");
-        }
+        try{ await navigator.clipboard.writeText(full); alert("Copiato ✅"); }
+        catch(e){ alert("Copia non riuscita."); }
       });
-
       box.querySelector(".speakBtn").addEventListener("click", ()=> speak(explainLong));
 
       const desc = box.querySelector(".desc");
