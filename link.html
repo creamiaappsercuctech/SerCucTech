@@ -3,294 +3,77 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>SerCucTech — Link Vetrina</title>
+  <title>Apri Vetrina</title>
+  <link rel="stylesheet" href="style.css?v=1">
   <style>
-    :root{
-      --bg:#0b1220;
-      --card:rgba(255,255,255,.06);
-      --line:rgba(255,255,255,.12);
-      --txt:#eaf0ff;
-      --muted:rgba(234,240,255,.72);
-      --btn:rgba(255,255,255,.10);
-      --green:#23c55e;
-      --shadow:0 10px 30px rgba(0,0,0,.35);
+    body{padding:18px}
+    .cardx{
+      max-width:720px;margin:0 auto;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.18);
+      border-radius:18px;padding:14px;display:grid;gap:12px
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:
-        radial-gradient(900px 600px at 20% -20%, rgba(130,170,255,.20), transparent 60%),
-        radial-gradient(900px 600px at 90% 10%, rgba(120,255,210,.10), transparent 60%),
-        var(--bg);
-      color:var(--txt);
-      padding:14px;
-      padding-bottom:120px;
-    }
-    .wrap{max-width:720px;margin:0 auto;display:grid;gap:12px}
-    .top{
-      border:1px solid var(--line);
-      background:var(--card);
-      border-radius:18px;
-      padding:14px;
-      box-shadow:var(--shadow);
-      text-align:center;
-    }
-    h1{margin:0;font-size:20px;font-weight:1000}
-    .sub{margin-top:8px;color:var(--muted);font-weight:900;line-height:1.35}
-    .card{
-      border:1px solid var(--line);
-      background:var(--card);
-      border-radius:18px;
-      padding:14px;
-      box-shadow:var(--shadow);
-    }
-    .pill{
-      display:inline-block;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.06);
-      color:var(--muted);
-      font-weight:900;
-      font-size:12px;
-    }
-    .row{display:grid;gap:10px}
+    .h{font-weight:1000;font-size:20px;margin:0}
+    .p{opacity:.9;margin:0;font-weight:800;line-height:1.35}
     .btn{
-      border:1px solid var(--line);
-      background:var(--btn);
-      color:var(--txt);
-      border-radius:16px;
-      padding:14px 14px;
-      font-weight:1000;
-      cursor:pointer;
-      text-align:center;
-      user-select:none;
+      width:100%;border:none;border-radius:16px;
+      padding:14px 12px;font-weight:1000;cursor:pointer
     }
     .btn:active{transform:scale(.99)}
-    .btnSolid{
-      border:none;
-      background:var(--green);
-      color:#06110a;
-      border-radius:16px;
-      padding:14px 14px;
-      font-weight:1000;
-      cursor:pointer;
-      text-align:center;
-      user-select:none;
-    }
-    .btnSolid:active{transform:scale(.99)}
-    .waBtn{
-      border:none;
-      background:#25D366;
-      color:#06210f;
-      border-radius:16px;
-      padding:14px 14px;
-      font-weight:1000;
-      cursor:pointer;
-      text-align:center;
-      user-select:none;
-    }
-    .waBtn:active{transform:scale(.99)}
-    .small{
-      color:var(--muted);
-      font-size:12px;
-      font-weight:900;
-      line-height:1.35;
-    }
-    .mono{
-      margin-top:6px;
-      padding:12px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:rgba(0,0,0,.22);
-      font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size:12px;
-      color:rgba(234,240,255,.88);
-      word-break:break-word;
-    }
-    .bar{
-      position:fixed; left:0; right:0; bottom:0;
-      padding:10px 12px;
-      background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.55));
-      backdrop-filter:blur(10px);
-      border-top:1px solid var(--line);
-      display:flex;
-      justify-content:center;
-      z-index:999;
-    }
-    .barInner{width:min(720px,100%);display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    @media(max-width:520px){ .barInner{grid-template-columns:1fr} }
+    .primary{background:#25D366;color:#06210f}
+    .ghost{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.16)}
+    .row{display:grid;gap:10px}
+    .small{font-size:12px;opacity:.85;font-weight:900}
   </style>
 </head>
-
 <body>
-  <div class="wrap">
-    <div class="top">
-      <h1 id="title">SerCucTech — Vetrina</h1>
-      <div class="sub">
-        Questa è la pagina più facile da condividere.<br>
-        Premi WhatsApp per inviare un messaggio già pronto.
-      </div>
-      <div style="margin-top:10px">
-        <span class="pill">ID: <span id="idPill">—</span></span>
-      </div>
+  <div class="cardx">
+    <h1 class="h" id="t">Caricamento…</h1>
+    <p class="p" id="d"></p>
+
+    <div class="row">
+      <button class="btn primary" id="openV">✅ Apri la vetrina</button>
+      <button class="btn ghost" id="openIndex">🔗 Vedi indice vetrine</button>
+      <button class="btn ghost" id="copy">📋 Copia link da condividere</button>
     </div>
 
-    <div class="card">
-      <div style="font-weight:1000;margin-bottom:8px">🔗 Link completo (da copiare)</div>
-      <div class="mono" id="fullLink">—</div>
-      <div class="row" style="margin-top:10px">
-        <button class="btn" id="copyLinkBtn">📋 Copia link</button>
-      </div>
-      <div class="small" style="margin-top:8px">
-        Suggerimento: copia il link e incollalo dove vuoi (WhatsApp, SMS, Facebook…).
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="font-weight:1000;margin-bottom:8px">🟢 WhatsApp con messaggio pronto</div>
-      <div class="row">
-        <button class="waBtn" id="openWaBtn">🟢 Apri WhatsApp (testo già pronto)</button>
-        <button class="btnSolid" id="copyMsgBtn">📌 Copia messaggio WhatsApp</button>
-      </div>
-      <div class="small" style="margin-top:8px">
-        Il messaggio dice: “Dimmi il numero dell’oggetto che ti interessa”.
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="font-weight:1000;margin-bottom:8px">🖼️ Apri la vetrina</div>
-      <div class="row">
-        <a class="btnSolid" id="openVetrinaBtn" href="#">Apri vetrina</a>
-      </div>
-      <div class="small" style="margin-top:8px">
-        Qui si vedono foto, numerini sugli oggetti e audio.
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="font-weight:1000;margin-bottom:8px">ℹ️ Mini spiegazione (10 anni)</div>
-      <div class="small">
-        Questa pagina serve solo per <b>condividere</b> facile.<br>
-        Chi la apre trova subito i pulsanti giusti.<br>
-        La vetrina vera è “Apri vetrina”.
-      </div>
-    </div>
-  </div>
-
-  <div class="bar">
-    <div class="barInner">
-      <button class="btn" id="shareNativeBtn">📤 Condividi (menu telefono)</button>
-      <button class="btn" id="copyAllBtn">📋 Copia (link + messaggio)</button>
-    </div>
+    <div class="small" id="s"></div>
   </div>
 
 <script>
-(function(){
-"use strict";
+(async function(){
+  const sp = new URLSearchParams(location.search);
+  const id = (sp.get("id") || "").trim() || "renzo11";
 
-function qs(name){
-  return new URLSearchParams(location.search).get(name);
-}
+  const base = location.origin + location.pathname.replace(/link\.html$/,"");
+  const share = `${base}link.html?id=${encodeURIComponent(id)}`;
+  const vetrina = `${base}vetrina.html?id=${encodeURIComponent(id)}`;
+  const index = `${base}index.html`;
 
-const id = (qs("id") || "").trim() || "renzo11";
-
-const idPill = document.getElementById("idPill");
-const fullLinkEl = document.getElementById("fullLink");
-const copyLinkBtn = document.getElementById("copyLinkBtn");
-
-const openWaBtn = document.getElementById("openWaBtn");
-const copyMsgBtn = document.getElementById("copyMsgBtn");
-
-const openVetrinaBtn = document.getElementById("openVetrinaBtn");
-
-const shareNativeBtn = document.getElementById("shareNativeBtn");
-const copyAllBtn = document.getElementById("copyAllBtn");
-
-idPill.textContent = id;
-
-const base = location.origin + location.pathname.replace(/link\.html$/,"");
-const link = `${base}link.html?id=${encodeURIComponent(id)}`;
-const vetrinaLink = `${base}vetrina.html?id=${encodeURIComponent(id)}`;
-
-fullLinkEl.textContent = link;
-openVetrinaBtn.href = vetrinaLink;
-
-function makeWhatsAppMessage(id){
-  const clean = (id||"renzo11").trim() || "renzo11";
-  const link = `${base}link.html?id=${encodeURIComponent(clean)}`;
-  return `Ciao! 👋
-Ti mando la vetrina con foto e numeri degli oggetti.
-
-✅ Apri qui:
-${link}
-
-📌 Se ti interessa un oggetto, dimmi il numero e ti rispondo subito su WhatsApp.`;
-}
-
-async function copyText(text){
-  try{
-    await navigator.clipboard.writeText(text);
-    return true;
-  }catch(e){
-    return false;
-  }
-}
-
-copyLinkBtn.addEventListener("click", async ()=>{
-  const ok = await copyText(link);
-  alert(ok ? "Link copiato ✅" : "Copia non riuscita. Tieni premuto sul testo e copia manualmente.");
-});
-
-copyMsgBtn.addEventListener("click", async ()=>{
-  const msg = makeWhatsAppMessage(id);
-  const ok = await copyText(msg);
-  alert(ok ? "Messaggio copiato ✅" : "Copia non riuscita.");
-});
-
-openWaBtn.addEventListener("click", ()=>{
-  const msg = makeWhatsAppMessage(id);
-  const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-  window.open(url, "_blank");
-});
-
-shareNativeBtn.addEventListener("click", async ()=>{
-  const msg = makeWhatsAppMessage(id);
-  if(navigator.share){
+  document.getElementById("openV").onclick = ()=> location.href = vetrina;
+  document.getElementById("openIndex").onclick = ()=> location.href = index;
+  document.getElementById("copy").onclick = async ()=>{
     try{
-      await navigator.share({
-        title: "Vetrina",
-        text: msg,
-        url: link
-      });
-    }catch(e){}
-  }else{
-    alert("Condivisione non disponibile. Usa i bottoni copia/WhatsApp.");
-  }
-});
-
-copyAllBtn.addEventListener("click", async ()=>{
-  const msg = makeWhatsAppMessage(id);
-  const all = `${msg}\n\n---\nLink diretto:\n${link}`;
-  const ok = await copyText(all);
-  alert(ok ? "Copiato (messaggio + link) ✅" : "Copia non riuscita.");
-});
-
-// titolo pagina (carico titolo da JSON se esiste)
-(async ()=>{
-  try{
-    const res = await fetch(`data/${encodeURIComponent(id)}.json`, {cache:"no-store"});
-    if(res.ok){
-      const j = await res.json();
-      const t = (j.title || "").trim();
-      if(t){
-        document.getElementById("title").textContent = t;
-        document.title = t + " — Link";
-      }
+      await navigator.clipboard.writeText(share);
+      alert("Link copiato ✅");
+    }catch(e){
+      prompt("Copia questo link:", share);
     }
-  }catch(e){}
-})();
+  };
+
+  // prova a leggere titolo/desc dal JSON
+  try{
+    const r = await fetch(`data/${encodeURIComponent(id)}.json`, {cache:"no-store"});
+    const j = await r.json();
+    document.getElementById("t").textContent = j.title || ("Vetrina " + id);
+    document.getElementById("d").textContent = j.description || "";
+  }catch(e){
+    document.getElementById("t").textContent = "Vetrina " + id;
+  }
+
+  document.getElementById("s").textContent =
+    "Link pubblico: " + share + "\\n" +
+    "Link diretto: " + vetrina;
 })();
 </script>
 </body>
