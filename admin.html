@@ -90,7 +90,12 @@
       font-weight:900;
       outline:none;
     }
-    textarea{min-height:120px;font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;font-size:12px;color:var(--muted)}
+    textarea{
+      min-height:140px;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size:12px;
+      color:var(--muted);
+    }
     .btn{
       padding:14px;
       border-radius:14px;
@@ -184,6 +189,39 @@
     }
     .gateOkRow{margin-top:10px; display:grid; gap:10px}
     .gateOkRow input{background:rgba(0,0,0,.28)}
+
+    /* Modal indice */
+    .modal{
+      position:fixed; inset:0; z-index:900;
+      background:rgba(0,0,0,.65);
+      display:none;
+      align-items:center; justify-content:center;
+      padding:18px;
+    }
+    .modal.show{display:flex;}
+    .modalCard{
+      width:min(900px,100%);
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(20,26,44,.95);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
+    .modalTitle{
+      font-weight:1000;
+      margin-bottom:8px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .closeX{
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      border-radius:12px;
+      padding:8px 10px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+    .modalBtns{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
   </style>
 </head>
 
@@ -213,6 +251,29 @@
   </div>
 </div>
 
+<!-- MODAL INDICE -->
+<div class="modal" id="indexModal">
+  <div class="modalCard">
+    <div class="modalTitle">
+      <div>📌 Aggiorna <b>data/vetrine.json</b></div>
+      <button class="closeX" id="closeModal">Chiudi</button>
+    </div>
+    <div class="small">
+      1) Premi “Copia” oppure “Scarica vetrine.json”  
+      2) Su GitHub apri <b>data/vetrine.json</b> → ✏️ Edit → incolla → Commit  
+      (Il commit automatico non è possibile senza token)
+    </div>
+
+    <textarea id="indexBox" spellcheck="false"></textarea>
+
+    <div class="modalBtns">
+      <button class="btn green" id="copyIndexBtn">📋 Copia</button>
+      <button class="btn green" id="downloadIndexBtn">⬇️ Scarica vetrine.json</button>
+      <button class="btn" id="openGithubIndexBtn">Apri GitHub data/vetrine.json</button>
+    </div>
+  </div>
+</div>
+
 <header>
   <h1>🔧 Admin SerCucTech</h1>
   <button class="createBtn" id="createMainBtn">➕ CREA NUOVA VETRINA</button>
@@ -226,7 +287,18 @@
       <span class="pill" id="statePill">Caricamento…</span>
     </div>
     <div class="small" style="margin-top:8px">
-      Questo Admin legge le vetrine da <b>data/vetrine.json</b>. Se aggiungi una vetrina, aggiorna quel file (1 riga).
+      Questo Admin legge le vetrine da <b>data/vetrine.json</b> e ti genera lo stesso file aggiornato in 1 click.
+    </div>
+  </div>
+
+  <!-- 🔥 INDICE -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="font-weight:1000">📌 Indice vetrine</div>
+      <button class="btn green" id="openIndexBtn">Aggiorna vetrine.json</button>
+    </div>
+    <div class="small" style="margin-top:8px">
+      Usa questo dopo “Crea” o “Duplica”. Ti prepara il JSON completo pronto da incollare.
     </div>
   </div>
 
@@ -238,7 +310,7 @@
       <div class="row">
         <input id="newId" placeholder="ID nuova vetrina (es. renzo13 / scalvini11)">
         <input id="newTitle" placeholder="Titolo (es. Bazar di ... con SerCucTech)">
-        <textarea id="newSpeech" placeholder="Testo fisso (description + voice.text) che resterà visibile e verrà letto dall’audio. Inserisci anche numeri telefono qui."></textarea>
+        <textarea id="newSpeech" placeholder="Testo fisso (description + voice.text) che resterà visibile e verrà letto. Inserisci anche numeri telefono qui."></textarea>
         <button class="btn green" id="createBtn">Crea e scarica JSON</button>
         <div class="small">
           Scarica <b>ID.json</b> pronto. Poi lo carichi su GitHub in <b>data/ID.json</b>.  
@@ -256,8 +328,7 @@
         <button class="btn amber" id="cloneBtn">Duplica e scarica JSON</button>
         <div class="small">
           Duplica tutto e sostituisce automaticamente gli URL:
-          <b>media/ID-</b> da sorgente → nuovo ID.  
-          (Poi rinomini/carichi le immagini nella cartella <b>media/</b>).
+          <b>media/ID-</b> da sorgente → nuovo ID.
         </div>
       </div>
     </div>
@@ -272,7 +343,7 @@
       <button class="btn" id="backupFullBtn">Scarica ZIP (JSON + media referenziati)</button>
       <div class="small">
         • “Solo JSON” è veloce e sicuro.  
-        • “JSON + media” prova a scaricare anche i file indicati nel JSON (se esistono).
+        • “JSON + media” prova a includere anche file indicati nel JSON (se esistono).
       </div>
     </div>
   </div>
@@ -281,21 +352,15 @@
   <div class="card">
     <div style="font-weight:1000;margin-bottom:8px">📌 Vetrine (da data/vetrine.json)</div>
     <div class="list" id="list"></div>
-    <div class="small" style="margin-top:10px">
-      Per ogni vetrina hai:
-      <b>Link</b> (pagina da condividere) e <b>Vetrina</b> (pagina pubblica).
-    </div>
   </div>
 
 </div>
 
 <script>
-/* =========================================================
-   CONFIG SICUREZZA ADMIN
-========================================================= */
+/* ===================== CONFIG SICUREZZA ADMIN ===================== */
 const PINKEY = "sercuctech_pin";
 const ADMIN_UNLOCK_KEY = "sercuctech_admin_unlock_until";
-const DEFAULT_PIN = "1234"; // cambia qui se vuoi
+const DEFAULT_PIN = "1234";
 
 function initPin(){
   if(!localStorage.getItem(PINKEY)) localStorage.setItem(PINKEY, DEFAULT_PIN);
@@ -318,34 +383,17 @@ const phrase = document.getElementById("phrase");
 const pinInput = document.getElementById("pinInput");
 const enterBtn = document.getElementById("enterBtn");
 
-function resetSeq(){ seq = []; }
-
 phrase.addEventListener("click", (e)=>{
-  const t = e.target;
-  const w = t?.getAttribute?.("data-word");
+  const w = e.target?.getAttribute?.("data-word");
   if(!w) return;
-
   seq.push(w);
   if(seq.length > 2) seq.shift();
-
-  const ok = (seq[0]==="SerCucTech" && seq[1]==="qualsiasi");
-  if(ok){
-    // feedback leggero
-    t.style.outline = "2px solid rgba(35,197,94,.55)";
-    setTimeout(()=>{ t.style.outline=""; }, 600);
-  }
 });
 
 enterBtn.addEventListener("click", ()=>{
   const okWords = (seq[0]==="SerCucTech" && seq[1]==="qualsiasi");
-  if(!okWords){
-    alert("Prima tocca: SerCucTech → qualsiasi");
-    return;
-  }
-  if(String(pinInput.value||"").trim() !== String(getPin()).trim()){
-    alert("PIN errato");
-    return;
-  }
+  if(!okWords) return alert("Prima tocca: SerCucTech → qualsiasi");
+  if(String(pinInput.value||"").trim() !== String(getPin()).trim()) return alert("PIN errato");
   setUnlock24h();
   gate.style.display = "none";
   app.hidden = false;
@@ -361,11 +409,7 @@ window.addEventListener("load", ()=>{
   }
 });
 
-/* =========================================================
-   DATI VETRINE: data/vetrine.json
-   Formato:
-   { "vetrine":[ {"id":"renzo11","title":"..."} , ... ] }
-========================================================= */
+/* ===================== UI ===================== */
 const statePill = document.getElementById("statePill");
 const listEl = document.getElementById("list");
 const createMainBtn = document.getElementById("createMainBtn");
@@ -382,8 +426,17 @@ const cloneBtn = document.getElementById("cloneBtn");
 const backupJsonBtn = document.getElementById("backupJsonBtn");
 const backupFullBtn = document.getElementById("backupFullBtn");
 
-let vetrineIndex = []; // [{id,title}]
-let vetrineDataCache = new Map(); // id -> json
+/* Modal indice */
+const openIndexBtn = document.getElementById("openIndexBtn");
+const indexModal = document.getElementById("indexModal");
+const closeModal = document.getElementById("closeModal");
+const indexBox = document.getElementById("indexBox");
+const copyIndexBtn = document.getElementById("copyIndexBtn");
+const downloadIndexBtn = document.getElementById("downloadIndexBtn");
+const openGithubIndexBtn = document.getElementById("openGithubIndexBtn");
+
+let vetrineIndex = [];      // [{id,title}]
+let vetrineDataCache = new Map();
 
 function escapeHtml(s){
   return String(s||"").replace(/[&<>"']/g, c => ({
@@ -404,10 +457,7 @@ function downloadJson(filename, obj){
   a.download = filename;
   document.body.appendChild(a);
   a.click();
-  setTimeout(()=>{
-    URL.revokeObjectURL(a.href);
-    a.remove();
-  }, 1200);
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1200);
 }
 
 function openLinkPage(id){
@@ -433,13 +483,9 @@ function buildBaseVetrina(id, title, speech){
 
 function rewriteIdInJson(obj, fromId, toId){
   const cloned = JSON.parse(JSON.stringify(obj));
-
   cloned.id = toId;
   cloned.title = cloned.title || toId;
 
-  // description/voice restano uguali
-
-  // media: sostituisce "media/fromId-" -> "media/toId-"
   if(Array.isArray(cloned.media)){
     cloned.media = cloned.media.map(m=>{
       if(!m || !m.url) return m;
@@ -449,9 +495,6 @@ function rewriteIdInJson(obj, fromId, toId){
     });
   }
 
-  // files: non cambia
-
-  // pinsData: rinomina le chiavi byImage
   if(cloned.pinsData && cloned.pinsData.byImage){
     const by = cloned.pinsData.byImage;
     const by2 = {};
@@ -471,7 +514,6 @@ function renderList(){
   vetrineIndex.forEach(v=>{
     const id = v.id;
     const title = v.title || id;
-
     const el = document.createElement("div");
     el.className = "item";
     el.innerHTML = `
@@ -498,13 +540,67 @@ function fillCloneSelect(){
   });
 }
 
-/* =========================================================
-   CREATE / CLONE UI
-========================================================= */
+/* ===================== INDICE vetrine.json ===================== */
+function normalizeIndex(list){
+  const map = new Map();
+  (list||[]).forEach(v=>{
+    const id = String(v.id||"").trim();
+    if(!id) return;
+    map.set(id, { id, title: String(v.title||id) });
+  });
+  return Array.from(map.values()).sort((a,b)=>a.id.localeCompare(b.id,"it",{numeric:true}));
+}
+
+function getGeneratedIndexJson(){
+  const obj = { vetrine: normalizeIndex(vetrineIndex) };
+  return JSON.stringify(obj, null, 2);
+}
+
+function showIndexModal(){
+  indexBox.value = getGeneratedIndexJson();
+  indexModal.classList.add("show");
+}
+
+openIndexBtn.addEventListener("click", showIndexModal);
+closeModal.addEventListener("click", ()=> indexModal.classList.remove("show"));
+
+copyIndexBtn.addEventListener("click", async ()=>{
+  try{
+    await navigator.clipboard.writeText(indexBox.value);
+    alert("Copiato ✅");
+  }catch(e){
+    indexBox.focus(); indexBox.select();
+    document.execCommand("copy");
+    alert("Copiato ✅");
+  }
+});
+
+downloadIndexBtn.addEventListener("click", ()=>{
+  try{
+    const obj = JSON.parse(indexBox.value);
+    downloadJson("vetrine.json", obj);
+  }catch(e){
+    alert("Il testo non è un JSON valido (non dovrebbe succedere).");
+  }
+});
+
+openGithubIndexBtn.addEventListener("click", ()=>{
+  window.open("https://github.com/creamiaappsercuctech/SerCucTech/blob/main/data/vetrine.json", "_blank");
+});
+
+/* ===================== CREATE / CLONE ===================== */
 createMainBtn.addEventListener("click", ()=>{
   createCard.hidden = !createCard.hidden;
   if(!createCard.hidden) newId.focus();
 });
+
+function addToIndex(id, title){
+  const exists = vetrineIndex.some(v => v.id === id);
+  if(!exists) vetrineIndex.push({ id, title: title || id });
+  vetrineIndex = normalizeIndex(vetrineIndex);
+  renderList();
+  fillCloneSelect();
+}
 
 createBtn.addEventListener("click", ()=>{
   const id = (newId.value||"").trim();
@@ -516,16 +612,28 @@ createBtn.addEventListener("click", ()=>{
   downloadJson(`${id}.json`, json);
   openLinkPage(id);
 
+  // aggiunge all'indice interno e apre modal indice pronto
+  addToIndex(id, title);
+  showIndexModal();
+
   alert(
     "✅ Creato file JSON.\n\n" +
     "Ora:\n" +
     "1) Carica su GitHub: data/" + id + ".json\n" +
-    "2) Metti immagini in media/\n" +
-    "3) Condividi: link.html?id=" + id
+    "2) Aggiorna data/vetrine.json (modal aperta)\n" +
+    "3) Metti immagini in media/\n" +
+    "4) Condividi: link.html?id=" + id
   );
 
   newId.value=""; newTitle.value=""; newSpeech.value="";
 });
+
+async function getVetrinaJson(id){
+  if(vetrineDataCache.has(id)) return vetrineDataCache.get(id);
+  const j = await fetchJson(`data/${encodeURIComponent(id)}.json`);
+  vetrineDataCache.set(id, j);
+  return j;
+}
 
 cloneBtn.addEventListener("click", async ()=>{
   const fromId = cloneFrom.value;
@@ -540,51 +648,42 @@ cloneBtn.addEventListener("click", async ()=>{
     downloadJson(`${toId}.json`, out);
     openLinkPage(toId);
 
+    addToIndex(toId, out.title || toId);
+    showIndexModal();
+
     alert(
       "✅ Clonato.\n\n" +
       "Ora:\n" +
       "1) Carica su GitHub: data/" + toId + ".json\n" +
-      "2) Rinomina/Carica immagini: media/" + toId + "-XXX.jpg\n" +
-      "3) Condividi: link.html?id=" + toId
+      "2) Aggiorna data/vetrine.json (modal aperta)\n" +
+      "3) Rinomina/Carica immagini: media/" + toId + "-XXX.jpg\n" +
+      "4) Condividi: link.html?id=" + toId
     );
   }catch(e){
     alert("Errore clonazione: " + e.message);
   }finally{
     statePill.textContent = "Pronto";
+    cloneTo.value = "";
   }
 });
 
-/* =========================================================
-   BACKUP ZIP
-========================================================= */
-async function getVetrinaJson(id){
-  if(vetrineDataCache.has(id)) return vetrineDataCache.get(id);
-  const j = await fetchJson(`data/${encodeURIComponent(id)}.json`);
-  vetrineDataCache.set(id, j);
-  return j;
-}
-
+/* ===================== BACKUP ZIP ===================== */
 function downloadBlob(filename, blob){
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = filename;
   document.body.appendChild(a);
   a.click();
-  setTimeout(()=>{
-    URL.revokeObjectURL(a.href);
-    a.remove();
-  }, 2000);
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
 }
 
 async function backupZipJsonOnly(){
   if(!window.JSZip) return alert("JSZip non caricato");
   const zip = new JSZip();
-
   for(const v of vetrineIndex){
     const j = await getVetrinaJson(v.id);
     zip.file(`data/${v.id}.json`, JSON.stringify(j, null, 2));
   }
-
   const blob = await zip.generateAsync({type:"blob"});
   downloadBlob(`backup-json-${new Date().toISOString().slice(0,10)}.zip`, blob);
 }
@@ -603,16 +702,13 @@ async function backupZipFull(){
     const j = await getVetrinaJson(v.id);
     zip.file(`data/${v.id}.json`, JSON.stringify(j, null, 2));
 
-    // prova a scaricare media e files referenziati nel JSON
     const media = Array.isArray(j.media) ? j.media : [];
     for(const m of media){
       if(!m?.url) continue;
       try{
         const b = await fetchAsBlob(m.url);
         zip.file(m.url, b);
-      }catch(e){
-        // ignora file mancanti
-      }
+      }catch(e){}
     }
 
     const files = Array.isArray(j.files) ? j.files : [];
@@ -621,9 +717,7 @@ async function backupZipFull(){
       try{
         const b = await fetchAsBlob(f.url);
         zip.file(f.url, b);
-      }catch(e){
-        // ignora
-      }
+      }catch(e){}
     }
   }
 
@@ -634,26 +728,20 @@ async function backupZipFull(){
 backupJsonBtn.addEventListener("click", backupZipJsonOnly);
 backupFullBtn.addEventListener("click", backupZipFull);
 
-/* =========================================================
-   BOOT
-========================================================= */
+/* ===================== BOOT ===================== */
 async function boot(){
   try{
     statePill.textContent = "Leggo data/vetrine.json…";
     const idx = await fetchJson("data/vetrine.json");
-    vetrineIndex = Array.isArray(idx.vetrine) ? idx.vetrine : [];
-    if(!vetrineIndex.length){
-      statePill.textContent = "Nessuna vetrina nel file indice";
-    }else{
-      statePill.textContent = "Pronto";
-    }
+    vetrineIndex = normalizeIndex(Array.isArray(idx.vetrine) ? idx.vetrine : []);
+    statePill.textContent = vetrineIndex.length ? "Pronto" : "Indice vuoto";
     renderList();
     fillCloneSelect();
   }catch(e){
     statePill.textContent = "Errore indice";
     alert(
       "Non trovo data/vetrine.json.\n\n" +
-      "Crea il file data/vetrine.json (ti ho messo il codice sotto in chat).\n" +
+      "Crea il file data/vetrine.json.\n" +
       "Errore: " + e.message
     );
   }
