@@ -27,7 +27,7 @@
         var(--bg);
       color:var(--txt);
       padding:16px;
-      padding-bottom:120px;
+      padding-bottom:140px;
     }
     .wrap{max-width:980px;margin:0 auto;display:grid;gap:12px}
     .top{
@@ -112,6 +112,9 @@
       font-weight:1000;
       cursor:pointer;
     }
+    .btnSolid:active{transform:scale(.99)}
+    .btnWide{width:100%}
+
     input{
       width:100%;
       padding:12px 12px;
@@ -130,12 +133,20 @@
       background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.55));
       backdrop-filter:blur(10px);
       border-top:1px solid var(--line);
-      display:flex;
+      display:grid;
       gap:10px;
-      justify-content:center;
+      justify-items:center;
       z-index:999;
     }
-    .bar .btnSolid{width:min(520px,100%)}
+    .barInner{
+      width:min(980px,100%);
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:10px;
+    }
+    @media(max-width:520px){
+      .barInner{grid-template-columns:1fr}
+    }
 
     .warn{
       color:rgba(255,255,255,.86);
@@ -147,6 +158,30 @@
       font-size:12px;
       line-height:1.35;
     }
+
+    .guideBox{
+      display:grid;
+      gap:10px;
+      margin-top:10px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;
+      padding:12px;
+      background:rgba(0,0,0,.16);
+    }
+    .guideTitle{
+      font-weight:1000;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .mini{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:900;
+      line-height:1.35;
+    }
   </style>
 </head>
 
@@ -155,7 +190,27 @@
     <div class="top">
       <h1>SerCucTech — Indice Link</h1>
       <div class="sub">
-        Tocca un link per aprirlo. Tocca 🔊 per sentire la spiegazione come un ragazzino di 10 anni.
+        Tocca un link per aprirlo. Tocca 🔊 per sentire la spiegazione (livello 10 anni).
+      </div>
+
+      <div class="guideBox">
+        <div class="guideTitle">
+          <div>🎧 Guida completa (audio)</div>
+          <span class="pill" id="guideState">pronto</span>
+        </div>
+        <button class="btnSolid btnWide" id="playFullGuide">▶️ Ascolta guida completa</button>
+        <div class="row" style="grid-template-columns:1fr 1fr;gap:10px">
+          <button class="btn" id="pauseGuide">⏸️ Pausa</button>
+          <button class="btn" id="resumeGuide">▶️ Riprendi</button>
+        </div>
+        <div class="mini">
+          Questa guida spiega tutto: cos’è una vetrina, cosa fa l’Admin, cosa condividere su WhatsApp,
+          e come mettere JSON e media su GitHub.
+        </div>
+        <div class="warn" id="audioWarn" style="display:none">
+          ⚠️ Su Android/Chrome l’audio può partire solo dopo un tuo tocco.
+          Se non senti la voce, tocca di nuovo “Ascolta guida completa”.
+        </div>
       </div>
     </div>
 
@@ -168,11 +223,6 @@
         </div>
 
         <div class="row" id="mainLinks"></div>
-
-        <div class="warn" id="audioWarn" style="display:none;margin-top:10px">
-          ⚠️ Su Android/Chrome l’audio può partire solo dopo un tuo tocco.
-          Se non senti la voce, tocca di nuovo il tasto 🔊.
-        </div>
       </div>
 
       <div class="card">
@@ -208,7 +258,11 @@
   </div>
 
   <div class="bar">
-    <button class="btnSolid" id="stopAudio">⏹️ Ferma voce</button>
+    <div class="barInner">
+      <button class="btnSolid" id="stopAudio">⏹️ Ferma voce</button>
+      <button class="btn" id="speakWhatToShare">🔊 Cosa condividere su WhatsApp?</button>
+      <button class="btn" id="speakIfBroken">🔊 Se mi si rompe il telefono?</button>
+    </div>
   </div>
 
 <script>
@@ -228,11 +282,20 @@ const copyPreview = document.getElementById("copyPreview");
 const speakPreview= document.getElementById("speakPreview");
 
 const stopAudioBtn= document.getElementById("stopAudio");
+const speakWhatToShareBtn = document.getElementById("speakWhatToShare");
+const speakIfBrokenBtn = document.getElementById("speakIfBroken");
+
+const playFullGuideBtn = document.getElementById("playFullGuide");
+const pauseGuideBtn = document.getElementById("pauseGuide");
+const resumeGuideBtn = document.getElementById("resumeGuide");
+const guideState = document.getElementById("guideState");
 
 const base = location.origin + location.pathname.replace(/index\.html$/,"");
 
 function canSpeak(){ return "speechSynthesis" in window && "SpeechSynthesisUtterance" in window; }
 function stopSpeak(){ try{ speechSynthesis.cancel(); }catch(e){} }
+function pauseSpeak(){ try{ speechSynthesis.pause(); }catch(e){} }
+function resumeSpeak(){ try{ speechSynthesis.resume(); }catch(e){} }
 
 function speak(text){
   if(!canSpeak()) return alert("Sintesi vocale non disponibile su questo browser.");
@@ -241,13 +304,26 @@ function speak(text){
     const u = new SpeechSynthesisUtterance(text);
     u.lang = navigator.language || "it-IT";
     u.rate = 1.03;
+    u.onstart = ()=>{ guideState.textContent = "parlo…"; };
+    u.onend = ()=>{ guideState.textContent = "finito"; };
+    u.onerror = ()=>{ guideState.textContent = "errore"; audioWarn.style.display=""; };
     speechSynthesis.speak(u);
   }catch(e){
+    guideState.textContent = "errore";
     audioWarn.style.display = "";
   }
 }
 
-stopAudioBtn.addEventListener("click", stopSpeak);
+stopAudioBtn.addEventListener("click", ()=>{ stopSpeak(); guideState.textContent="pronto"; });
+
+pauseGuideBtn.addEventListener("click", ()=>{
+  pauseSpeak();
+  guideState.textContent = "in pausa";
+});
+resumeGuideBtn.addEventListener("click", ()=>{
+  resumeSpeak();
+  guideState.textContent = "parlo…";
+});
 
 function mkItem({label, href, explain}){
   const el = document.createElement("div");
@@ -277,54 +353,111 @@ const explainers = {
   home: {
     short: "Questa è la pagina indice con tutti i link.",
     long:
-`Immagina che questa sia una mappa. Qui trovi tutti i pulsanti più importanti.
-Se ti perdi, torni qui e scegli dove andare.
-Da qui puoi aprire l’Admin, aprire una vetrina, o copiare un link da condividere su WhatsApp.`
+`Questa pagina è come una mappa.
+Quando non sai dove andare, torni qui e scegli.
+Ci sono i link per l’Admin, per le vetrine, e per GitHub.
+E vicino a ogni link c’è un tasto con la voce che ti spiega cosa fare.`
   },
   admin: {
     short: "Pagina per te (crea, duplica, backup).",
     long:
-`Questa è la stanza dei comandi. Qui lavori tu.
-Con l’Admin puoi creare una nuova vetrina, duplicarne una già pronta, e fare backup.
-Per entrare devi sbloccare con le due parole e poi il PIN, così gli altri non toccano niente.`
+`L’Admin è la stanza dei comandi.
+Qui puoi creare una vetrina nuova, duplicarne una già pronta e fare backup.
+È protetto, così gli utenti non entrano e non cambiano cose per sbaglio.`
   },
   linkPage: {
     short: "Pagina da condividere agli utenti.",
     long:
-`Questo è il link “giusto” da condividere.
-L’utente lo apre e vede due cose semplici: “Apri vetrina” e “Condividi su WhatsApp”.
-Così non si confonde e non deve sapere come funziona il tuo sistema.`
+`La pagina “link” è quella da mandare su WhatsApp.
+Perché? Perché è semplice: l’utente apre e vede subito come entrare nella vetrina.
+Così non si perde e tu lavori più veloce.`
   },
   vetrina: {
     short: "Pagina pubblica con immagini, numerini e audio.",
     long:
-`Questa è la vetrina vera e propria.
-Dentro ci sono le foto, i pulsanti, i numerini sugli oggetti e l’audio di benvenuto.
-È la pagina che l’utente guarda per scegliere oggetti e per contattare i numeri che hai messo.`
+`La vetrina è la pagina dove si vede tutto: foto, numerini sugli oggetti, e il testo fisso.
+Quando una persona guarda la vetrina, capisce cosa c’è in vendita e può contattarti.`
   },
   githubData: {
     short: "Cartella data: qui metti i file .json delle vetrine.",
     long:
-`Questa è la cartella “data” su GitHub.
-Qui dentro ci sono i file JSON di ogni vetrina, tipo renzo11.json, renzo12.json.
-Quando l’Admin ti fa scaricare un JSON, tu lo incolli qui e fai Commit, così la vetrina diventa pubblica.`
+`GitHub è come un armadio online.
+Nella cartella data ci sono i file JSON, cioè le “schede” delle vetrine.
+Ogni vetrina ha il suo file, tipo renzo11.json.
+Quando crei una vetrina, devi mettere il file dentro data e fare Commit.`
   },
   githubMedia: {
     short: "Cartella media: qui carichi immagini e video.",
     long:
-`Questa è la cartella “media” su GitHub.
-Qui carichi le foto e i video della vetrina.
-Consiglio: rinomina i file con l’ID, tipo renzo11-001.jpg, renzo11-002.jpg, così rimane tutto ordinato e non ti perdi.`
+`Nella cartella media metti le foto e i video.
+È come una scatola di immagini.
+Se vuoi ordine, usa nomi tipo: renzo11-001.jpg, renzo11-002.jpg.
+Così capisci subito di quale vetrina sono.`
   },
   githubIndex: {
     short: "File vetrine.json: lista di tutte le vetrine.",
     long:
-`Questo file è come un elenco telefonico.
-Dentro ci sono tutti gli ID delle vetrine e i loro titoli.
-L’Admin lo legge per farti vedere la lista e per farti scegliere quale vetrina duplicare.
-Quando aggiungi una vetrina nuova, devi aggiornare anche questo file.`
+`Questo file è l’elenco ufficiale delle vetrine.
+Serve all’Admin per mostrarti la lista e per farti scegliere quale duplicare.
+Quando aggiungi una vetrina, devi aggiungere anche una riga qui.`
   }
 };
+
+const fullGuideText =
+`Ciao! Ora ti spiego tutto come se avessi dieci anni, ma in modo completo.
+
+Immagina che tu abbia un negozio fatto di pagine web.
+Ogni “vetrina” è come un cartellone con foto e oggetti da mostrare.
+
+Ci sono tre cose importanti:
+
+Uno: la pagina “vetrina”.
+Questa è la pagina dove si vedono le immagini, i numerini sugli oggetti, e l’audio di benvenuto.
+È la pagina più ricca.
+
+Due: la pagina “link”.
+Questa è una pagina semplice che serve solo per aiutare le persone.
+Quando tu condividi un link su WhatsApp, è meglio condividere la pagina link,
+perché chi la apre capisce subito cosa deve fare e non si perde.
+
+Tre: la pagina “admin”.
+Quella è solo per te. È protetta.
+Dentro l’admin puoi creare una vetrina nuova, duplicare una vetrina, e fare backup.
+
+Ora come funziona quando crei una vetrina nuova?
+
+Passo uno: vai in Admin e premi “Crea nuova vetrina”.
+L’admin ti fa scaricare un file che si chiama con l’ID, per esempio renzo13 punto json.
+Quel file contiene tutte le informazioni: titolo, testo fisso, lista immagini e numerini.
+
+Passo due: devi mettere quel file su GitHub nella cartella data.
+Apri GitHub, vai su data, apri o crea data/renzo13.json, incolli il contenuto, e fai Commit.
+Questo rende la vetrina pubblica online.
+
+Passo tre: devi caricare le foto nella cartella media su GitHub.
+Carichi i file e li nomini bene, tipo renzo13-001.jpg, renzo13-002.jpg.
+Poi nel JSON metti gli URL delle immagini.
+
+Passo quattro: aggiorni l’elenco delle vetrine.
+C’è un file che si chiama data/vetrine.json.
+Dentro ci sono tutti gli ID delle vetrine.
+Se aggiungi renzo13, devi aggiungere anche una riga lì, e fare Commit.
+Così l’Admin vede la nuova vetrina nell’elenco.
+
+Ora cosa condividi su WhatsApp?
+Condividi sempre: link punto html punto interrogativo id uguale renzo13.
+Per esempio: link.html?id=renzo13.
+Quello è il link facile per gli utenti.
+
+E se ti si rompe il telefono?
+Non è un problema grosso se hai salvato tutto su GitHub.
+Perché GitHub tiene i tuoi file online.
+Con un altro telefono, apri la repo e ritrovi data e media.
+E puoi anche fare un backup ZIP dall’Admin per sicurezza.
+
+Fine.
+Se vuoi, posso aggiungere anche una guida ancora più passo passo con numeri: 1,2,3,4,
+così segui come una checklist.`;
 
 function renderMain(){
   mainLinks.innerHTML = "";
@@ -334,37 +467,31 @@ function renderMain(){
     href: "index.html",
     explain: explainers.home
   }));
-
   mainLinks.appendChild(mkItem({
     label: "🔒 Admin",
     href: "admin.html",
     explain: explainers.admin
   }));
-
   mainLinks.appendChild(mkItem({
     label: "📄 Pagina link vetrina (esempio renzo11)",
     href: "link.html?id=renzo11",
     explain: explainers.linkPage
   }));
-
   mainLinks.appendChild(mkItem({
     label: "🖼️ Vetrina diretta (esempio renzo11)",
     href: "vetrina.html?id=renzo11",
     explain: explainers.vetrina
   }));
-
   mainLinks.appendChild(mkItem({
     label: "📁 GitHub cartella data",
     href: `https://github.com/creamiaappsercuctech/SerCucTech/tree/main/data`,
     explain: explainers.githubData
   }));
-
   mainLinks.appendChild(mkItem({
     label: "🖼️ GitHub cartella media",
     href: `https://github.com/creamiaappsercuctech/SerCucTech/tree/main/media`,
     explain: explainers.githubMedia
   }));
-
   mainLinks.appendChild(mkItem({
     label: "🧾 GitHub file data/vetrine.json",
     href: `https://github.com/creamiaappsercuctech/SerCucTech/blob/main/data/vetrine.json`,
@@ -402,6 +529,28 @@ speakPreview.addEventListener("click", ()=>{
   speak(explainers.linkPage.long);
 });
 
+playFullGuideBtn.addEventListener("click", ()=>{
+  speak(fullGuideText);
+});
+
+speakWhatToShareBtn.addEventListener("click", ()=>{
+  speak(
+`Cosa condividere su WhatsApp?
+Condividi sempre la pagina link, non la vetrina diretta.
+Per esempio: link.html?id=renzo11.
+Perché è più semplice per gli utenti: entrano, capiscono, e trovano subito i pulsanti giusti.`
+  );
+});
+
+speakIfBrokenBtn.addEventListener("click", ()=>{
+  speak(
+`Se ti si rompe il telefono, recuperi tutto da GitHub.
+Perché i file veri stanno online: la cartella data con i JSON e la cartella media con foto e video.
+Apri GitHub da un altro telefono e ritrovi tutto.
+Per sicurezza puoi anche fare un backup ZIP dall’Admin.`
+  );
+});
+
 /* ----------- Elenco vetrine automatico ----------- */
 async function loadIndex(){
   statusPill.textContent = "carico vetrine…";
@@ -421,14 +570,11 @@ async function loadIndex(){
       const linkHref = `link.html?id=${encodeURIComponent(id)}`;
       const vetrinaHref = `vetrina.html?id=${encodeURIComponent(id)}`;
 
-      const explain = {
-        short: "Apri o condividi questa vetrina.",
-        long:
+      const explainLong =
 `Questa è la vetrina con ID ${id}.
-Se vuoi mandarla a qualcuno su WhatsApp, usa la “pagina link”: ${linkHref}.
-Se invece vuoi vedere direttamente le foto e i numerini, apri la “vetrina diretta”: ${vetrinaHref}.
-Ricorda: la pagina link è più facile per gli utenti.`
-      };
+Per condividerla su WhatsApp usa: ${linkHref}.
+Se vuoi vedere direttamente foto e numeri, apri: ${vetrinaHref}.
+La pagina link è consigliata per gli utenti, perché è più semplice.`;
 
       const box = document.createElement("div");
       box.className = "item";
@@ -436,7 +582,7 @@ Ricorda: la pagina link è più facile per gli utenti.`
         <a href="${linkHref}">👤 ${title} — (link) ${linkHref}</a>
         <button class="btn green copyBtn">Copia</button>
         <button class="btn amber speakBtn">🔊</button>
-        <div class="desc">Apri pagina link (consigliata) • oppure vetrina diretta</div>
+        <div class="desc"></div>
       `;
 
       box.querySelector(".copyBtn").addEventListener("click", async ()=>{
@@ -449,9 +595,8 @@ Ricorda: la pagina link è più facile per gli utenti.`
         }
       });
 
-      box.querySelector(".speakBtn").addEventListener("click", ()=> speak(explain.long));
+      box.querySelector(".speakBtn").addEventListener("click", ()=> speak(explainLong));
 
-      // aggiungo anche un secondo link (vetrina diretta) dentro description
       const desc = box.querySelector(".desc");
       desc.innerHTML = `Apri pagina link (consigliata). Vetrina diretta: <span style="text-decoration:underline;cursor:pointer">${vetrinaHref}</span>`;
       desc.querySelector("span").addEventListener("click", ()=> location.href = vetrinaHref);
