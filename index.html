@@ -1,22 +1,147 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>SerCucTech</title>
-  <meta http-equiv="refresh" content="0; url=vetrina.html?id=renzo11">
+  <title>SerCucTech — Indice</title>
   <style>
-    body{margin:0;font-family:system-ui;background:#0b1220;color:#fff;display:flex;min-height:100vh;align-items:center;justify-content:center}
-    a{color:#8fd3ff}
-    .box{max-width:520px;padding:18px;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(255,255,255,.04)}
+    :root{
+      --bg:#0b1220; --card:rgba(255,255,255,.06); --line:rgba(255,255,255,.12);
+      --txt:#eaf0ff; --muted:rgba(234,240,255,.72); --btn:rgba(255,255,255,.10);
+      --green:#23c55e;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background: radial-gradient(900px 600px at 20% -20%, rgba(130,170,255,.20), transparent 60%),
+                  radial-gradient(900px 600px at 90% 10%, rgba(120,255,210,.10), transparent 60%),
+                  var(--bg);
+      color:var(--txt);
+      padding:16px;
+    }
+    .wrap{max-width:900px;margin:0 auto;display:grid;gap:12px}
+    .top{
+      border:1px solid var(--line); background:var(--card); border-radius:18px; padding:14px;
+    }
+    h1{margin:0;font-size:20px;font-weight:1000;text-align:center}
+    p{margin:8px 0 0; color:var(--muted); text-align:center; font-weight:800}
+    .grid{display:grid; gap:12px; grid-template-columns:1fr;}
+    @media(min-width:820px){ .grid{grid-template-columns:1fr 1fr;} }
+    .card{
+      border:1px solid var(--line); background:var(--card); border-radius:18px; padding:14px;
+    }
+    .btn{
+      display:block; width:100%;
+      border:1px solid var(--line); background:var(--btn); color:var(--txt);
+      border-radius:16px; padding:14px 14px; font-weight:1000; text-align:center;
+      text-decoration:none; user-select:none;
+    }
+    .btn:active{transform:scale(.99)}
+    .btn.primary{background:rgba(35,197,94,.18); border-color:rgba(35,197,94,.35)}
+    .btn.green{background:var(--green); color:#06110a; border-color:rgba(0,0,0,.2)}
+    .row{display:grid; gap:10px}
+    .small{margin-top:10px; font-size:12px; color:var(--muted); font-weight:800; line-height:1.35}
+    input{
+      width:100%; padding:12px 12px; border-radius:14px; border:1px solid var(--line);
+      background:rgba(0,0,0,.22); color:var(--txt); font-weight:900; outline:none;
+    }
+    .list{display:grid; gap:10px; margin-top:10px}
+    .item{
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+      padding:12px; border-radius:16px; border:1px solid var(--line); background:rgba(0,0,0,.18);
+    }
+    .item strong{font-weight:1000}
+    .chips{display:flex; gap:8px; flex-wrap:wrap}
+    .chip{
+      padding:8px 10px; border-radius:999px;
+      border:1px solid var(--line); background:rgba(255,255,255,.06);
+      color:var(--muted); font-weight:900; font-size:12px; text-decoration:none;
+    }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h2>SerCucTech</h2>
-    <p>Reindirizzamento alla vetrina…</p>
-    <p>Se non parte, apri:</p>
-    <p><a href="vetrina.html?id=renzo11">vetrina.html?id=renzo11</a></p>
+  <div class="wrap">
+    <div class="top">
+      <h1>SerCucTech — Indice</h1>
+      <p>Qui trovi i link Utente/Admin e l’elenco vetrine condivisibili.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="row">
+          <a class="btn primary" href="link.html?id=renzo11">👤 Link Utente (RENZO11)</a>
+          <a class="btn primary" href="link.html?id=renzo12">👤 Link Utente (RENZO12)</a>
+          <a class="btn" href="vetrina.html?id=renzo11">Apri direttamente vetrina renzo11</a>
+          <a class="btn" href="admin.html">🔒 Admin</a>
+        </div>
+        <div class="small">
+          • Il link da condividere è <b>link.html?id=...</b><br>
+          • Dentro quella pagina l’utente vede: “Apri vetrina” + “Condividi WhatsApp”.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div style="font-weight:1000;margin-bottom:6px">Cerca vetrina per ID</div>
+          <input id="idBox" placeholder="es. renzo11 / renzo12" />
+          <a id="goLink" class="btn green" href="link.html?id=renzo11">Apri pagina link (id)</a>
+        </div>
+        <div class="small">
+          Scrivi l’ID e premi il bottone: ti apre la pagina “indice link” della vetrina.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:1000">Elenco rapido (modifica a mano qui dentro se vuoi)</div>
+      <div class="list" id="list">
+        <!-- popolato da JS -->
+      </div>
+      <div class="small">
+        Se vuoi, in futuro possiamo leggere automaticamente tutti gli ID da <b>data/vetrine.json</b>.
+      </div>
+    </div>
   </div>
+
+<script>
+  const idBox = document.getElementById("idBox");
+  const goLink = document.getElementById("goLink");
+  const list = document.getElementById("list");
+
+  const vetrine = [
+    { id:"renzo11", title:"Bazar di Bostone con SerCucTech" },
+    { id:"renzo12", title:"Nuova Vetrina" }
+  ];
+
+  function setGo(){
+    const id = (idBox.value || "").trim() || "renzo11";
+    goLink.href = `link.html?id=${encodeURIComponent(id)}`;
+    goLink.textContent = `Apri pagina link (${id})`;
+  }
+  idBox.addEventListener("input", setGo);
+  setGo();
+
+  function renderList(){
+    list.innerHTML = "";
+    vetrine.forEach(v=>{
+      const el = document.createElement("div");
+      el.className = "item";
+      el.innerHTML = `
+        <div>
+          <strong>${escapeHtml(v.title)}</strong><div style="color:rgba(234,240,255,.72);font-weight:900;font-size:12px">id: ${escapeHtml(v.id)}</div>
+        </div>
+        <div class="chips">
+          <a class="chip" href="link.html?id=${encodeURIComponent(v.id)}">Pagina link</a>
+          <a class="chip" href="vetrina.html?id=${encodeURIComponent(v.id)}">Vetrina</a>
+        </div>
+      `;
+      list.appendChild(el);
+    });
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c]));
+  }
+  renderList();
+</script>
 </body>
 </html>
