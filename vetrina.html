@@ -4,7 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Vetrina</title>
-  <link rel="stylesheet" href="style.css?v=20">
+
+  <!-- puoi usare stile.css o style.css: con il ponte, vanno entrambi -->
+  <link rel="stylesheet" href="stile.css?v=1">
 </head>
 
 <body>
@@ -22,30 +24,27 @@
 
     <!-- TESTO AUDIO FISSO + CONTATTI -->
     <section class="voicePanel" id="voicePanel" hidden>
-      <div class="voicePanelInner">
+      <div class="voicePanelInner" id="voicePanelInner" title="Tocca per ascoltare">
         <div class="voiceTop">
-          <div class="voiceTitle">📣 Messaggio (tocca il testo per ascoltare)</div>
-          <div class="voiceHint">Numeri cliccabili: WhatsApp o chiamata</div>
+          <div class="voiceTitle">📣 Messaggio (tocca qui per ascoltare)</div>
+          <div class="voiceHint">Numeri cliccabili: WhatsApp / chiamata</div>
         </div>
 
         <div class="voiceText" id="voiceText"></div>
-
         <div class="contactsRow" id="contactsRow"></div>
         <div class="contactsHint">👉 Tocca un numero per contattare subito</div>
       </div>
     </section>
 
-    <!-- INDICE ALTRE VETRINE -->
+    <!-- INDICE ALTRE VETRINE (caricato da data/vetrine.json) -->
     <section class="indexPanel" id="indexPanel" hidden>
       <div class="indexPanelInner">
-        <div class="indexTop">
-          <div class="indexTitle">📚 Altre vetrine</div>
-          <button class="miniBtn" id="refreshIndexBtn" type="button">Aggiorna</button>
+        <div class="indexHead">
+          <div class="indexTitle">🔗 Altre vetrine</div>
+          <button class="indexBtn" id="indexReloadBtn" type="button">Aggiorna</button>
         </div>
-        <div class="indexHint">
-          Questo indice è uguale in tutte le vetrine: così da una vetrina puoi entrare nelle altre.
-        </div>
-        <div class="indexLinks" id="indexLinks"></div>
+        <div class="indexHint">Tocca una vetrina per aprirla</div>
+        <div class="indexList" id="indexList"></div>
       </div>
     </section>
   </header>
@@ -54,7 +53,7 @@
     <!-- GALLERIA -->
     <section class="card heroCard">
       <div class="hero">
-        <button class="navBtn left" id="prevBtn" aria-label="Immagine precedente">‹</button>
+        <button class="navBtn left" id="prevBtn" aria-label="Immagine precedente" type="button">‹</button>
 
         <div class="mediaStage" id="mediaStage">
           <div class="imgCounter" id="imgCounter">01/01</div>
@@ -62,94 +61,101 @@
           <div class="imgWrap" id="imgWrap">
             <img id="heroImg" class="heroImg" alt="Immagine vetrina">
             <div id="pinsLayer" class="pinsLayer" aria-hidden="true"></div>
+
+            <!-- bottone whatsapp sopra foto -->
+            <button class="waOnPhoto" id="waOnPhotoBtn" type="button">WhatsApp: chiedi info su questa foto</button>
           </div>
 
           <div class="imgBadge" id="imgBadge">01</div>
         </div>
 
-        <button class="navBtn right" id="nextBtn" aria-label="Immagine successiva">›</button>
-      </div>
-
-      <!-- ✅ TASTO WHATSAPP SOTTO OGNI FOTO -->
-      <div class="photoActions">
-        <button class="waBtn" id="waPhotoBtn">🟢 WhatsApp (Foto) • Chiedi info</button>
+        <button class="navBtn right" id="nextBtn" aria-label="Immagine successiva" type="button">›</button>
       </div>
 
       <div class="thumbRow" id="thumbRow"></div>
 
+      <!-- azioni foto -->
+      <div class="photoActions" style="display:flex;justify-content:center;margin-top:10px;gap:10px;flex-wrap:wrap">
+        <button class="barBtn" id="editPhotoBtn" type="button">🧷 Metti numerini (modifica foto)</button>
+        <button class="barBtn" id="openImgBtn" type="button">🔎 Apri immagine</button>
+      </div>
+
       <div class="smallHint">
         Swipe sull’immagine • Tap = schermo intero • Tap di nuovo = normale
-        <br>
-        <span class="smallHint2">Modalità numerini: tap rapido sul titolo 5 volte (solo sul tuo telefono)</span>
       </div>
     </section>
 
-    <!-- FILES -->
+    <!-- FILES (se li aggiungi nel JSON) -->
     <section class="card" id="filesCard" hidden>
       <h2 class="h2">Files</h2>
       <div id="filesList" class="filesList"></div>
-    </section>
-
-    <!-- LABEL TOOL (NASCOSTO) -->
-    <section class="card labelCard" id="labelCard" hidden>
-      <div class="labelHead">
-        <h2 class="h2" style="margin:0">🧷 Numerini manuali sugli oggetti</h2>
-        <span class="labelBadge" id="labelModeBadge">OFF</span>
-      </div>
-
-      <div class="labelControls">
-        <button class="labelBtn" id="labelToggleBtn">Attiva/Disattiva</button>
-        <button class="labelBtn" id="labelUndoBtn">Annulla ultimo</button>
-        <button class="labelBtn danger" id="labelClearBtn">Pulisci tutti</button>
-      </div>
-
-      <div class="labelSliderRow">
-        <div class="labelSliderTitle">Grandezza numerino</div>
-        <input type="range" id="pinSizeRange" min="14" max="64" value="28">
-        <div class="labelSliderValue"><span id="pinSizeValue">28</span> px</div>
-      </div>
-
-      <div class="labelExportRow">
-        <button class="labelBtn" id="exportPinsBtn">Export JSON (pins)</button>
-        <button class="labelBtn" id="copyPinsBtn">Copia JSON</button>
-      </div>
-
-      <textarea id="pinsJsonBox" class="pinsJsonBox" placeholder="Qui comparirà il JSON dei pins…"></textarea>
-      <div class="labelTip">
-        ✅ Modalità attiva: tocca l’immagine per piazzare un numerino (1,2,3…).<br>
-        ✅ Salvati sul tuo telefono (localStorage).<br>
-        ✅ Gli utenti li vedono SOLO se tu li metti nel JSON (campo "pinsData").
-      </div>
     </section>
   </main>
 
   <!-- SHARE sopra la barra -->
   <div class="shareDock">
-    <button class="shareBtn" id="shareBtn">Condividi questa vetrina</button>
+    <button class="shareBtn" id="shareBtn" type="button">Condividi questa vetrina</button>
   </div>
 
-  <!-- BOTTOM BAR -->
+  <!-- BOTTOM BAR fissa -->
   <nav class="bottombar" id="bottombar">
-    <button class="barBtn" id="homeBtn">Home</button>
-    <button class="barBtn" id="voiceBtn">Voice</button>
-    <button class="barBtn danger" id="stopBtn">Stop</button>
-    <button class="barBtn" id="fullBtn">Full</button>
-    <button class="barBtn" id="themeBtn">Tema</button>
-    <button class="barBtn" id="kioskBtn">Kiosk</button>
+    <button class="barBtn" id="homeBtn" type="button">Home</button>
+    <button class="barBtn" id="voiceBtn" type="button">Voice</button>
+    <button class="barBtn danger" id="stopBtn" type="button">Stop</button>
+    <button class="barBtn" id="fullBtn" type="button">Full</button>
+    <button class="barBtn" id="themeBtn" type="button">Tema</button>
+    <button class="barBtn" id="kioskBtn" type="button">Kiosk</button>
   </nav>
 
-  <!-- ✅ OVERLAY audio: NON blocca i bottoni -->
+  <!-- OVERLAY audio sblocco (non blocca click grazie al CSS) -->
   <div class="audioGate" id="audioGate" hidden>
     <div class="audioGateCard">
       <div class="audioGateTitle">Audio bloccato dal telefono</div>
       <div class="audioGateText">Tocca “Attiva audio”. Poi partirà automaticamente.</div>
       <div class="audioGateBtns">
-        <button class="primary" id="enableAudioBtn">Attiva audio</button>
-        <button class="ghost" id="skipAudioBtn">Non ora</button>
+        <button class="primary" id="enableAudioBtn" type="button">Attiva audio</button>
+        <button class="ghost" id="skipAudioBtn" type="button">Non ora</button>
       </div>
     </div>
   </div>
 
-  <script src="app.js?v=20"></script>
+  <!-- MODAL EDIT FOTO -->
+  <div class="waModal" id="editModal" hidden>
+    <div class="waModalCard" style="width:min(980px, 96vw)">
+      <div class="waModalTitle">🧷 Editor numerini (tap sulla foto per aggiungere)</div>
+      <div class="waModalText" id="editHint">
+        1) Tocca sulla foto per piazzare numeri 1,2,3…<br>
+        2) Cambia grandezza se serve<br>
+        3) Quando finito: Scarica PNG oppure Salva su GitHub (opzionale)
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,.12);border-radius:16px;overflow:hidden;background:rgba(0,0,0,.2)">
+        <canvas id="editCanvas" style="width:100%;height:auto;display:block"></canvas>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px">
+        <button class="barBtn" id="undoPinBtn" type="button">↩️ Undo</button>
+        <button class="barBtn danger" id="clearPinsBtn" type="button">🧹 Clear</button>
+
+        <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:220px">
+          <span style="font-weight:900">Grandezza</span>
+          <input id="pinSize" type="range" min="14" max="72" value="28" style="width:220px">
+          <span id="pinSizeVal" style="min-width:56px;font-weight:900">28px</span>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+        <button class="barBtn" id="downloadPngBtn" type="button">⬇️ Scarica PNG con numerini</button>
+        <button class="barBtn" id="saveGithubBtn" type="button">☁️ Salva su GitHub (token)</button>
+        <button class="barBtn danger" id="closeEditBtn" type="button">Chiudi</button>
+      </div>
+
+      <div style="margin-top:10px">
+        <div class="smallHint2" id="saveResult" style="opacity:.95"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=1"></script>
 </body>
 </html>
