@@ -4,14 +4,44 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Vetrina</title>
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 
+  <!-- EXTRA stile: bottoni fissi + archivio -->
   <style>
-    .waPhotoBtn{
+    .waDock2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      width:100%;
+      max-width:980px;
+      margin:0 auto;
+    }
+    .waBtnFix{
+      border:none;
+      background:#25D366;
+      color:#06210f;
+      font-weight:1000;
+      padding:12px 12px;
+      border-radius:14px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .waBtnFix:active{transform:scale(.99)}
+    .waBtnFix.gray{
+      background:rgba(255,255,255,.12);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.18);
+    }
+
+    .waPhotoBtns{
       position:absolute;
       right:10px;
       bottom:10px;
       z-index:50;
+      display:grid;
+      gap:8px;
+    }
+    .waPhotoBtn{
       border:none;
       background:#25D366;
       color:#06210f;
@@ -20,193 +50,157 @@
       border-radius:14px;
       box-shadow:0 10px 22px rgba(0,0,0,.35);
       cursor:pointer;
+      user-select:none;
+      text-align:left;
+      line-height:1.15;
+      min-width:180px;
     }
     .waPhotoBtn small{font-size:11px;opacity:.9}
-    .contactBtn{
-      border:1px solid rgba(255,255,255,.25);
-      background:rgba(0,0,0,.25);
+    .waPhotoBtn:active{transform:scale(.99)}
+    .waPhotoBtn.gray{
+      background:rgba(255,255,255,.12);
       color:#fff;
-      padding:8px 10px;
-      border-radius:12px;
-      font-weight:900;
-      cursor:pointer;
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow:0 10px 22px rgba(0,0,0,.25);
     }
-    .contactBtn.wa{background:rgba(37,211,102,.2)}
+
+    .archiveTools{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    @media(max-width:520px){ .archiveTools{grid-template-columns:1fr} }
+
+    .archBtn{
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(0,0,0,.22);
+      color:#fff;
+      padding:10px 12px;
+      border-radius:14px;
+      font-weight:1000;
+      cursor:pointer;
+      user-select:none;
+    }
+    .archBtn:active{transform:scale(.99)}
+    .archBtn.danger{border-color:rgba(255,90,90,.35); background:rgba(255,90,90,.12)}
+
+    .archList{
+      display:grid;
+      gap:10px;
+      margin-top:12px;
+    }
+    .archItem{
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.18);
+      border-radius:16px;
+      padding:12px;
+      display:grid;
+      gap:8px;
+    }
+    .archTop{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .archMeta{
+      font-weight:1000;
+      font-size:12px;
+      opacity:.9;
+    }
+    .archType{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.08);
+      font-weight:1000;
+      font-size:12px;
+    }
+    .archText{
+      white-space:pre-wrap;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size:12px;
+      opacity:.95;
+      line-height:1.35;
+      padding:10px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.22);
+      overflow:auto;
+      max-height:220px;
+    }
   </style>
 </head>
 
 <body>
-<header class="topbar">
-  <div class="topbar-inner">
-    <div class="brandDot"></div>
-    <div class="titleWrap">
-      <h1 id="pageTitle">Caricamento…</h1>
-      <p id="pageDesc"></p>
-    </div>
-    <span id="badgeId" class="idBadge">id:-</span>
-  </div>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brandDot" aria-hidden="true"></div>
 
-  <!-- VOICE + CONTATTI -->
-  <section class="voicePanel" id="voicePanel" hidden>
-    <div class="voicePanelInner">
-      <div class="voiceTitle">📣 Messaggio</div>
-      <div id="voiceText" class="voiceText"></div>
-      <div id="contactsRow" class="contactsRow"></div>
-      <div class="contactsHint">👉 Tocca per contattare</div>
-    </div>
-  </section>
-</header>
-
-<main class="content">
-
-<section class="card heroCard">
-  <div class="hero">
-    <button class="navBtn left" id="prevBtn">‹</button>
-
-    <div class="mediaStage">
-      <div class="imgCounter" id="imgCounter">01/01</div>
-
-      <div class="imgWrap">
-        <img id="heroImg" class="heroImg">
-        <div id="pinsLayer" class="pinsLayer"></div>
+      <div class="titleWrap">
+        <h1 id="pageTitle" class="pageTitle">Caricamento…</h1>
+        <p id="pageDesc" class="pageDesc"></p>
       </div>
 
-      <div class="imgBadge" id="imgBadge">01</div>
-
-      <!-- ✅ WHATSAPP FOTO -->
-      <button id="waPhotoBtn" class="waPhotoBtn">
-        🟢 WhatsApp Foto<br>
-        <small>chiedi info per questo numero</small>
-      </button>
+      <span id="badgeId" class="idBadge">id: -</span>
     </div>
 
-    <button class="navBtn right" id="nextBtn">›</button>
-  </div>
+    <!-- TESTO AUDIO FISSO + CONTATTI -->
+    <section class="voicePanel" id="voicePanel" hidden>
+      <div class="voicePanelInner">
+        <div class="voiceTop">
+          <div class="voiceTitle">📣 Messaggio (tocca “Voice” per ascoltare)</div>
+          <div class="voiceHint">Contatti (fissi): WhatsApp o chiamata</div>
+        </div>
 
-  <div id="thumbRow" class="thumbRow"></div>
-</section>
+        <div class="voiceText" id="voiceText"></div>
 
-<!-- ALTRE VETRINE -->
-<section class="card" id="networkCard">
-  <h2 class="h2">🔗 Altre vetrine</h2>
-  <div id="netList"></div>
-</section>
+        <div class="contactsRow" id="contactsRow"></div>
+        <div class="contactsHint">👉 Tocca un numero per contattare subito</div>
+      </div>
+    </section>
+  </header>
 
-</main>
+  <main class="content">
+    <!-- GALLERIA -->
+    <section class="card heroCard">
+      <div class="hero">
+        <button class="navBtn left" id="prevBtn" aria-label="Immagine precedente">‹</button>
 
-<!-- SHARE GENERALE -->
-<div class="shareDock">
-  <button id="shareBtn" class="shareBtn">🟢 WhatsApp Vetrina</button>
-</div>
+        <div class="mediaStage" id="mediaStage">
+          <div class="imgCounter" id="imgCounter">01/01</div>
 
-<nav class="bottombar">
-  <button id="homeBtn" class="barBtn">Home</button>
-  <button id="voiceBtn" class="barBtn">Voice</button>
-  <button id="stopBtn" class="barBtn danger">Stop</button>
-  <button id="fullBtn" class="barBtn">Full</button>
-  <button id="themeBtn" class="barBtn">Tema</button>
-  <button id="kioskBtn" class="barBtn">Kiosk</button>
-</nav>
+          <div class="imgWrap" id="imgWrap">
+            <img id="heroImg" class="heroImg" alt="Immagine vetrina">
+            <div id="pinsLayer" class="pinsLayer" aria-hidden="true"></div>
+          </div>
 
-<script src="app.js?v=3"></script>
+          <div class="imgBadge" id="imgBadge">01</div>
 
-<script>
-(async function(){
-"use strict";
+          <!-- ✅ 2 bottoni fissi per WhatsApp FOTO -->
+          <div class="waPhotoBtns" id="waPhotoBtns">
+            <button class="waPhotoBtn" id="waPhotoRenzo" type="button">
+              🟢 WhatsApp Renzo<br><small>info numero foto corrente</small>
+            </button>
+            <button class="waPhotoBtn" id="waPhotoSergio" type="button">
+              🟢 WhatsApp Sergio<br><small>info numero foto corrente</small>
+            </button>
+          </div>
+        </div>
 
-const qs = new URLSearchParams(location.search);
-const ID = qs.get("id") || "renzo11";
-document.getElementById("badgeId").textContent = "id: " + ID;
+        <button class="navBtn right" id="nextBtn" aria-label="Immagine successiva">›</button>
+      </div>
 
-const base = location.origin + location.pathname.replace(/vetrina\.html$/,"");
-const linkVetrina = base + "link.html?id=" + ID;
+      <div class="thumbRow" id="thumbRow"></div>
 
-let CONTACTS = [];
+      <div class="smallHint">
+        Swipe sull’immagine • Tap = schermo intero • Tap di nuovo = normale
+        <br>
+        <span class="smallHint2">Modalità numerini: tap rapido sul titolo 5 volte (solo sul tuo telefono)</span>
+      </div>
+    </section>
 
-// ===== LOAD JSON =====
-const res = await fetch("data/"+ID+".json",{cache:"no-store"});
-const data = await res.json();
-
-document.getElementById("pageTitle").textContent = data.title || ID;
-document.getElementById("pageDesc").textContent = data.description || "";
-document.getElementById("voiceText").textContent = data.voice?.text || "";
-CONTACTS = Array.isArray(data.contacts) ? data.contacts : [];
-
-if(CONTACTS.length){
-  document.getElementById("voicePanel").hidden = false;
-}
-
-// ===== RENDER CONTATTI =====
-const row = document.getElementById("contactsRow");
-row.innerHTML = "";
-CONTACTS.forEach(c=>{
-  if(!c.phone) return;
-
-  const wa = document.createElement("button");
-  wa.className="contactBtn wa";
-  wa.textContent = "WhatsApp " + c.name;
-  wa.onclick=()=>openWA(c.phone,makeGenericMsg(c.name));
-
-  const call = document.createElement("a");
-  call.href="tel:"+c.phone;
-  call.className="contactBtn";
-  call.textContent="Chiama " + c.name;
-
-  row.appendChild(wa);
-  row.appendChild(call);
-});
-
-// ===== HELPERS =====
-function currentPhoto(){
-  const img=document.getElementById("heroImg");
-  return img?.currentSrc||img?.src||"";
-}
-function currentNumber(){
-  return document.getElementById("imgBadge")?.textContent||"?";
-}
-function chooseContact(){
-  if(CONTACTS.length===1) return CONTACTS[0];
-  const list=CONTACTS.map((c,i)=>`${i+1}) ${c.name}`).join("\n");
-  const n=prompt("Invia a:\n"+list);
-  const i=parseInt(n)-1;
-  return CONTACTS[i]||CONTACTS[0];
-}
-function openWA(phone,msg){
-  const url="https://wa.me/"+phone+"?text="+encodeURIComponent(msg);
-  window.open(url,"_blank");
-}
-function makeGenericMsg(name){
-  return `Ciao ${name}! 👋
-Ti mando la vetrina:
-
-${linkVetrina}
-
-📌 Dimmi il numero dell’oggetto che ti interessa.`;
-}
-function makePhotoMsg(name){
-  return `Ciao ${name}! 👋
-Vorrei informazioni per il numero ${currentNumber()}.
-
-🔗 Vetrina:
-${linkVetrina}
-
-📷 Foto:
-${currentPhoto()}`;
-}
-
-// ===== SHARE GENERALE =====
-document.getElementById("shareBtn").onclick=()=>{
-  const c=chooseContact();
-  openWA(c.phone,makeGenericMsg(c.name));
-};
-
-// ===== WHATSAPP FOTO =====
-document.getElementById("waPhotoBtn").onclick=()=>{
-  const c=chooseContact();
-  openWA(c.phone,makePhotoMsg(c.name));
-};
-
-})();
-</script>
-</body>
-</html>
+    <!-- ✅
