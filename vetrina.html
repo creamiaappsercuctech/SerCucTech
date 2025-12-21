@@ -4,857 +4,148 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Vetrina</title>
-  <link rel="stylesheet" href="style.css?v=8">
-
-  <style>
-    .waDock2{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:980px;margin:0 auto}
-    .waBtnFix{border:none;background:#25D366;color:#06210f;font-weight:1000;padding:12px;border-radius:14px;cursor:pointer;user-select:none}
-    .waBtnFix:active{transform:scale(.99)}
-    .waBtnFix.gray{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.18)}
-
-    .waPhotoBtns{position:absolute;right:10px;bottom:10px;z-index:50;display:grid;gap:8px}
-    .waPhotoBtn{
-      border:none;background:#25D366;color:#06210f;font-weight:1000;padding:10px 12px;border-radius:14px;
-      box-shadow:0 10px 22px rgba(0,0,0,.35);cursor:pointer;user-select:none;text-align:left;line-height:1.15;min-width:190px
-    }
-    .waPhotoBtn small{font-size:11px;opacity:.9}
-    .waPhotoBtn:active{transform:scale(.99)}
-    .waPhotoBtn.gray{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 22px rgba(0,0,0,.25)}
-
-    /* Archivio */
-    .archiveTools{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:10px}
-    @media(max-width:720px){.archiveTools{grid-template-columns:1fr 1fr}}
-    @media(max-width:520px){.archiveTools{grid-template-columns:1fr}}
-    .archBtn{border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.22);color:#fff;padding:10px 12px;border-radius:14px;font-weight:1000;cursor:pointer;user-select:none}
-    .archBtn:active{transform:scale(.99)}
-    .archBtn.danger{border-color:rgba(255,90,90,.35);background:rgba(255,90,90,.12)}
-    .archBtn.ok{border-color:rgba(35,197,94,.35);background:rgba(35,197,94,.14)}
-
-    .archSearch{
-      width:100%;margin-top:12px;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.16);
-      background:rgba(0,0,0,.22);color:#fff;font-weight:900;outline:none
-    }
-    .archList{display:grid;gap:10px;margin-top:12px}
-    .archItem{border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.18);border-radius:16px;padding:12px;display:grid;gap:8px}
-    .archTop{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
-    .archMeta{font-weight:1000;font-size:12px;opacity:.9}
-    .archType{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);font-weight:1000;font-size:12px}
-    .archText{
-      white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;opacity:.95;line-height:1.35;
-      padding:10px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22);overflow:auto;max-height:220px
-    }
-    .miniRow{display:flex;gap:10px;flex-wrap:wrap}
-    .miniPill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);font-weight:1000;font-size:12px;opacity:.9}
-
-    /* Admin gate */
-    .adminGate{position:fixed;inset:0;z-index:9999;display:none;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px}
-    .adminCard{width:min(520px,100%);border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.38);border-radius:18px;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.45);color:#fff}
-    .adminTitle{font-weight:1000;font-size:16px}
-    .adminText{opacity:.9;font-weight:900;margin-top:8px;line-height:1.35}
-    .adminRow{display:grid;gap:10px;margin-top:12px}
-    .adminInp{width:100%;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.22);color:#fff;font-weight:1000;outline:none}
-    .adminBtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-    .adminBtn{padding:12px;border-radius:14px;font-weight:1000;cursor:pointer;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);color:#fff}
-    .adminBtn.primary{background:#25D366;color:#06210f;border:none}
-
-    .adminBar{
-      display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;
-      border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.16);
-      padding:10px;border-radius:16px;margin-top:10px
-    }
-    .adminState{font-weight:1000;opacity:.95}
-
-    .fileInp{display:none}
-  </style>
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 
 <body>
-<header class="topbar">
-  <div class="topbar-inner">
-    <div class="brandDot" id="brandDot" aria-hidden="true"></div>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brandDot" aria-hidden="true"></div>
 
-    <div class="titleWrap">
-      <h1 id="pageTitle" class="pageTitle">Caricamento…</h1>
-      <p id="pageDesc" class="pageDesc"></p>
-    </div>
-
-    <span id="badgeId" class="idBadge">id: -</span>
-  </div>
-
-  <section class="voicePanel" id="voicePanel" hidden>
-    <div class="voicePanelInner">
-      <div class="voiceTop">
-        <div class="voiceTitle">📣 Messaggio (tocca “Voice” per ascoltare)</div>
-        <div class="voiceHint">Contatti (fissi): WhatsApp o chiamata</div>
+      <div class="titleWrap">
+        <h1 id="pageTitle" class="pageTitle">Caricamento…</h1>
+        <p id="pageDesc" class="pageDesc"></p>
       </div>
 
-      <div class="voiceText" id="voiceText"></div>
-      <div class="contactsRow" id="contactsRow"></div>
-      <div class="contactsHint">👉 Tocca un numero per contattare subito</div>
+      <span id="badgeId" class="idBadge">id: -</span>
     </div>
-  </section>
-</header>
 
-<main class="content">
-  <section class="card heroCard">
-    <div class="hero">
-      <button class="navBtn left" id="prevBtn" aria-label="Immagine precedente">‹</button>
-
-      <div class="mediaStage" id="mediaStage">
-        <div class="imgCounter" id="imgCounter">01/01</div>
-
-        <div class="imgWrap" id="imgWrap">
-          <img id="heroImg" class="heroImg" alt="Immagine vetrina">
-          <div id="pinsLayer" class="pinsLayer" aria-hidden="true"></div>
+    <!-- TESTO AUDIO FISSO + CONTATTI (click ovunque = parte audio) -->
+    <section class="voicePanel" id="voicePanel" hidden role="button" tabindex="0" aria-label="Tocca per ascoltare l'audio">
+      <div class="voicePanelInner">
+        <div class="voiceTop">
+          <div class="voiceTitle">📣 Messaggio (tocca qui per ascoltare)</div>
+          <div class="voiceHint">Numeri cliccabili: WhatsApp o chiamata</div>
         </div>
 
-        <div class="imgBadge" id="imgBadge">01</div>
+        <div class="voiceText" id="voiceText"></div>
 
-        <div class="waPhotoBtns" id="waPhotoBtns">
-          <button class="waPhotoBtn" id="waPhotoRenzo" type="button">
-            🟢 WhatsApp Renzo<br><small>info numero foto corrente</small>
-          </button>
-          <button class="waPhotoBtn" id="waPhotoSergio" type="button">
-            🟢 WhatsApp Sergio<br><small>info numero foto corrente</small>
-          </button>
+        <div class="contactsRow" id="contactsRow"></div>
+        <div class="contactsHint">👉 Tocca un numero per contattare subito</div>
+      </div>
+    </section>
+  </header>
+
+  <main class="content">
+    <!-- GALLERIA -->
+    <section class="card heroCard">
+      <div class="hero">
+        <button class="navBtn left" id="prevBtn" aria-label="Immagine precedente">‹</button>
+
+        <div class="mediaStage" id="mediaStage">
+          <div class="imgCounter" id="imgCounter">01/01</div>
+
+          <div class="imgWrap" id="imgWrap">
+            <img id="heroImg" class="heroImg" alt="Immagine vetrina">
+
+            <!-- pins overlay -->
+            <div id="pinsLayer" class="pinsLayer" aria-hidden="true"></div>
+
+            <!-- WhatsApp overlay su FOTO (sempre 2) -->
+            <div class="waOverlay" id="waOverlay">
+              <button class="waBtnOverlay" id="waPhotoRenzo" type="button">🟢 WhatsApp Renzo (Foto)</button>
+              <button class="waBtnOverlay" id="waPhotoSergio" type="button">🟢 WhatsApp Sergio (Foto)</button>
+            </div>
+          </div>
+
+          <div class="imgBadge" id="imgBadge">01</div>
         </div>
+
+        <button class="navBtn right" id="nextBtn" aria-label="Immagine successiva">›</button>
       </div>
 
-      <button class="navBtn right" id="nextBtn" aria-label="Immagine successiva">›</button>
-    </div>
+      <div class="thumbRow" id="thumbRow"></div>
 
-    <div class="thumbRow" id="thumbRow"></div>
-  </section>
+      <div class="smallHint">
+        Swipe sull’immagine • Tap = schermo intero • Tap di nuovo = normale
+        <br>
+        <span class="smallHint2">Modalità numerini: tap rapido sul titolo 5 volte (solo sul tuo telefono)</span>
+      </div>
 
-  <!-- ARCHIVIO (SOLO ADMIN) -->
-  <section class="card" id="archiveCard" hidden>
-    <h2 class="h2">🗂 Archivio richieste info (solo admin)</h2>
+      <!-- WhatsApp vetrina (sotto, sempre 2) -->
+      <div class="waBar">
+        <button class="waBtn" id="waVetrinaRenzo" type="button">🟢 WhatsApp Renzo (Vetrina)</button>
+        <button class="waBtn" id="waVetrinaSergio" type="button">🟢 WhatsApp Sergio (Vetrina)</button>
+      </div>
+    </section>
 
-    <div class="adminBar">
-      <div class="adminState" id="adminState">Stato admin: BLOCCATO</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="archBtn ok" id="archImportBtn">⬆️ Import JSON</button>
-        <button class="archBtn danger" id="adminLockBtn">🔒 Blocca admin</button>
+    <!-- FILES (se li aggiungi nel JSON) -->
+    <section class="card" id="filesCard" hidden>
+      <h2 class="h2">Files</h2>
+      <div id="filesList" class="filesList"></div>
+    </section>
+
+    <!-- LABEL TOOL (NASCOSTO) -->
+    <section class="card labelCard" id="labelCard" hidden>
+      <div class="labelHead">
+        <h2 class="h2" style="margin:0">🧷 Numerini manuali sugli oggetti</h2>
+        <span class="labelBadge" id="labelModeBadge">OFF</span>
+      </div>
+
+      <div class="labelControls">
+        <button class="labelBtn" id="labelToggleBtn">Attiva/Disattiva</button>
+        <button class="labelBtn" id="labelUndoBtn">Annulla ultimo</button>
+        <button class="labelBtn danger" id="labelClearBtn">Pulisci tutti</button>
+      </div>
+
+      <div class="labelSliderRow">
+        <div class="labelSliderTitle">Grandezza numerino</div>
+        <input type="range" id="pinSizeRange" min="14" max="64" value="28">
+        <div class="labelSliderValue"><span id="pinSizeValue">28</span> px</div>
+      </div>
+
+      <div class="labelExportRow">
+        <button class="labelBtn" id="exportPinsBtn">Export JSON (pins)</button>
+        <button class="labelBtn" id="copyPinsBtn">Copia JSON</button>
+      </div>
+
+      <textarea id="pinsJsonBox" class="pinsJsonBox" placeholder="Qui comparirà il JSON dei pins…"></textarea>
+
+      <div class="labelTip">
+        ✅ Quando la modalità è attiva: tocca l’immagine per piazzare un numerino (1,2,3…).<br>
+        ✅ I numerini restano salvati sul tuo telefono (localStorage).<br>
+        ✅ Gli utenti che aprono il link vedono i numerini SOLO se tu li hai esportati e li metti nel JSON.
+      </div>
+    </section>
+  </main>
+
+  <!-- SHARE sopra la barra -->
+  <div class="shareDock">
+    <button class="shareBtn" id="shareBtn">Condividi su WhatsApp</button>
+  </div>
+
+  <!-- BOTTOM BAR fissa -->
+  <nav class="bottombar" id="bottombar">
+    <button class="barBtn" id="homeBtn">Home</button>
+    <button class="barBtn" id="voiceBtn">Voice</button>
+    <button class="barBtn danger" id="stopBtn">Stop</button>
+    <button class="barBtn" id="fullBtn">Full</button>
+    <button class="barBtn" id="themeBtn">Tema</button>
+    <button class="barBtn" id="kioskBtn">Kiosk</button>
+  </nav>
+
+  <!-- OVERLAY audio sblocco -->
+  <div class="audioGate" id="audioGate" hidden>
+    <div class="audioGateCard">
+      <div class="audioGateTitle">Audio bloccato dal telefono</div>
+      <div class="audioGateText">Tocca “Attiva audio”. Poi partirà automaticamente.</div>
+      <div class="audioGateBtns">
+        <button class="primary" id="enableAudioBtn">Attiva audio</button>
+        <button class="ghost" id="skipAudioBtn">Non ora</button>
       </div>
     </div>
-
-    <div class="smallHint" id="archHint">
-      Ricerca: scrivi “03” oppure “Renzo” oppure “prezzo” ecc.
-    </div>
-
-    <input id="archSearch" class="archSearch" placeholder="🔎 Cerca nell’archivio (numero, nome, testo, data…)" />
-
-    <div class="archiveTools">
-      <button class="archBtn" id="archCopyBtn">📋 Copia tutto</button>
-      <button class="archBtn" id="archExportBtn">⬇️ Export JSON</button>
-      <button class="archBtn" id="archExportCsvBtn">⬇️ Export CSV</button>
-      <button class="archBtn danger" id="archClearBtn">🧹 Pulisci archivio</button>
-    </div>
-
-    <div class="miniRow" style="margin-top:10px">
-      <span class="miniPill" id="archCount">0 richieste</span>
-      <span class="miniPill" id="archShown">0 mostrate</span>
-    </div>
-
-    <div class="archList" id="archList"></div>
-
-    <input id="archImportFile" class="fileInp" type="file" accept="application/json">
-  </section>
-
-  <!-- INDICE ALTRE VETRINE -->
-  <section class="card" id="networkCard">
-    <h2 class="h2">🔗 Altre vetrine</h2>
-    <div class="smallHint" style="margin-top:6px">
-      Indice da <b>data/vetrine.json</b> con filtri per tag.
-    </div>
-    <div id="netFilters" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"></div>
-    <div id="netList" style="display:grid;gap:10px;margin-top:12px"></div>
-    <div class="smallHint" id="netHint" style="margin-top:10px;opacity:.9"></div>
-  </section>
-
-  <section class="card" id="filesCard" hidden>
-    <h2 class="h2">Files</h2>
-    <div id="filesList" class="filesList"></div>
-  </section>
-
-  <section class="card labelCard" id="labelCard" hidden>
-    <div class="labelHead">
-      <h2 class="h2" style="margin:0">🧷 Numerini manuali sugli oggetti</h2>
-      <span class="labelBadge" id="labelModeBadge">OFF</span>
-    </div>
-
-    <div class="labelControls">
-      <button class="labelBtn" id="labelToggleBtn">Attiva/Disattiva</button>
-      <button class="labelBtn" id="labelUndoBtn">Annulla ultimo</button>
-      <button class="labelBtn danger" id="labelClearBtn">Pulisci tutti</button>
-    </div>
-
-    <div class="labelSliderRow">
-      <div class="labelSliderTitle">Grandezza numerino</div>
-      <input type="range" id="pinSizeRange" min="14" max="64" value="28">
-      <div class="labelSliderValue"><span id="pinSizeValue">28</span> px</div>
-    </div>
-
-    <div class="labelExportRow">
-      <button class="labelBtn" id="exportPinsBtn">Export JSON (pins)</button>
-      <button class="labelBtn" id="copyPinsBtn">Copia JSON</button>
-    </div>
-
-    <textarea id="pinsJsonBox" class="pinsJsonBox" placeholder="Qui comparirà il JSON dei pins…"></textarea>
-  </section>
-</main>
-
-<div class="shareDock">
-  <div class="waDock2">
-    <button class="waBtnFix" id="waVetrinaRenzo">🟢 WhatsApp Renzo (Vetrina)</button>
-    <button class="waBtnFix" id="waVetrinaSergio">🟢 WhatsApp Sergio (Vetrina)</button>
   </div>
-</div>
 
-<nav class="bottombar" id="bottombar">
-  <button class="barBtn" id="homeBtn">Home</button>
-  <button class="barBtn" id="voiceBtn">Voice</button>
-  <button class="barBtn danger" id="stopBtn">Stop</button>
-  <button class="barBtn" id="fullBtn">Full</button>
-  <button class="barBtn" id="themeBtn">Tema</button>
-  <button class="barBtn" id="kioskBtn">Kiosk</button>
-</nav>
-
-<!-- ADMIN GATE -->
-<div class="adminGate" id="adminGate">
-  <div class="adminCard">
-    <div class="adminTitle">🔒 Accesso admin</div>
-    <div class="adminText">
-      Inserisci le 2 parole di sblocco.<br>
-      (Sblocco permanente su questo dispositivo finché non premi “Blocca admin”)
-    </div>
-
-    <div class="adminRow">
-      <input class="adminInp" id="w1" placeholder="Parola 1" autocomplete="off" />
-      <input class="adminInp" id="w2" placeholder="Parola 2" autocomplete="off" />
-    </div>
-
-    <div class="adminBtns">
-      <button class="adminBtn" id="adminCancel">Annulla</button>
-      <button class="adminBtn primary" id="adminOk">Sblocca</button>
-    </div>
-  </div>
-</div>
-
-<script src="app.js?v=8"></script>
-
-<script>
-(function(){
-  "use strict";
-
-  // ====== ADMIN (permanente) ======
-  const ADMIN_UNLOCK_KEY = "sercuctech_admin_unlocked";
-  const DEVICE_KEY = "sercuctech_device_id";
-  const ADMIN_W1 = "sercuctech";
-  const ADMIN_W2 = "qualsiasi";
-
-  function getDeviceId(){
-    let id = localStorage.getItem(DEVICE_KEY);
-    if(!id){
-      id = "dev_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
-      localStorage.setItem(DEVICE_KEY, id);
-    }
-    return id;
-  }
-  function isAdminUnlocked(){
-    const dev = getDeviceId();
-    return localStorage.getItem(ADMIN_UNLOCK_KEY) === dev;
-  }
-  function setAdminUnlocked(){
-    localStorage.setItem(ADMIN_UNLOCK_KEY, getDeviceId());
-  }
-  function clearAdminUnlocked(){
-    localStorage.removeItem(ADMIN_UNLOCK_KEY);
-  }
-
-  // ====== PAGE ======
-  const daysIT = ["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"];
-
-  function getId(){
-    const sp = new URLSearchParams(location.search);
-    return (sp.get("id") || "").trim() || "renzo11";
-  }
-  const id = getId();
-
-  const base = location.origin + location.pathname.replace(/vetrina\.html$/,"");
-  const shareLink = `${base}link.html?id=${encodeURIComponent(id)}`;
-
-  const badge = document.getElementById("badgeId");
-  if(badge) badge.textContent = "id: " + id;
-
-  // ===== Archivio =====
-  const ARCH_KEY = `sercuctech_requests_${id}`;
-  let ARCH_QUERY = "";
-
-  function loadArchive(){
-    try{ return JSON.parse(localStorage.getItem(ARCH_KEY)) || []; }
-    catch(e){ return []; }
-  }
-  function saveArchive(list){
-    localStorage.setItem(ARCH_KEY, JSON.stringify(list));
-  }
-  function nowStamp(){
-    const d = new Date();
-    return {
-      day: daysIT[d.getDay()],
-      date: d.toLocaleDateString("it-IT"),
-      time: d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit",second:"2-digit"}),
-      iso: d.toISOString()
-    };
-  }
-  function addArchiveEntry(entry){
-    const list = loadArchive();
-    list.unshift(entry);
-    saveArchive(list);
-    renderArchive();
-  }
-
-  function toCsvValue(v){
-    const s = String(v ?? "");
-    return `"${s.replace(/"/g,'""')}"`;
-  }
-  function exportJsonFile(filename, obj){
-    const blob = new Blob([JSON.stringify(obj,null,2)], {type:"application/json"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    a.click();
-    setTimeout(()=>URL.revokeObjectURL(a.href),1500);
-  }
-  function exportCsvFile(filename, rows){
-    const header = ["type","day","date","time","iso","toName","toPhone","message"];
-    const lines = [header.map(toCsvValue).join(",")];
-    rows.forEach(r=>{
-      lines.push([r.type,r.day,r.date,r.time,r.iso,r.toName,r.toPhone,r.message].map(toCsvValue).join(","));
-    });
-    const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    a.click();
-    setTimeout(()=>URL.revokeObjectURL(a.href),1500);
-  }
-  async function copyText(t){
-    try{ await navigator.clipboard.writeText(t); return true; }
-    catch(e){ return false; }
-  }
-  function matchesQuery(r,q){
-    if(!q) return true;
-    const text = [r.type,r.day,r.date,r.time,r.iso,r.toName,r.toPhone,r.message].join(" ").toLowerCase();
-    return text.includes(q);
-  }
-
-  function setAdminStateUI(){
-    const unlocked = isAdminUnlocked();
-    const st = document.getElementById("adminState");
-    if(st) st.textContent = "Stato admin: " + (unlocked ? "SBLOCCATO" : "BLOCCATO");
-  }
-
-  function renderArchive(){
-    const card = document.getElementById("archiveCard");
-    if(!card) return;
-
-    const unlocked = isAdminUnlocked();
-    card.hidden = !unlocked;
-    setAdminStateUI();
-    if(!unlocked) return;
-
-    const box = document.getElementById("archList");
-    const count = document.getElementById("archCount");
-    const shown = document.getElementById("archShown");
-    if(!box) return;
-
-    const list = loadArchive();
-    const q = (ARCH_QUERY || "").trim().toLowerCase();
-    const filtered = list.filter(r=>matchesQuery(r,q));
-
-    if(count) count.textContent = `${list.length} richieste`;
-    if(shown) shown.textContent = `${filtered.length} mostrate`;
-
-    box.innerHTML = "";
-    if(!filtered.length){
-      const empty = document.createElement("div");
-      empty.style.opacity = ".85";
-      empty.style.fontWeight = "900";
-      empty.textContent = q ? "Nessun risultato per questa ricerca." : "Nessuna richiesta salvata ancora.";
-      box.appendChild(empty);
-      return;
-    }
-
-    filtered.forEach((r)=>{
-      const item = document.createElement("div");
-      item.className = "archItem";
-      const meta = `${r.day} • ${r.date} • ${r.time} • a: ${r.toName||"?"} (${r.toPhone||"?"})`;
-      item.innerHTML = `
-        <div class="archTop">
-          <div class="archMeta">${meta}</div>
-          <div class="archType">${r.type || "RICHIESTA"}</div>
-        </div>
-        <div class="archText"></div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="archBtn" data-act="copyOne">Copia</button>
-        </div>
-      `;
-      item.querySelector(".archText").textContent = r.message || "";
-      item.querySelector("button").addEventListener("click", async ()=>{
-        const ok = await copyText(r.message || "");
-        alert(ok ? "Copiato ✅" : "Copia non riuscita");
-      });
-      box.appendChild(item);
-    });
-  }
-
-  document.getElementById("archSearch")?.addEventListener("input",(e)=>{
-    ARCH_QUERY = e.target.value || "";
-    renderArchive();
-  });
-
-  document.getElementById("archCopyBtn")?.addEventListener("click", async ()=>{
-    const list = loadArchive();
-    const q = (ARCH_QUERY || "").trim().toLowerCase();
-    const rows = list.filter(r=>matchesQuery(r,q));
-    const txt = rows.map(r =>
-      `=== ${r.type} ===\n${r.day} ${r.date} ${r.time}\nA: ${r.toName} (${r.toPhone})\n\n${r.message}\n`
-    ).join("\n-----------------------------\n");
-    const ok = await copyText(txt || "");
-    alert(ok ? "Copiato ✅" : "Copia non riuscita");
-  });
-
-  document.getElementById("archExportBtn")?.addEventListener("click", ()=>{
-    const list = loadArchive();
-    const q = (ARCH_QUERY || "").trim().toLowerCase();
-    const rows = list.filter(r=>matchesQuery(r,q));
-    exportJsonFile(`richieste-${id}.json`, rows);
-  });
-
-  document.getElementById("archExportCsvBtn")?.addEventListener("click", ()=>{
-    const list = loadArchive();
-    const q = (ARCH_QUERY || "").trim().toLowerCase();
-    const rows = list.filter(r=>matchesQuery(r,q));
-    exportCsvFile(`richieste-${id}.csv`, rows);
-  });
-
-  document.getElementById("archClearBtn")?.addEventListener("click", ()=>{
-    if(confirm("Sicuro di cancellare TUTTO l’archivio?")){
-      saveArchive([]);
-      renderArchive();
-    }
-  });
-
-  // ✅ IMPORT JSON
-  const importBtn = document.getElementById("archImportBtn");
-  const importFile = document.getElementById("archImportFile");
-
-  function sanitizeImportedRows(rows){
-    const out = [];
-    for(const r of rows){
-      if(!r || typeof r !== "object") continue;
-      // accettiamo solo campi attesi
-      const row = {
-        type: String(r.type || "RICHIESTA"),
-        day: String(r.day || ""),
-        date: String(r.date || ""),
-        time: String(r.time || ""),
-        iso: String(r.iso || ""),
-        toName: String(r.toName || ""),
-        toPhone: String(r.toPhone || ""),
-        message: String(r.message || "")
-      };
-      // minimo: deve avere message
-      if(!row.message) continue;
-      out.push(row);
-    }
-    return out;
-  }
-
-  async function handleImportFile(file){
-    const text = await file.text();
-    let parsed = null;
-    try{ parsed = JSON.parse(text); }catch(e){ parsed = null; }
-    if(!parsed){
-      alert("File JSON non valido ❌");
-      return;
-    }
-    if(!Array.isArray(parsed)){
-      alert("Il JSON deve essere un ARRAY di righe (come export) ❌");
-      return;
-    }
-
-    const rows = sanitizeImportedRows(parsed);
-    if(!rows.length){
-      alert("Nessuna riga valida nel file ❌");
-      return;
-    }
-
-    const mode = prompt(
-      "Import: scrivi 1 o 2\n" +
-      "1) UNISCI (aggiunge alle richieste esistenti)\n" +
-      "2) SOSTITUISCI (cancella e mette solo quelle importate)"
-    );
-
-    const old = loadArchive();
-    let merged = [];
-    if(String(mode).trim() === "2"){
-      merged = rows;
-    }else{
-      merged = rows.concat(old);
-    }
-
-    // dedup semplice: iso+toPhone+type+message
-    const seen = new Set();
-    const finalList = [];
-    for(const r of merged){
-      const k = `${r.iso}|${r.toPhone}|${r.type}|${r.message.slice(0,80)}`;
-      if(seen.has(k)) continue;
-      seen.add(k);
-      finalList.push(r);
-    }
-
-    saveArchive(finalList);
-    renderArchive();
-    alert("Import completato ✅");
-  }
-
-  importBtn?.addEventListener("click", ()=>{
-    if(!isAdminUnlocked()){
-      alert("Devi essere admin per importare.");
-      return;
-    }
-    importFile.value = "";
-    importFile.click();
-  });
-
-  importFile?.addEventListener("change", async ()=>{
-    const f = importFile.files && importFile.files[0];
-    if(!f) return;
-    try{
-      await handleImportFile(f);
-    }catch(e){
-      alert("Errore durante import ❌");
-    }
-  });
-
-  // Blocca admin
-  document.getElementById("adminLockBtn")?.addEventListener("click", ()=>{
-    if(confirm("Vuoi bloccare l’admin? (l’archivio tornerà invisibile)")){
-      clearAdminUnlocked();
-      renderArchive();
-      alert("Admin bloccato 🔒");
-    }
-  });
-
-  // ===== Contatti dal JSON =====
-  let CONTACTS = [];
-  let TITLE = id;
-
-  async function fetchJson(url){
-    const res = await fetch(url, {cache:"no-store"});
-    if(!res.ok) throw new Error("HTTP " + res.status);
-    return await res.json();
-  }
-
-  async function loadVetrinaData(){
-    try{
-      const j = await fetchJson(`data/${encodeURIComponent(id)}.json`);
-      TITLE = (j.title || id).trim();
-      CONTACTS = Array.isArray(j.contacts) ? j.contacts : [];
-
-      const voiceText = document.getElementById("voiceText");
-      if(voiceText && j.voice?.text) voiceText.textContent = j.voice.text;
-
-      const row = document.getElementById("contactsRow");
-      if(row){
-        row.innerHTML = "";
-        CONTACTS.slice(0,2).forEach(c=>{
-          if(!c || !c.phone) return;
-
-          const wa = document.createElement("button");
-          wa.className = "contactBtn wa";
-          wa.textContent = `WhatsApp ${c.name}`;
-          wa.addEventListener("click", ()=> sendWhatsApp("VETRINA", c));
-
-          const call = document.createElement("a");
-          call.href = "tel:" + String(c.phone).replace(/\D/g,"");
-          call.className = "contactBtn";
-          call.textContent = `Chiama ${c.name}`;
-
-          row.appendChild(wa);
-          row.appendChild(call);
-        });
-      }
-
-      applyFixedButtons();
-    }catch(e){
-      applyFixedButtons(true);
-    }
-  }
-
-  function applyFixedButtons(disableAll=false){
-    const c1 = CONTACTS[0];
-    const c2 = CONTACTS[1];
-
-    const btnVR = document.getElementById("waVetrinaRenzo");
-    const btnVS = document.getElementById("waVetrinaSergio");
-    const btnPR = document.getElementById("waPhotoRenzo");
-    const btnPS = document.getElementById("waPhotoSergio");
-
-    function setBtn(btn, c, label){
-      if(!btn) return;
-      if(disableAll || !c || !c.phone){
-        btn.textContent = label + " (non configurato)";
-        btn.classList.add("gray");
-        btn.disabled = true;
-        return;
-      }
-      btn.textContent = label.replace("{NAME}", c.name);
-      btn.classList.remove("gray");
-      btn.disabled = false;
-    }
-
-    setBtn(btnVR, c1, "🟢 WhatsApp {NAME} (Vetrina)");
-    setBtn(btnVS, c2, "🟢 WhatsApp {NAME} (Vetrina)");
-    setBtn(btnPR, c1, "🟢 WhatsApp {NAME} (Foto)");
-    setBtn(btnPS, c2, "🟢 WhatsApp {NAME} (Foto)");
-  }
-
-  function currentPhotoUrl(){
-    const img = document.getElementById("heroImg");
-    return (img && (img.currentSrc || img.src)) ? (img.currentSrc || img.src) : "";
-  }
-  function currentObjNumber(){
-    const b = document.getElementById("imgBadge");
-    return (b && b.textContent) ? b.textContent.trim() : "??";
-  }
-
-  function makeMsgVetrina(toName){
-    return `Ciao ${toName}! 👋
-Ti mando la vetrina con foto e numeri degli oggetti.
-
-✅ Apri qui:
-${shareLink}
-
-📌 Dimmi il numero dell’oggetto che ti interessa.`;
-  }
-
-  function makeMsgFoto(toName){
-    const n = currentObjNumber();
-    const photo = currentPhotoUrl();
-    const photoLine = photo ? `📷 Foto: ${photo}` : "";
-    return `Ciao ${toName}! 👋
-Vorrei informazioni per il numero ${n}.
-
-🏷️ Vetrina: ${TITLE}
-🔗 Link vetrina: ${shareLink}
-${photoLine}
-
-✅ Se disponibile, mandatemi prezzo e disponibilità.`;
-  }
-
-  function openWa(phone, msg){
-    const digits = String(phone||"").replace(/\D/g,"");
-    const url = digits
-      ? `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`
-      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
-    window.open(url, "_blank");
-  }
-
-  function sendWhatsApp(kind, contact){
-    const toName = contact?.name || "Contatto";
-    const toPhone = contact?.phone || "";
-    const msg = (kind === "FOTO") ? makeMsgFoto(toName) : makeMsgVetrina(toName);
-
-    const stamp = nowStamp();
-    addArchiveEntry({ type: kind, ...stamp, toName, toPhone, message: msg });
-
-    openWa(toPhone, msg);
-  }
-
-  document.getElementById("waVetrinaRenzo")?.addEventListener("click", ()=>{ if(CONTACTS[0]) sendWhatsApp("VETRINA", CONTACTS[0]); });
-  document.getElementById("waVetrinaSergio")?.addEventListener("click", ()=>{ if(CONTACTS[1]) sendWhatsApp("VETRINA", CONTACTS[1]); });
-  document.getElementById("waPhotoRenzo")?.addEventListener("click", ()=>{ if(CONTACTS[0]) sendWhatsApp("FOTO", CONTACTS[0]); });
-  document.getElementById("waPhotoSergio")?.addEventListener("click", ()=>{ if(CONTACTS[1]) sendWhatsApp("FOTO", CONTACTS[1]); });
-
-  /* ===== INDICE ALTRE VETRINE ===== */
-  const netFilters = document.getElementById("netFilters");
-  const netList = document.getElementById("netList");
-  const netHint = document.getElementById("netHint");
-  const DEFAULT_TAGS = ["tutte","servizi","attività","abbigliamento","commercio","casa","auto","altro"];
-  function normTag(t){ return String(t||"").trim().toLowerCase(); }
-
-  function filterBtn(label, active){
-    const b = document.createElement("button");
-    b.type = "button";
-    b.textContent = label;
-    b.style.border = "1px solid rgba(255,255,255,.18)";
-    b.style.background = active ? "rgba(35,197,94,.22)" : "rgba(255,255,255,.08)";
-    b.style.color = "rgba(255,255,255,.95)";
-    b.style.borderRadius = "999px";
-    b.style.padding = "10px 12px";
-    b.style.fontWeight = "900";
-    b.style.cursor = "pointer";
-    b.style.fontSize = "12px";
-    return b;
-  }
-
-  function cardLink(v){
-    const wrap = document.createElement("div");
-    wrap.style.border = "1px solid rgba(255,255,255,.14)";
-    wrap.style.background = "rgba(0,0,0,.18)";
-    wrap.style.borderRadius = "16px";
-    wrap.style.padding = "12px";
-    wrap.style.display = "grid";
-    wrap.style.gap = "8px";
-
-    const a = document.createElement("a");
-    a.href = `vetrina.html?id=${encodeURIComponent(v.id)}`;
-    a.textContent = `${v.title || v.id}`;
-    a.style.color = "rgba(255,255,255,.95)";
-    a.style.textDecoration = "none";
-    a.style.fontWeight = "1000";
-
-    const meta = document.createElement("div");
-    meta.style.fontSize = "12px";
-    meta.style.fontWeight = "900";
-    meta.style.color = "rgba(234,240,255,.72)";
-    meta.textContent = `id: ${v.id}${v.tag ? " • " + v.tag : ""}`;
-
-    wrap.appendChild(a);
-    wrap.appendChild(meta);
-    return wrap;
-  }
-
-  async function loadIndex(){
-    try{
-      if(!netHint) return;
-      netHint.textContent = "Carico elenco vetrine…";
-      const idx = await fetchJson("data/vetrine.json");
-      const list = Array.isArray(idx.vetrine) ? idx.vetrine : [];
-
-      const baseList = list
-        .map(x => ({ id: String(x.id||"").trim(), title: String(x.title||"").trim() }))
-        .filter(x => x.id && x.id !== id);
-
-      const enriched = [];
-      for(const v of baseList){
-        try{
-          const j = await fetchJson(`data/${encodeURIComponent(v.id)}.json`);
-          const tags = Array.isArray(j.tags) ? j.tags.map(normTag).filter(Boolean) : [];
-          const tag = tags[0] || "";
-          enriched.push({ ...v, tags, tag });
-        }catch(e){
-          enriched.push({ ...v, tags:[], tag:"" });
-        }
-      }
-
-      const tagSet = new Set(DEFAULT_TAGS.map(normTag));
-      enriched.forEach(v => (v.tags||[]).forEach(t => tagSet.add(normTag(t))));
-      const tagsAll = Array.from(tagSet).filter(Boolean);
-      tagsAll.sort((a,b)=>{
-        if(a==="tutte") return -1;
-        if(b==="tutte") return 1;
-        return a.localeCompare(b,"it");
-      });
-
-      let currentFilter = "tutte";
-
-      function renderFilters(){
-        if(!netFilters) return;
-        netFilters.innerHTML = "";
-        tagsAll.forEach(t=>{
-          const b = filterBtn(t, t===currentFilter);
-          b.addEventListener("click", ()=>{
-            currentFilter = t;
-            renderFilters();
-            renderList();
-          });
-          netFilters.appendChild(b);
-        });
-      }
-
-      function renderList(){
-        if(!netList) return;
-        netList.innerHTML = "";
-        const filtered = (currentFilter==="tutte")
-          ? enriched
-          : enriched.filter(v => (v.tags||[]).includes(currentFilter));
-
-        if(!filtered.length){
-          const empty = document.createElement("div");
-          empty.style.opacity = ".85";
-          empty.style.fontWeight = "900";
-          empty.textContent = "Nessuna vetrina in questo contesto.";
-          netList.appendChild(empty);
-          netHint.textContent = `Filtro: ${currentFilter} • 0 risultati`;
-          return;
-        }
-
-        filtered.sort((a,b)=>a.id.localeCompare(b.id,"it",{numeric:true}));
-        filtered.forEach(v => netList.appendChild(cardLink(v)));
-        netHint.textContent = `Filtro: ${currentFilter} • ${filtered.length} vetrine`;
-      }
-
-      renderFilters();
-      renderList();
-    }catch(e){
-      if(netHint) netHint.textContent = "Errore: non riesco a leggere data/vetrine.json";
-    }
-  }
-
-  // ===== Admin unlock: 7 tap sul pallino =====
-  const brandDot = document.getElementById("brandDot");
-  const gate = document.getElementById("adminGate");
-  const w1 = document.getElementById("w1");
-  const w2 = document.getElementById("w2");
-
-  let tapCount = 0;
-  let tapTimer = null;
-
-  function openGate(){
-    gate.style.display = "flex";
-    w1.value = ""; w2.value = "";
-    w1.focus();
-  }
-  function closeGate(){ gate.style.display = "none"; }
-
-  if(brandDot){
-    brandDot.addEventListener("click", ()=>{
-      tapCount++;
-      if(tapTimer) clearTimeout(tapTimer);
-      tapTimer = setTimeout(()=>{ tapCount = 0; }, 1200);
-
-      if(tapCount >= 7){
-        tapCount = 0;
-        openGate();
-      }
-    });
-  }
-
-  document.getElementById("adminCancel")?.addEventListener("click", closeGate);
-
-  document.getElementById("adminOk")?.addEventListener("click", ()=>{
-    const a = (w1.value||"").trim().toLowerCase();
-    const b = (w2.value||"").trim().toLowerCase();
-    if(a === ADMIN_W1 && b === ADMIN_W2){
-      setAdminUnlocked();
-      closeGate();
-      renderArchive();
-      alert("Admin sbloccato ✅ (permanente su questo dispositivo)");
-    }else{
-      alert("Parole sbagliate ❌");
-    }
-  });
-
-  // Avvio
-  getDeviceId();
-  loadVetrinaData();
-  loadIndex();
-  renderArchive();
-})();
-</script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
