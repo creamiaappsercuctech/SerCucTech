@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Vetrina</title>
-  <link rel="stylesheet" href="style.css?v=9">
+  <link rel="stylesheet" href="style.css?v=20">
 </head>
 
 <body>
@@ -20,12 +20,12 @@
       <span id="badgeId" class="idBadge">id: -</span>
     </div>
 
-    <!-- TESTO AUDIO FISSO + CONTATTI (CLICCA QUI PER FAR PARTIRE AUDIO) -->
+    <!-- TESTO AUDIO FISSO + CONTATTI -->
     <section class="voicePanel" id="voicePanel" hidden>
-      <div class="voicePanelInner" id="voiceClickable">
+      <div class="voicePanelInner">
         <div class="voiceTop">
-          <div class="voiceTitle">📣 Messaggio (tocca qui o “Voice” per ascoltare)</div>
-          <div class="voiceHint">Numeri cliccabili: WhatsApp / chiamata</div>
+          <div class="voiceTitle">📣 Messaggio (tocca il testo per ascoltare)</div>
+          <div class="voiceHint">Numeri cliccabili: WhatsApp o chiamata</div>
         </div>
 
         <div class="voiceText" id="voiceText"></div>
@@ -38,14 +38,14 @@
     <!-- INDICE ALTRE VETRINE -->
     <section class="indexPanel" id="indexPanel" hidden>
       <div class="indexPanelInner">
-        <div class="indexHead">
+        <div class="indexTop">
           <div class="indexTitle">📚 Altre vetrine</div>
-          <button class="indexBtn" id="indexRefreshBtn" type="button">Aggiorna</button>
+          <button class="miniBtn" id="refreshIndexBtn" type="button">Aggiorna</button>
         </div>
         <div class="indexHint">
           Questo indice è uguale in tutte le vetrine: così da una vetrina puoi entrare nelle altre.
         </div>
-        <div class="indexList" id="indexList"></div>
+        <div class="indexLinks" id="indexLinks"></div>
       </div>
     </section>
   </header>
@@ -54,7 +54,7 @@
     <!-- GALLERIA -->
     <section class="card heroCard">
       <div class="hero">
-        <button class="navBtn left" id="prevBtn" aria-label="Immagine precedente" type="button">‹</button>
+        <button class="navBtn left" id="prevBtn" aria-label="Immagine precedente">‹</button>
 
         <div class="mediaStage" id="mediaStage">
           <div class="imgCounter" id="imgCounter">01/01</div>
@@ -62,53 +62,32 @@
           <div class="imgWrap" id="imgWrap">
             <img id="heroImg" class="heroImg" alt="Immagine vetrina">
             <div id="pinsLayer" class="pinsLayer" aria-hidden="true"></div>
-
-            <!-- CTA WhatsApp sulla foto (UNICO) -->
-            <button class="waOnPhoto" id="waPhotoBtn" type="button">
-              🟢 WhatsApp (Foto) • Chiedi info
-            </button>
           </div>
 
           <div class="imgBadge" id="imgBadge">01</div>
         </div>
 
-        <button class="navBtn right" id="nextBtn" aria-label="Immagine successiva" type="button">›</button>
+        <button class="navBtn right" id="nextBtn" aria-label="Immagine successiva">›</button>
+      </div>
+
+      <!-- ✅ TASTO WHATSAPP SOTTO OGNI FOTO -->
+      <div class="photoActions">
+        <button class="waBtn" id="waPhotoBtn">🟢 WhatsApp (Foto) • Chiedi info</button>
       </div>
 
       <div class="thumbRow" id="thumbRow"></div>
 
       <div class="smallHint">
-        Swipe sulle foto • Tap sulla foto = schermo intero • Tap di nuovo = normale
+        Swipe sull’immagine • Tap = schermo intero • Tap di nuovo = normale
         <br>
-        <span class="smallHint2">Modalità numerini & archivio: tap sul titolo 5 volte (solo sul tuo telefono)</span>
+        <span class="smallHint2">Modalità numerini: tap rapido sul titolo 5 volte (solo sul tuo telefono)</span>
       </div>
     </section>
 
-    <!-- FILES (se li aggiungi nel JSON) -->
+    <!-- FILES -->
     <section class="card" id="filesCard" hidden>
       <h2 class="h2">Files</h2>
       <div id="filesList" class="filesList"></div>
-    </section>
-
-    <!-- ADMIN: ARCHIVIO RICHIESTE INFO (SOLO TU) -->
-    <section class="card adminCard" id="adminCard" hidden>
-      <div class="adminHead">
-        <h2 class="h2" style="margin:0">🔒 Archivio richieste info (solo tu)</h2>
-        <span class="labelBadge" id="adminBadge">OFF</span>
-      </div>
-
-      <div class="adminBtns">
-        <button class="labelBtn" id="exportRequestsBtn" type="button">Export richieste (JSON)</button>
-        <button class="labelBtn" id="copyRequestsBtn" type="button">Copia richieste</button>
-        <button class="labelBtn danger" id="clearRequestsBtn" type="button">Pulisci archivio</button>
-      </div>
-
-      <div class="adminHint">
-        ✅ Qui finiscono le richieste “Chiedi info” con data/ora, foto e messaggio.<br>
-        ✅ Restano sul TUO telefono (localStorage). Per “per sempre” anche se cambi telefono: usa “Export”.
-      </div>
-
-      <textarea id="requestsBox" class="pinsJsonBox" placeholder="Qui vedrai le richieste archiviate…"></textarea>
     </section>
 
     <!-- LABEL TOOL (NASCOSTO) -->
@@ -119,9 +98,9 @@
       </div>
 
       <div class="labelControls">
-        <button class="labelBtn" id="labelToggleBtn" type="button">Attiva/Disattiva</button>
-        <button class="labelBtn" id="labelUndoBtn" type="button">Annulla ultimo</button>
-        <button class="labelBtn danger" id="labelClearBtn" type="button">Pulisci tutti</button>
+        <button class="labelBtn" id="labelToggleBtn">Attiva/Disattiva</button>
+        <button class="labelBtn" id="labelUndoBtn">Annulla ultimo</button>
+        <button class="labelBtn danger" id="labelClearBtn">Pulisci tutti</button>
       </div>
 
       <div class="labelSliderRow">
@@ -131,65 +110,46 @@
       </div>
 
       <div class="labelExportRow">
-        <button class="labelBtn" id="exportPinsBtn" type="button">Export pinsData (JSON)</button>
-        <button class="labelBtn" id="copyPinsBtn" type="button">Copia pinsData</button>
+        <button class="labelBtn" id="exportPinsBtn">Export JSON (pins)</button>
+        <button class="labelBtn" id="copyPinsBtn">Copia JSON</button>
       </div>
 
       <textarea id="pinsJsonBox" class="pinsJsonBox" placeholder="Qui comparirà il JSON dei pins…"></textarea>
-
       <div class="labelTip">
         ✅ Modalità attiva: tocca l’immagine per piazzare un numerino (1,2,3…).<br>
-        ✅ I numerini restano salvati sul tuo telefono.<br>
-        ✅ Per farli vedere a TUTTI: copia “pinsData” e incollalo dentro il tuo file JSON della vetrina.
+        ✅ Salvati sul tuo telefono (localStorage).<br>
+        ✅ Gli utenti li vedono SOLO se tu li metti nel JSON (campo "pinsData").
       </div>
-    </section>
-
-    <!-- ERRORE -->
-    <section class="card errorCard" id="errorCard" hidden>
-      <h2 class="h2">Errore</h2>
-      <div id="errorText" class="errorText"></div>
     </section>
   </main>
 
   <!-- SHARE sopra la barra -->
   <div class="shareDock">
-    <button class="shareBtn" id="shareBtn" type="button">Condividi questa vetrina su WhatsApp</button>
+    <button class="shareBtn" id="shareBtn">Condividi questa vetrina</button>
   </div>
 
-  <!-- BOTTOM BAR fissa -->
+  <!-- BOTTOM BAR -->
   <nav class="bottombar" id="bottombar">
-    <button class="barBtn" id="homeBtn" type="button">Home</button>
-    <button class="barBtn" id="voiceBtn" type="button">Voice</button>
-    <button class="barBtn danger" id="stopBtn" type="button">Stop</button>
-    <button class="barBtn" id="fullBtn" type="button">Full</button>
-    <button class="barBtn" id="themeBtn" type="button">Tema</button>
-    <button class="barBtn" id="kioskBtn" type="button">Kiosk</button>
+    <button class="barBtn" id="homeBtn">Home</button>
+    <button class="barBtn" id="voiceBtn">Voice</button>
+    <button class="barBtn danger" id="stopBtn">Stop</button>
+    <button class="barBtn" id="fullBtn">Full</button>
+    <button class="barBtn" id="themeBtn">Tema</button>
+    <button class="barBtn" id="kioskBtn">Kiosk</button>
   </nav>
 
-  <!-- AUDIO GATE (non blocca i bottoni) -->
+  <!-- ✅ OVERLAY audio: NON blocca i bottoni -->
   <div class="audioGate" id="audioGate" hidden>
     <div class="audioGateCard">
       <div class="audioGateTitle">Audio bloccato dal telefono</div>
       <div class="audioGateText">Tocca “Attiva audio”. Poi partirà automaticamente.</div>
       <div class="audioGateBtns">
-        <button class="primary" id="enableAudioBtn" type="button">Attiva audio</button>
-        <button class="ghost" id="skipAudioBtn" type="button">Non ora</button>
+        <button class="primary" id="enableAudioBtn">Attiva audio</button>
+        <button class="ghost" id="skipAudioBtn">Non ora</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL per aprire 2° numero senza blocchi -->
-  <div class="waModal" id="waModal" hidden>
-    <div class="waModalCard">
-      <div class="waModalTitle">Invio WhatsApp a 2 numeri</div>
-      <div class="waModalText" id="waModalText"></div>
-      <div class="waModalBtns">
-        <button class="primary" id="waOpenSecondBtn" type="button">Apri Sergio</button>
-        <button class="ghost" id="waCloseBtn" type="button">Chiudi</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=20"></script>
 </body>
 </html>
