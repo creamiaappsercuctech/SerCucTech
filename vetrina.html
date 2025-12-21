@@ -66,6 +66,20 @@
       </div>
     </section>
 
+    <!-- ✅ INDICE ALTRE VETRINE (AUTO-AGGIORNANTE) -->
+    <section class="card" id="networkCard">
+      <h2 class="h2">🔗 Altre vetrine</h2>
+      <div class="smallHint" style="margin-top:6px">
+        Questo indice si aggiorna da <b>data/vetrine.json</b>.
+        Usa i <b>tag</b> nelle vetrine per dividerle in contesti (servizi, attività, abbigliamento, commercio, ecc.).
+      </div>
+
+      <div id="netFilters" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"></div>
+      <div id="netList" style="display:grid;gap:10px;margin-top:12px"></div>
+
+      <div class="smallHint" id="netHint" style="margin-top:10px;opacity:.9"></div>
+    </section>
+
     <!-- FILES (se li aggiungi nel JSON) -->
     <section class="card" id="filesCard" hidden>
       <h2 class="h2">Files</h2>
@@ -108,7 +122,7 @@
 
   <!-- SHARE sopra la barra -->
   <div class="shareDock">
-    <button class="shareBtn" id="shareBtn">Condividi su WhatsApp</button>
+    <button class="shareBtn" id="shareBtn">🟢 WhatsApp (messaggio pronto)</button>
   </div>
 
   <!-- BOTTOM BAR fissa -->
@@ -134,5 +148,226 @@
   </div>
 
   <script src="app.js?v=2"></script>
+
+  <!-- ✅ EXTRA: WhatsApp + Indice vetrine (non rompe app.js) -->
+  <script>
+  (function(){
+    "use strict";
+
+    function getId(){
+      const sp = new URLSearchParams(location.search);
+      return (sp.get("id") || "").trim() || "renzo11";
+    }
+    const id = getId();
+
+    const base = location.origin + location.pathname.replace(/vetrina\.html$/,"");
+    const shareLink = `${base}link.html?id=${encodeURIComponent(id)}`;
+
+    function textFromDom(el){
+      return (el && el.textContent) ? el.textContent.trim() : "";
+    }
+
+    function makeWaMessage(){
+      const title = textFromDom(document.getElementById("pageTitle")) || id;
+      return `Ciao! 👋
+Ti mando la vetrina con foto e numeri degli oggetti.
+
+✅ Apri qui:
+${shareLink}
+
+📌 Se ti interessa un oggetto, dimmi il numero e ti rispondo subito su WhatsApp.`;
+    }
+
+    // WhatsApp bottone (sopra barra)
+    const shareBtn = document.getElementById("shareBtn");
+    if(shareBtn){
+      shareBtn.addEventListener("click", ()=>{
+        const msg = makeWaMessage();
+        const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+        window.open(url, "_blank");
+      });
+    }
+
+    /* ===================== INDICE ALTRE VETRINE ===================== */
+
+    const netFilters = document.getElementById("netFilters");
+    const netList = document.getElementById("netList");
+    const netHint = document.getElementById("netHint");
+
+    const DEFAULT_TAGS = ["tutte","servizi","attività","abbigliamento","commercio","casa","auto","altro"];
+
+    function normTag(t){
+      return String(t||"").trim().toLowerCase();
+    }
+
+    function btn(label, active){
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = label;
+      b.style.border = "1px solid rgba(255,255,255,.18)";
+      b.style.background = active ? "rgba(35,197,94,.22)" : "rgba(255,255,255,.08)";
+      b.style.color = "rgba(255,255,255,.95)";
+      b.style.borderRadius = "999px";
+      b.style.padding = "10px 12px";
+      b.style.fontWeight = "900";
+      b.style.cursor = "pointer";
+      b.style.fontSize = "12px";
+      return b;
+    }
+
+    function cardLink(v){
+      const wrap = document.createElement("div");
+      wrap.style.border = "1px solid rgba(255,255,255,.14)";
+      wrap.style.background = "rgba(0,0,0,.18)";
+      wrap.style.borderRadius = "16px";
+      wrap.style.padding = "12px";
+      wrap.style.display = "grid";
+      wrap.style.gap = "8px";
+
+      const a = document.createElement("a");
+      a.href = `vetrina.html?id=${encodeURIComponent(v.id)}`;
+      a.textContent = `${v.title || v.id}`;
+      a.style.color = "rgba(255,255,255,.95)";
+      a.style.textDecoration = "none";
+      a.style.fontWeight = "1000";
+
+      const meta = document.createElement("div");
+      meta.style.fontSize = "12px";
+      meta.style.fontWeight = "900";
+      meta.style.color = "rgba(234,240,255,.72)";
+      meta.textContent = `id: ${v.id}${v.tag ? " • " + v.tag : ""}`;
+
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.gap = "8px";
+      row.style.flexWrap = "wrap";
+
+      const openBtn = document.createElement("a");
+      openBtn.href = `vetrina.html?id=${encodeURIComponent(v.id)}`;
+      openBtn.textContent = "Apri";
+      openBtn.style.textDecoration = "none";
+      openBtn.style.border = "1px solid rgba(255,255,255,.18)";
+      openBtn.style.background = "rgba(255,255,255,.08)";
+      openBtn.style.color = "rgba(255,255,255,.95)";
+      openBtn.style.borderRadius = "14px";
+      openBtn.style.padding = "10px 12px";
+      openBtn.style.fontWeight = "1000";
+      openBtn.style.fontSize = "12px";
+
+      const waBtn = document.createElement("a");
+      const linkForV = `${base}link.html?id=${encodeURIComponent(v.id)}`;
+      const waMsg = `Ciao! 👋\nGuarda questa vetrina:\n${linkForV}\n\n📌 Dimmi il numero dell’oggetto che ti interessa.`;
+      waBtn.href = `https://wa.me/?text=${encodeURIComponent(waMsg)}`;
+      waBtn.target = "_blank";
+      waBtn.rel = "noopener";
+      waBtn.textContent = "WhatsApp";
+      waBtn.style.textDecoration = "none";
+      waBtn.style.border = "1px solid rgba(37,211,102,.35)";
+      waBtn.style.background = "rgba(37,211,102,.20)";
+      waBtn.style.color = "rgba(255,255,255,.98)";
+      waBtn.style.borderRadius = "14px";
+      waBtn.style.padding = "10px 12px";
+      waBtn.style.fontWeight = "1000";
+      waBtn.style.fontSize = "12px";
+
+      row.appendChild(openBtn);
+      row.appendChild(waBtn);
+
+      wrap.appendChild(a);
+      wrap.appendChild(meta);
+      wrap.appendChild(row);
+      return wrap;
+    }
+
+    async function fetchJson(url){
+      const res = await fetch(url, {cache:"no-store"});
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    }
+
+    // Carica index base
+    async function loadIndex(){
+      try{
+        netHint.textContent = "Carico elenco vetrine…";
+        const idx = await fetchJson("data/vetrine.json");
+        const list = Array.isArray(idx.vetrine) ? idx.vetrine : [];
+
+        // rimuovi questa vetrina dall’elenco
+        const baseList = list
+          .map(x => ({ id: String(x.id||"").trim(), title: String(x.title||"").trim() }))
+          .filter(x => x.id && x.id !== id);
+
+        // carica tags da ogni vetrina (leggero, una volta)
+        const enriched = [];
+        for(const v of baseList){
+          try{
+            const j = await fetchJson(`data/${encodeURIComponent(v.id)}.json`);
+            const tags = Array.isArray(j.tags) ? j.tags.map(normTag).filter(Boolean) : [];
+            const tag = tags[0] || "";
+            enriched.push({ ...v, tags, tag });
+          }catch(e){
+            enriched.push({ ...v, tags:[], tag:"" });
+          }
+        }
+
+        // crea filtri in base ai tag trovati + default
+        const tagSet = new Set(DEFAULT_TAGS.map(normTag));
+        enriched.forEach(v => (v.tags||[]).forEach(t => tagSet.add(normTag(t))));
+        const tagsAll = Array.from(tagSet).filter(Boolean);
+        // metti "tutte" per prima
+        tagsAll.sort((a,b)=>{
+          if(a==="tutte") return -1;
+          if(b==="tutte") return 1;
+          return a.localeCompare(b,"it");
+        });
+
+        let currentFilter = "tutte";
+
+        function renderFilters(){
+          netFilters.innerHTML = "";
+          tagsAll.forEach(t=>{
+            const b = btn(t, t===currentFilter);
+            b.addEventListener("click", ()=>{
+              currentFilter = t;
+              renderFilters();
+              renderList();
+            });
+            netFilters.appendChild(b);
+          });
+        }
+
+        function renderList(){
+          netList.innerHTML = "";
+          const filtered = (currentFilter==="tutte")
+            ? enriched
+            : enriched.filter(v => (v.tags||[]).includes(currentFilter));
+
+          if(!filtered.length){
+            const empty = document.createElement("div");
+            empty.style.opacity = ".85";
+            empty.style.fontWeight = "900";
+            empty.textContent = "Nessuna vetrina in questo contesto. (Aggiungi tags nelle vetrine.)";
+            netList.appendChild(empty);
+            netHint.textContent = `Filtro: ${currentFilter} • 0 risultati`;
+            return;
+          }
+
+          // ordinamento per id
+          filtered.sort((a,b)=>a.id.localeCompare(b.id,"it",{numeric:true}));
+
+          filtered.forEach(v => netList.appendChild(cardLink(v)));
+          netHint.textContent = `Filtro: ${currentFilter} • ${filtered.length} vetrine`;
+        }
+
+        renderFilters();
+        renderList();
+      }catch(e){
+        netHint.textContent = "Errore: non riesco a leggere data/vetrine.json";
+      }
+    }
+
+    loadIndex();
+  })();
+  </script>
 </body>
 </html>
