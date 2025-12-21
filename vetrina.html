@@ -5,6 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Vetrina</title>
   <link rel="stylesheet" href="style.css?v=2">
+
+  <!-- EXTRA stile (solo per bottone WhatsApp Foto + indice) -->
+  <style>
+    .waPhotoBtn{
+      position:absolute;
+      right:10px;
+      bottom:10px;
+      z-index:50;
+      border:none;
+      background:#25D366;
+      color:#06210f;
+      font-weight:1000;
+      padding:10px 12px;
+      border-radius:14px;
+      box-shadow:0 10px 22px rgba(0,0,0,.35);
+      cursor:pointer;
+      user-select:none;
+    }
+    .waPhotoBtn:active{ transform:scale(.99); }
+    .waPhotoBtnSmall{
+      font-size:12px;
+      opacity:.95;
+    }
+  </style>
 </head>
 
 <body>
@@ -52,6 +76,11 @@
           </div>
 
           <div class="imgBadge" id="imgBadge">01</div>
+
+          <!-- ✅ WhatsApp per FOTO CORRENTE -->
+          <button class="waPhotoBtn" id="waPhotoBtn" type="button">
+            🟢 WhatsApp Foto<br><span class="waPhotoBtnSmall">chiedi info per questo numero</span>
+          </button>
         </div>
 
         <button class="navBtn right" id="nextBtn" aria-label="Immagine successiva">›</button>
@@ -70,13 +99,11 @@
     <section class="card" id="networkCard">
       <h2 class="h2">🔗 Altre vetrine</h2>
       <div class="smallHint" style="margin-top:6px">
-        Questo indice si aggiorna da <b>data/vetrine.json</b>.
-        Usa i <b>tag</b> nelle vetrine per dividerle in contesti (servizi, attività, abbigliamento, commercio, ecc.).
+        Questo indice si aggiorna da <b>data/vetrine.json</b>. Usa i <b>tag</b> nelle vetrine per dividerle
+        (servizi, attività, abbigliamento ecc.).
       </div>
-
       <div id="netFilters" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"></div>
       <div id="netList" style="display:grid;gap:10px;margin-top:12px"></div>
-
       <div class="smallHint" id="netHint" style="margin-top:10px;opacity:.9"></div>
     </section>
 
@@ -115,7 +142,7 @@
       <div class="labelTip">
         ✅ Quando la modalità è attiva: tocca l’immagine per piazzare un numerino (1,2,3…).<br>
         ✅ I numerini restano salvati sul tuo telefono (localStorage).<br>
-        ✅ Gli utenti che aprono il link vedono i numerini SOLO se tu li hai esportati e li metti nel JSON (ti spiego dopo se vuoi).
+        ✅ Gli utenti che aprono il link vedono i numerini SOLO se tu li hai esportati e li metti nel JSON.
       </div>
     </section>
   </main>
@@ -149,7 +176,7 @@
 
   <script src="app.js?v=2"></script>
 
-  <!-- ✅ EXTRA: WhatsApp + Indice vetrine (non rompe app.js) -->
+  <!-- ✅ EXTRA: WhatsApp per FOTO + Indice vetrine (non rompe app.js) -->
   <script>
   (function(){
     "use strict";
@@ -159,46 +186,144 @@
       return (sp.get("id") || "").trim() || "renzo11";
     }
     const id = getId();
-
     const base = location.origin + location.pathname.replace(/vetrina\.html$/,"");
     const shareLink = `${base}link.html?id=${encodeURIComponent(id)}`;
 
-    function textFromDom(el){
-      return (el && el.textContent) ? el.textContent.trim() : "";
+    function extractPhones(text){
+      const t = String(text||"");
+      const found = t.match(/(\+?\d[\d\s]{7,}\d)/g) || [];
+      const norm = found
+        .map(x => x.replace(/\s+/g,"").replace(/^00/,"+"))
+        .map(x => x.startsWith("+") ? x : x.replace(/\D/g,""));
+      return Array.from(new Set(norm.filter(x => x.length >= 9)));
     }
 
-    function makeWaMessage(){
-      const title = textFromDom(document.getElementById("pageTitle")) || id;
+    function getAllTextForPhones(){
+      const a = document.getElementById("voiceText")?.textContent || "";
+      const b = document.getElementById("pageDesc")?.textContent || "";
+      const c = document.getElementById("pageTitle")?.textContent || "";
+      return `${c}\n${b}\n${a}`;
+    }
+
+    function choosePhone(phones){
+      if(!phones.length) return "";
+      if(phones.length === 1) return phones[0];
+      // scelta semplice
+      const list = phones.map((p,i)=> `${i+1}) ${p}`).join("\n");
+      const pick = prompt("A quale numero vuoi inviare su WhatsApp?\n\n" + list + "\n\nScrivi il numero (1,2,3...)");
+      const n = Number(pick);
+      if(!Number.isFinite(n) || n < 1 || n > phones.length) return phones[0];
+      return phones[n-1];
+    }
+
+    function currentPhotoUrl(){
+      const img = document.getElementById("heroImg");
+      if(!img) return "";
+      return (img.currentSrc || img.src || "").trim();
+    }
+
+    function currentObjNumber(){
+      // usa il badge che già mostri (01,02...) -> lo metto nel messaggio
+      const b = document.getElementById("imgBadge");
+      const t = (b && b.textContent) ? b.textContent.trim() : "";
+      return t || "??";
+    }
+
+    function makePhotoMessage(){
+      const title = (document.getElementById("pageTitle")?.textContent || id).trim();
+      const n = currentObjNumber();
+      const photo = currentPhotoUrl();
+      const photoLine = photo ? `📷 Foto: ${photo}` : "";
       return `Ciao! 👋
+Vorrei informazioni per il numero ${n}.
+
+🏷️ Vetrina: ${title}
+🔗 Link vetrina: ${shareLink}
+${photoLine}
+
+✅ Se disponibile, mandatemi prezzo e disponibilità.`;
+    }
+
+    // PROVO A CONDIVIDERE LA FOTO COME FILE (Android share sheet)
+    async function sharePhotoAsFile(msg){
+      const photo = currentPhotoUrl();
+      if(!photo || !navigator.share) return false;
+
+      // Provo a scaricare l'immagine e creare File
+      try{
+        const res = await fetch(photo, { cache:"no-store" });
+        if(!res.ok) throw new Error("HTTP " + res.status);
+        const blob = await res.blob();
+        const ext = (blob.type || "image/jpeg").includes("png") ? "png" : "jpg";
+        const file = new File([blob], `foto-${id}-${currentObjNumber()}.${ext}`, { type: blob.type || "image/jpeg" });
+
+        // se il browser supporta files
+        if(navigator.canShare && !navigator.canShare({ files:[file] })) return false;
+
+        await navigator.share({
+          title: "Richiesta info oggetto",
+          text: msg,
+          files: [file]
+        });
+        return true;
+      }catch(e){
+        return false;
+      }
+    }
+
+    function openWaTextOnly(phone, msg){
+      // phone (solo cifre) se presente, altrimenti share generico
+      const digits = String(phone||"").replace(/\D/g,"");
+      const url = digits
+        ? `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`
+        : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      window.open(url, "_blank");
+    }
+
+    // ====== WhatsApp generale (già tuo) ======
+    const shareBtn = document.getElementById("shareBtn");
+    if(shareBtn){
+      shareBtn.addEventListener("click", async ()=>{
+        const phones = extractPhones(getAllTextForPhones());
+        const chosen = choosePhone(phones);
+        const msg = `Ciao! 👋
 Ti mando la vetrina con foto e numeri degli oggetti.
 
 ✅ Apri qui:
 ${shareLink}
 
 📌 Se ti interessa un oggetto, dimmi il numero e ti rispondo subito su WhatsApp.`;
+
+        // qui va bene testo-only
+        openWaTextOnly(chosen, msg);
+      });
     }
 
-    // WhatsApp bottone (sopra barra)
-    const shareBtn = document.getElementById("shareBtn");
-    if(shareBtn){
-      shareBtn.addEventListener("click", ()=>{
-        const msg = makeWaMessage();
-        const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-        window.open(url, "_blank");
+    // ====== WhatsApp FOTO (nuovo) ======
+    const waPhotoBtn = document.getElementById("waPhotoBtn");
+    if(waPhotoBtn){
+      waPhotoBtn.addEventListener("click", async ()=>{
+        const phones = extractPhones(getAllTextForPhones());
+        const chosen = choosePhone(phones);
+        const msg = makePhotoMessage();
+
+        // 1) prova invio con FOTO allegata (share sheet)
+        const ok = await sharePhotoAsFile(msg);
+
+        // 2) se non riesce, invia testo con LINK foto
+        if(!ok){
+          openWaTextOnly(chosen, msg);
+        }
       });
     }
 
     /* ===================== INDICE ALTRE VETRINE ===================== */
-
     const netFilters = document.getElementById("netFilters");
     const netList = document.getElementById("netList");
     const netHint = document.getElementById("netHint");
-
     const DEFAULT_TAGS = ["tutte","servizi","attività","abbigliamento","commercio","casa","auto","altro"];
 
-    function normTag(t){
-      return String(t||"").trim().toLowerCase();
-    }
+    function normTag(t){ return String(t||"").trim().toLowerCase(); }
 
     function btn(label, active){
       const b = document.createElement("button");
@@ -285,19 +410,17 @@ ${shareLink}
       return await res.json();
     }
 
-    // Carica index base
     async function loadIndex(){
       try{
+        if(!netHint) return;
         netHint.textContent = "Carico elenco vetrine…";
         const idx = await fetchJson("data/vetrine.json");
         const list = Array.isArray(idx.vetrine) ? idx.vetrine : [];
 
-        // rimuovi questa vetrina dall’elenco
         const baseList = list
           .map(x => ({ id: String(x.id||"").trim(), title: String(x.title||"").trim() }))
           .filter(x => x.id && x.id !== id);
 
-        // carica tags da ogni vetrina (leggero, una volta)
         const enriched = [];
         for(const v of baseList){
           try{
@@ -310,11 +433,9 @@ ${shareLink}
           }
         }
 
-        // crea filtri in base ai tag trovati + default
         const tagSet = new Set(DEFAULT_TAGS.map(normTag));
         enriched.forEach(v => (v.tags||[]).forEach(t => tagSet.add(normTag(t))));
         const tagsAll = Array.from(tagSet).filter(Boolean);
-        // metti "tutte" per prima
         tagsAll.sort((a,b)=>{
           if(a==="tutte") return -1;
           if(b==="tutte") return 1;
@@ -324,6 +445,7 @@ ${shareLink}
         let currentFilter = "tutte";
 
         function renderFilters(){
+          if(!netFilters) return;
           netFilters.innerHTML = "";
           tagsAll.forEach(t=>{
             const b = btn(t, t===currentFilter);
@@ -337,6 +459,7 @@ ${shareLink}
         }
 
         function renderList(){
+          if(!netList) return;
           netList.innerHTML = "";
           const filtered = (currentFilter==="tutte")
             ? enriched
@@ -352,9 +475,7 @@ ${shareLink}
             return;
           }
 
-          // ordinamento per id
           filtered.sort((a,b)=>a.id.localeCompare(b.id,"it",{numeric:true}));
-
           filtered.forEach(v => netList.appendChild(cardLink(v)));
           netHint.textContent = `Filtro: ${currentFilter} • ${filtered.length} vetrine`;
         }
@@ -362,11 +483,12 @@ ${shareLink}
         renderFilters();
         renderList();
       }catch(e){
-        netHint.textContent = "Errore: non riesco a leggere data/vetrine.json";
+        if(netHint) netHint.textContent = "Errore: non riesco a leggere data/vetrine.json";
       }
     }
 
     loadIndex();
+
   })();
   </script>
 </body>
