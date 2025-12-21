@@ -1,0 +1,26 @@
+{
+  "id": "renzo12",
+  "title": "Nuova Vetrina",
+  "description": "Vetrina commerciale. Tocca i numeri per contattare.",
+  "voice": {
+    "lang": "it-IT",
+    "text": "Benvenuto nella nuova vetrina. Per informazioni contatta i numeri indicati qui sotto."
+  },
+  "tags": ["vetrina"],
+  "media": [
+    { "type": "image", "url": "media/renzo12-001.jpg", "label": "Foto 001" },
+    { "type": "image", "url": "media/renzo12-002.jpg", "label": "Foto 002" }
+  ],
+  "files": [
+    { "label": "Manuale", "url": "files/manuale.pdf", "type": "pdf" }
+  ],
+  "pinsData": {
+    "pinSize": 28,
+    "byImage": {
+      "media/renzo12-001.jpg": [],
+      "media/renzo12-002.jpg": []
+    }
+  },
+  "createdAt": "2025-12-21T00:00:00+01:00",
+  "updatedAt": "2025-12-21T00:00:00+01:00"
+}
