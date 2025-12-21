@@ -258,10 +258,9 @@
       <div>📌 Aggiorna <b>data/vetrine.json</b></div>
       <button class="closeX" id="closeModal">Chiudi</button>
     </div>
-    <div class="small">
+    <div class="small" id="afterCreateHint">
       1) Premi “Copia” oppure “Scarica vetrine.json”  
-      2) Su GitHub apri <b>data/vetrine.json</b> → ✏️ Edit → incolla → Commit  
-      (Il commit automatico non è possibile senza token)
+      2) Su GitHub apri <b>data/vetrine.json</b> → ✏️ Edit → incolla → Commit
     </div>
 
     <textarea id="indexBox" spellcheck="false"></textarea>
@@ -270,6 +269,7 @@
       <button class="btn green" id="copyIndexBtn">📋 Copia</button>
       <button class="btn green" id="downloadIndexBtn">⬇️ Scarica vetrine.json</button>
       <button class="btn" id="openGithubIndexBtn">Apri GitHub data/vetrine.json</button>
+      <button class="btn amber" id="openGithubNewJsonBtn" style="display:none;">Apri GitHub data/ID.json</button>
     </div>
   </div>
 </div>
@@ -286,40 +286,32 @@
       <div style="font-weight:1000">Stato</div>
       <span class="pill" id="statePill">Caricamento…</span>
     </div>
-    <div class="small" style="margin-top:8px">
-      Questo Admin legge le vetrine da <b>data/vetrine.json</b> e ti genera lo stesso file aggiornato in 1 click.
-    </div>
   </div>
 
-  <!-- 🔥 INDICE -->
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <div style="font-weight:1000">📌 Indice vetrine</div>
       <button class="btn green" id="openIndexBtn">Aggiorna vetrine.json</button>
     </div>
     <div class="small" style="margin-top:8px">
-      Usa questo dopo “Crea” o “Duplica”. Ti prepara il JSON completo pronto da incollare.
+      Dopo “Crea” o “Duplica”, l’admin apre qui automaticamente anche GitHub del file nuovo.
     </div>
   </div>
 
   <div class="grid2">
-
-    <!-- CREA -->
     <div class="card" id="createCard" hidden>
       <div style="font-weight:1000;margin-bottom:8px">➕ Crea nuova vetrina</div>
       <div class="row">
         <input id="newId" placeholder="ID nuova vetrina (es. renzo13 / scalvini11)">
-        <input id="newTitle" placeholder="Titolo (es. Bazar di ... con SerCucTech)">
-        <textarea id="newSpeech" placeholder="Testo fisso (description + voice.text) che resterà visibile e verrà letto. Inserisci anche numeri telefono qui."></textarea>
+        <input id="newTitle" placeholder="Titolo (es. ... con SerCucTech)">
+        <textarea id="newSpeech" placeholder="Testo fisso (description + voice.text). Inserisci anche numeri telefono qui."></textarea>
         <button class="btn green" id="createBtn">Crea e scarica JSON</button>
         <div class="small">
-          Scarica <b>ID.json</b> pronto. Poi lo carichi su GitHub in <b>data/ID.json</b>.  
           Link utente: <b>link.html?id=ID</b>
         </div>
       </div>
     </div>
 
-    <!-- DUPLICA -->
     <div class="card">
       <div style="font-weight:1000;margin-bottom:8px">🧬 Duplica vetrina (clone)</div>
       <div class="row">
@@ -327,37 +319,32 @@
         <input id="cloneTo" placeholder="Nuovo ID (es. renzo14)">
         <button class="btn amber" id="cloneBtn">Duplica e scarica JSON</button>
         <div class="small">
-          Duplica tutto e sostituisce automaticamente gli URL:
-          <b>media/ID-</b> da sorgente → nuovo ID.
+          Riscrive automaticamente: <b>media/vecchio-</b> → <b>media/nuovo-</b>
         </div>
       </div>
     </div>
-
   </div>
 
-  <!-- BACKUP -->
   <div class="card">
     <div style="font-weight:1000;margin-bottom:8px">🧰 Backup</div>
     <div class="row">
       <button class="btn green" id="backupJsonBtn">Scarica ZIP (solo JSON)</button>
       <button class="btn" id="backupFullBtn">Scarica ZIP (JSON + media referenziati)</button>
       <div class="small">
-        • “Solo JSON” è veloce e sicuro.  
-        • “JSON + media” prova a includere anche file indicati nel JSON (se esistono).
+        “JSON + media” prova a includere anche file indicati nel JSON (se esistono).
       </div>
     </div>
   </div>
 
-  <!-- LISTA -->
   <div class="card">
-    <div style="font-weight:1000;margin-bottom:8px">📌 Vetrine (da data/vetrine.json)</div>
+    <div style="font-weight:1000;margin-bottom:8px">📌 Vetrine</div>
     <div class="list" id="list"></div>
   </div>
 
 </div>
 
 <script>
-/* ===================== CONFIG SICUREZZA ADMIN ===================== */
+/* ===================== SICUREZZA ===================== */
 const PINKEY = "sercuctech_pin";
 const ADMIN_UNLOCK_KEY = "sercuctech_admin_unlock_until";
 const DEFAULT_PIN = "1234";
@@ -367,15 +354,12 @@ function initPin(){
 }
 function getPin(){ return localStorage.getItem(PINKEY) || DEFAULT_PIN; }
 function setUnlock24h(){
-  const until = Date.now() + (24*60*60*1000);
-  localStorage.setItem(ADMIN_UNLOCK_KEY, String(until));
+  localStorage.setItem(ADMIN_UNLOCK_KEY, String(Date.now() + 24*60*60*1000));
 }
 function isUnlocked(){
-  const until = Number(localStorage.getItem(ADMIN_UNLOCK_KEY) || "0");
-  return Date.now() < until;
+  return Date.now() < Number(localStorage.getItem(ADMIN_UNLOCK_KEY) || "0");
 }
 
-/* sblocco parole: SerCucTech -> qualsiasi */
 let seq = [];
 const gate = document.getElementById("gate");
 const app = document.getElementById("app");
@@ -409,7 +393,7 @@ window.addEventListener("load", ()=>{
   }
 });
 
-/* ===================== UI ===================== */
+/* ===================== UI/STATE ===================== */
 const statePill = document.getElementById("statePill");
 const listEl = document.getElementById("list");
 const createMainBtn = document.getElementById("createMainBtn");
@@ -434,22 +418,22 @@ const indexBox = document.getElementById("indexBox");
 const copyIndexBtn = document.getElementById("copyIndexBtn");
 const downloadIndexBtn = document.getElementById("downloadIndexBtn");
 const openGithubIndexBtn = document.getElementById("openGithubIndexBtn");
+const openGithubNewJsonBtn = document.getElementById("openGithubNewJsonBtn");
 
-let vetrineIndex = [];      // [{id,title}]
+let vetrineIndex = [];
 let vetrineDataCache = new Map();
 
+/* ===================== HELPERS ===================== */
 function escapeHtml(s){
   return String(s||"").replace(/[&<>"']/g, c => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
   }[c]));
 }
-
 async function fetchJson(url){
   const res = await fetch(url, {cache:"no-store"});
   if(!res.ok) throw new Error("HTTP " + res.status);
   return await res.json();
 }
-
 function downloadJson(filename, obj){
   const blob = new Blob([JSON.stringify(obj,null,2)], {type:"application/json"});
   const a = document.createElement("a");
@@ -459,56 +443,67 @@ function downloadJson(filename, obj){
   a.click();
   setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1200);
 }
-
 function openLinkPage(id){
   window.open(`link.html?id=${encodeURIComponent(id)}`, "_blank");
 }
-
-function buildBaseVetrina(id, title, speech){
-  const now = new Date().toISOString();
-  const text = (speech||"").trim();
-  return {
-    id,
-    title: (title||id).trim() || id,
-    description: text || "Descrizione vetrina",
-    voice: { lang:"it-IT", text: text || "Benvenuto nella vetrina." },
-    tags: ["vetrina"],
-    media: [],
-    files: [],
-    pinsData: { pinSize: 28, byImage: {} },
-    createdAt: now,
-    updatedAt: now
-  };
+function openGithubDataJson(id){
+  window.open(`https://github.com/creamiaappsercuctech/SerCucTech/blob/main/data/${encodeURIComponent(id)}.json`, "_blank");
 }
 
-function rewriteIdInJson(obj, fromId, toId){
-  const cloned = JSON.parse(JSON.stringify(obj));
-  cloned.id = toId;
-  cloned.title = cloned.title || toId;
+/* ===================== INDEX vetrine.json ===================== */
+function normalizeIndex(list){
+  const map = new Map();
+  (list||[]).forEach(v=>{
+    const id = String(v.id||"").trim();
+    if(!id) return;
+    map.set(id, { id, title: String(v.title||id) });
+  });
+  return Array.from(map.values()).sort((a,b)=>a.id.localeCompare(b.id,"it",{numeric:true}));
+}
+function getGeneratedIndexJson(){
+  const obj = { vetrine: normalizeIndex(vetrineIndex) };
+  return JSON.stringify(obj, null, 2);
+}
+function showIndexModal(withNewId){
+  indexBox.value = getGeneratedIndexJson();
+  indexModal.classList.add("show");
 
-  if(Array.isArray(cloned.media)){
-    cloned.media = cloned.media.map(m=>{
-      if(!m || !m.url) return m;
-      const mm = {...m};
-      mm.url = String(mm.url).replaceAll(`media/${fromId}-`, `media/${toId}-`);
-      return mm;
-    });
+  if(withNewId){
+    openGithubNewJsonBtn.style.display = "";
+    openGithubNewJsonBtn.textContent = `Apri GitHub data/${withNewId}.json`;
+    openGithubNewJsonBtn.onclick = ()=> openGithubDataJson(withNewId);
+  }else{
+    openGithubNewJsonBtn.style.display = "none";
+    openGithubNewJsonBtn.onclick = null;
   }
-
-  if(cloned.pinsData && cloned.pinsData.byImage){
-    const by = cloned.pinsData.byImage;
-    const by2 = {};
-    for(const k of Object.keys(by)){
-      const nk = String(k).replaceAll(`media/${fromId}-`, `media/${toId}-`);
-      by2[nk] = by[k];
-    }
-    cloned.pinsData.byImage = by2;
-  }
-
-  cloned.updatedAt = new Date().toISOString();
-  return cloned;
 }
 
+openIndexBtn.addEventListener("click", ()=>showIndexModal(""));
+closeModal.addEventListener("click", ()=> indexModal.classList.remove("show"));
+
+copyIndexBtn.addEventListener("click", async ()=>{
+  try{
+    await navigator.clipboard.writeText(indexBox.value);
+    alert("Copiato ✅");
+  }catch(e){
+    indexBox.focus(); indexBox.select();
+    document.execCommand("copy");
+    alert("Copiato ✅");
+  }
+});
+downloadIndexBtn.addEventListener("click", ()=>{
+  try{
+    const obj = JSON.parse(indexBox.value);
+    downloadJson("vetrine.json", obj);
+  }catch(e){
+    alert("Testo non valido (non dovrebbe succedere).");
+  }
+});
+openGithubIndexBtn.addEventListener("click", ()=>{
+  window.open("https://github.com/creamiaappsercuctech/SerCucTech/blob/main/data/vetrine.json", "_blank");
+});
+
+/* ===================== LISTA ===================== */
 function renderList(){
   listEl.innerHTML = "";
   vetrineIndex.forEach(v=>{
@@ -529,7 +524,6 @@ function renderList(){
     listEl.appendChild(el);
   });
 }
-
 function fillCloneSelect(){
   cloneFrom.innerHTML = "";
   vetrineIndex.forEach(v=>{
@@ -539,61 +533,6 @@ function fillCloneSelect(){
     cloneFrom.appendChild(opt);
   });
 }
-
-/* ===================== INDICE vetrine.json ===================== */
-function normalizeIndex(list){
-  const map = new Map();
-  (list||[]).forEach(v=>{
-    const id = String(v.id||"").trim();
-    if(!id) return;
-    map.set(id, { id, title: String(v.title||id) });
-  });
-  return Array.from(map.values()).sort((a,b)=>a.id.localeCompare(b.id,"it",{numeric:true}));
-}
-
-function getGeneratedIndexJson(){
-  const obj = { vetrine: normalizeIndex(vetrineIndex) };
-  return JSON.stringify(obj, null, 2);
-}
-
-function showIndexModal(){
-  indexBox.value = getGeneratedIndexJson();
-  indexModal.classList.add("show");
-}
-
-openIndexBtn.addEventListener("click", showIndexModal);
-closeModal.addEventListener("click", ()=> indexModal.classList.remove("show"));
-
-copyIndexBtn.addEventListener("click", async ()=>{
-  try{
-    await navigator.clipboard.writeText(indexBox.value);
-    alert("Copiato ✅");
-  }catch(e){
-    indexBox.focus(); indexBox.select();
-    document.execCommand("copy");
-    alert("Copiato ✅");
-  }
-});
-
-downloadIndexBtn.addEventListener("click", ()=>{
-  try{
-    const obj = JSON.parse(indexBox.value);
-    downloadJson("vetrine.json", obj);
-  }catch(e){
-    alert("Il testo non è un JSON valido (non dovrebbe succedere).");
-  }
-});
-
-openGithubIndexBtn.addEventListener("click", ()=>{
-  window.open("https://github.com/creamiaappsercuctech/SerCucTech/blob/main/data/vetrine.json", "_blank");
-});
-
-/* ===================== CREATE / CLONE ===================== */
-createMainBtn.addEventListener("click", ()=>{
-  createCard.hidden = !createCard.hidden;
-  if(!createCard.hidden) newId.focus();
-});
-
 function addToIndex(id, title){
   const exists = vetrineIndex.some(v => v.id === id);
   if(!exists) vetrineIndex.push({ id, title: title || id });
@@ -602,27 +541,53 @@ function addToIndex(id, title){
   fillCloneSelect();
 }
 
+/* ===================== CREATE / CLONE ===================== */
+createMainBtn.addEventListener("click", ()=>{
+  createCard.hidden = !createCard.hidden;
+  if(!createCard.hidden) newId.focus();
+});
+
+function buildBaseVetrina(id, title, speech){
+  const now = new Date().toISOString();
+  const text = (speech||"").trim();
+  return {
+    id,
+    title: (title||id).trim() || id,
+    description: text || "Descrizione vetrina",
+    voice: { lang:"it-IT", text: text || "Benvenuto nella vetrina." },
+    tags: ["vetrina"],
+    media: [],
+    files: [],
+    pinsData: { pinSize: 28, byImage: {} },
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
 createBtn.addEventListener("click", ()=>{
-  const id = (newId.value||"").trim();
-  if(!id) return alert("Inserisci un ID");
-  const title = (newTitle.value||"").trim() || id;
+  const vid = (newId.value||"").trim();
+  if(!vid) return alert("Inserisci un ID");
+  const title = (newTitle.value||"").trim() || vid;
   const speech = (newSpeech.value||"").trim();
 
-  const json = buildBaseVetrina(id, title, speech);
-  downloadJson(`${id}.json`, json);
-  openLinkPage(id);
+  const json = buildBaseVetrina(vid, title, speech);
+  downloadJson(`${vid}.json`, json);
 
-  // aggiunge all'indice interno e apre modal indice pronto
-  addToIndex(id, title);
-  showIndexModal();
+  openLinkPage(vid);
+  addToIndex(vid, title);
+
+  // Modal indice + bottone GitHub ID.json
+  showIndexModal(vid);
+
+  // apre GitHub sul file data/ID.json per incolla/commit
+  openGithubDataJson(vid);
 
   alert(
-    "✅ Creato file JSON.\n\n" +
-    "Ora:\n" +
-    "1) Carica su GitHub: data/" + id + ".json\n" +
+    "✅ Creato.\n\n" +
+    "1) GitHub data/" + vid + ".json è aperto (incolla e commit)\n" +
     "2) Aggiorna data/vetrine.json (modal aperta)\n" +
     "3) Metti immagini in media/\n" +
-    "4) Condividi: link.html?id=" + id
+    "4) Condividi: link.html?id=" + vid
   );
 
   newId.value=""; newTitle.value=""; newSpeech.value="";
@@ -634,11 +599,36 @@ async function getVetrinaJson(id){
   vetrineDataCache.set(id, j);
   return j;
 }
+function rewriteIdInJson(obj, fromId, toId){
+  const cloned = JSON.parse(JSON.stringify(obj));
+  cloned.id = toId;
+  cloned.title = cloned.title || toId;
+
+  if(Array.isArray(cloned.media)){
+    cloned.media = cloned.media.map(m=>{
+      if(!m || !m.url) return m;
+      const mm = {...m};
+      mm.url = String(mm.url).replaceAll(`media/${fromId}-`, `media/${toId}-`);
+      return mm;
+    });
+  }
+  if(cloned.pinsData && cloned.pinsData.byImage){
+    const by = cloned.pinsData.byImage;
+    const by2 = {};
+    for(const k of Object.keys(by)){
+      const nk = String(k).replaceAll(`media/${fromId}-`, `media/${toId}-`);
+      by2[nk] = by[k];
+    }
+    cloned.pinsData.byImage = by2;
+  }
+  cloned.updatedAt = new Date().toISOString();
+  return cloned;
+}
 
 cloneBtn.addEventListener("click", async ()=>{
   const fromId = cloneFrom.value;
   const toId = (cloneTo.value||"").trim();
-  if(!fromId) return alert("Seleziona vetrina sorgente");
+  if(!fromId) return alert("Seleziona sorgente");
   if(!toId) return alert("Inserisci nuovo ID");
 
   try{
@@ -646,15 +636,16 @@ cloneBtn.addEventListener("click", async ()=>{
     const src = await getVetrinaJson(fromId);
     const out = rewriteIdInJson(src, fromId, toId);
     downloadJson(`${toId}.json`, out);
-    openLinkPage(toId);
 
+    openLinkPage(toId);
     addToIndex(toId, out.title || toId);
-    showIndexModal();
+
+    showIndexModal(toId);
+    openGithubDataJson(toId);
 
     alert(
       "✅ Clonato.\n\n" +
-      "Ora:\n" +
-      "1) Carica su GitHub: data/" + toId + ".json\n" +
+      "1) GitHub data/" + toId + ".json è aperto (incolla e commit)\n" +
       "2) Aggiorna data/vetrine.json (modal aperta)\n" +
       "3) Rinomina/Carica immagini: media/" + toId + "-XXX.jpg\n" +
       "4) Condividi: link.html?id=" + toId
@@ -676,7 +667,6 @@ function downloadBlob(filename, blob){
   a.click();
   setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
 }
-
 async function backupZipJsonOnly(){
   if(!window.JSZip) return alert("JSZip non caricato");
   const zip = new JSZip();
@@ -687,13 +677,11 @@ async function backupZipJsonOnly(){
   const blob = await zip.generateAsync({type:"blob"});
   downloadBlob(`backup-json-${new Date().toISOString().slice(0,10)}.zip`, blob);
 }
-
 async function fetchAsBlob(url){
   const res = await fetch(url, {cache:"no-store"});
   if(!res.ok) throw new Error("HTTP " + res.status);
   return await res.blob();
 }
-
 async function backupZipFull(){
   if(!window.JSZip) return alert("JSZip non caricato");
   const zip = new JSZip();
@@ -705,26 +693,18 @@ async function backupZipFull(){
     const media = Array.isArray(j.media) ? j.media : [];
     for(const m of media){
       if(!m?.url) continue;
-      try{
-        const b = await fetchAsBlob(m.url);
-        zip.file(m.url, b);
-      }catch(e){}
+      try{ zip.file(m.url, await fetchAsBlob(m.url)); }catch(e){}
     }
-
     const files = Array.isArray(j.files) ? j.files : [];
     for(const f of files){
       if(!f?.url) continue;
-      try{
-        const b = await fetchAsBlob(f.url);
-        zip.file(f.url, b);
-      }catch(e){}
+      try{ zip.file(f.url, await fetchAsBlob(f.url)); }catch(e){}
     }
   }
 
   const blob = await zip.generateAsync({type:"blob"});
   downloadBlob(`backup-full-${new Date().toISOString().slice(0,10)}.zip`, blob);
 }
-
 backupJsonBtn.addEventListener("click", backupZipJsonOnly);
 backupFullBtn.addEventListener("click", backupZipFull);
 
@@ -739,11 +719,7 @@ async function boot(){
     fillCloneSelect();
   }catch(e){
     statePill.textContent = "Errore indice";
-    alert(
-      "Non trovo data/vetrine.json.\n\n" +
-      "Crea il file data/vetrine.json.\n" +
-      "Errore: " + e.message
-    );
+    alert("Non trovo data/vetrine.json. Crea il file e riprova.");
   }
 }
 </script>
