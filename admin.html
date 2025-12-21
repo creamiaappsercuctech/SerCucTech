@@ -16,7 +16,6 @@
       --txt:#eaf0ff;
       --muted:rgba(234,240,255,.72);
       --green:#23c55e;
-      --red:#ff4d4d;
       --amber:#ffcc66;
       --btn:rgba(255,255,255,.10);
       --shadow:0 10px 30px rgba(0,0,0,.35);
@@ -38,188 +37,78 @@
       backdrop-filter:blur(10px);
       border-bottom:1px solid var(--line);
     }
-    h1{
-      margin:0 0 10px;
-      font-size:20px;
-      font-weight:1000;
-      text-align:center;
-    }
-    .wrap{
-      max-width:980px;
-      margin:0 auto;
-      padding:16px;
-      display:grid;
-      gap:14px;
-    }
-    .card{
-      border:1px solid var(--line);
-      background:var(--card);
-      border-radius:18px;
-      box-shadow:var(--shadow);
-      padding:14px;
-    }
-    .row{display:grid; gap:10px}
-    .grid2{display:grid; gap:12px}
+    h1{margin:0 0 10px;font-size:20px;font-weight:1000;text-align:center}
+    .wrap{max-width:980px;margin:0 auto;padding:16px;display:grid;gap:14px}
+    .card{border:1px solid var(--line);background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:14px}
+    .row{display:grid;gap:10px}
+    .grid2{display:grid;gap:12px}
     @media(min-width:900px){ .grid2{grid-template-columns:1fr 1fr;} }
 
-    /* 🔥 TASTO CREA NUOVA */
     .createBtn{
-      display:block;
-      width:100%;
-      padding:18px 16px;
-      font-size:18px;
-      font-weight:1000;
-      text-align:center;
-      border-radius:18px;
-      background:var(--green);
-      color:#06110a;
-      border:none;
-      cursor:pointer;
-      box-shadow:var(--shadow);
+      display:block;width:100%;padding:18px 16px;font-size:18px;font-weight:1000;text-align:center;
+      border-radius:18px;background:var(--green);color:#06110a;border:none;cursor:pointer;box-shadow:var(--shadow)
     }
     .createBtn:active{transform:scale(.98)}
 
     input, select, textarea{
-      width:100%;
-      padding:14px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:rgba(0,0,0,.25);
-      color:var(--txt);
-      font-size:15px;
-      font-weight:900;
-      outline:none;
+      width:100%;padding:14px;border-radius:14px;border:1px solid var(--line);
+      background:rgba(0,0,0,.25);color:var(--txt);font-size:15px;font-weight:900;outline:none
     }
     textarea{
       min-height:140px;
       font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size:12px;
-      color:var(--muted);
+      font-size:12px;color:var(--muted);
     }
     .btn{
-      padding:14px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:var(--btn);
-      color:var(--txt);
-      font-weight:1000;
-      font-size:14px;
-      cursor:pointer;
+      padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--btn);
+      color:var(--txt);font-weight:1000;font-size:14px;cursor:pointer
     }
     .btn.green{background:var(--green);color:#06110a;border-color:rgba(0,0,0,.2)}
-    .btn.red{background:rgba(255,77,77,.18);color:#fff}
     .btn.amber{background:rgba(255,204,102,.18);color:#fff}
     .btn:active{transform:scale(.99)}
 
-    .small{
-      font-size:12px;
-      color:var(--muted);
-      font-weight:800;
-      line-height:1.35;
-    }
-    .pill{
-      display:inline-block;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.06);
-      color:var(--muted);
-      font-weight:900;
-      font-size:12px;
-    }
+    .small{font-size:12px;color:var(--muted);font-weight:800;line-height:1.35}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--muted);font-weight:900;font-size:12px}
 
     .list{display:grid; gap:10px}
     .item{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      padding:12px;
-      border-radius:16px;
-      border:1px solid var(--line);
-      background:rgba(0,0,0,.18);
+      display:flex;justify-content:space-between;align-items:center;gap:10px;
+      padding:12px;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.18);
     }
     .item strong{font-weight:1000}
-    .itemBtns{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+    .itemBtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
     a.linkBtn{
-      text-decoration:none;
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.08);
-      color:var(--txt);
-      font-size:12px;
-      font-weight:1000;
+      text-decoration:none;padding:8px 10px;border-radius:999px;border:1px solid var(--line);
+      background:rgba(255,255,255,.08);color:var(--txt);font-size:12px;font-weight:1000;
     }
 
     /* GATE admin */
-    .gate{
-      position:fixed; inset:0; z-index:999;
-      background:rgba(0,0,0,.68);
-      display:flex; align-items:center; justify-content:center;
-      padding:18px;
-    }
+    .gate{position:fixed; inset:0; z-index:999;background:rgba(0,0,0,.68);display:flex;align-items:center;justify-content:center;padding:18px}
     .gateCard{
-      width:min(560px,100%);
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(20,26,44,.92);
-      border-radius:18px;
-      box-shadow:var(--shadow);
-      padding:14px;
+      width:min(560px,100%);border:1px solid rgba(255,255,255,.14);background:rgba(20,26,44,.92);
+      border-radius:18px;box-shadow:var(--shadow);padding:14px
     }
     .gateTitle{font-weight:1000;font-size:16px;text-align:center;margin-bottom:8px}
     .gateText{color:rgba(255,255,255,.78);font-size:13px;text-align:center;line-height:1.35}
     .phrase{
-      margin-top:10px;
-      padding:12px;
-      border-radius:14px;
-      border:1px dashed rgba(255,255,255,.18);
-      background:rgba(0,0,0,.18);
-      font-weight:900;
-      line-height:1.4;
-      text-align:center;
-      user-select:none;
+      margin-top:10px;padding:12px;border-radius:14px;border:1px dashed rgba(255,255,255,.18);
+      background:rgba(0,0,0,.18);font-weight:900;line-height:1.4;text-align:center;user-select:none
     }
-    .hot{
-      display:inline-block;
-      padding:2px 6px;
-      border-radius:10px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.14);
-    }
-    .gateOkRow{margin-top:10px; display:grid; gap:10px}
+    .hot{display:inline-block;padding:2px 6px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14)}
+    .gateOkRow{margin-top:10px;display:grid;gap:10px}
     .gateOkRow input{background:rgba(0,0,0,.28)}
 
     /* Modal indice */
-    .modal{
-      position:fixed; inset:0; z-index:900;
-      background:rgba(0,0,0,.65);
-      display:none;
-      align-items:center; justify-content:center;
-      padding:18px;
-    }
+    .modal{position:fixed; inset:0; z-index:900;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:18px}
     .modal.show{display:flex;}
     .modalCard{
-      width:min(900px,100%);
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(20,26,44,.95);
-      border-radius:18px;
-      box-shadow:var(--shadow);
-      padding:14px;
+      width:min(900px,100%);border:1px solid rgba(255,255,255,.14);background:rgba(20,26,44,.95);
+      border-radius:18px;box-shadow:var(--shadow);padding:14px
     }
-    .modalTitle{
-      font-weight:1000;
-      margin-bottom:8px;
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-    }
+    .modalTitle{font-weight:1000;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px}
     .closeX{
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.08);
-      color:#fff;
-      border-radius:12px;
-      padding:8px 10px;
-      font-weight:1000;
-      cursor:pointer;
+      border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:#fff;border-radius:12px;
+      padding:8px 10px;font-weight:1000;cursor:pointer
     }
     .modalBtns{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
   </style>
@@ -231,9 +120,7 @@
 <div class="gate" id="gate">
   <div class="gateCard">
     <div class="gateTitle">🔒 Accesso Admin</div>
-    <div class="gateText">
-      Sblocco con 2 parole in sequenza, poi PIN. Valido 24 ore su questo dispositivo.
-    </div>
+    <div class="gateText">Sblocco con 2 parole in sequenza, poi PIN. Valido 24 ore su questo dispositivo.</div>
 
     <div class="phrase" id="phrase">
       <span class="hot" data-word="SerCucTech">SerCucTech</span>.
@@ -244,9 +131,7 @@
     <div class="gateOkRow">
       <input id="pinInput" placeholder="Inserisci PIN (es. 1234)" inputmode="numeric" autocomplete="off">
       <button class="btn green" id="enterBtn">Entra</button>
-      <div class="small" style="text-align:center">
-        Tocca prima <b>SerCucTech</b> poi <b>qualsiasi</b> (in quest’ordine).
-      </div>
+      <div class="small" style="text-align:center">Tocca prima <b>SerCucTech</b> poi <b>qualsiasi</b> (in quest’ordine).</div>
     </div>
   </div>
 </div>
@@ -258,9 +143,9 @@
       <div>📌 Aggiorna <b>data/vetrine.json</b></div>
       <button class="closeX" id="closeModal">Chiudi</button>
     </div>
-    <div class="small" id="afterCreateHint">
-      1) Premi “Copia” oppure “Scarica vetrine.json”  
-      2) Su GitHub apri <b>data/vetrine.json</b> → ✏️ Edit → incolla → Commit
+
+    <div class="small">
+      1) “Copia” o “Scarica” → 2) GitHub data/vetrine.json → ✏️ Edit → incolla → Commit
     </div>
 
     <textarea id="indexBox" spellcheck="false"></textarea>
@@ -268,7 +153,7 @@
     <div class="modalBtns">
       <button class="btn green" id="copyIndexBtn">📋 Copia</button>
       <button class="btn green" id="downloadIndexBtn">⬇️ Scarica vetrine.json</button>
-      <button class="btn" id="openGithubIndexBtn">Apri GitHub data/vetrine.json</button>
+      <button class="btn" id="openGithubIndexBtn">Apri GitHub vetrine.json</button>
       <button class="btn amber" id="openGithubNewJsonBtn" style="display:none;">Apri GitHub data/ID.json</button>
     </div>
   </div>
@@ -288,13 +173,14 @@
     </div>
   </div>
 
+  <!-- GitHub quick -->
   <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-      <div style="font-weight:1000">📌 Indice vetrine</div>
-      <button class="btn green" id="openIndexBtn">Aggiorna vetrine.json</button>
-    </div>
-    <div class="small" style="margin-top:8px">
-      Dopo “Crea” o “Duplica”, l’admin apre qui automaticamente anche GitHub del file nuovo.
+    <div style="font-weight:1000;margin-bottom:8px">⚡ Scorciatoie GitHub</div>
+    <div class="row">
+      <button class="btn green" id="openGithubMediaBtn">Apri GitHub cartella media</button>
+      <button class="btn green" id="openGithubDataBtn">Apri GitHub cartella data</button>
+      <button class="btn" id="openIndexBtn">Aggiorna vetrine.json (modal)</button>
+      <div class="small">Comodo per caricare foto/video e incollare i JSON.</div>
     </div>
   </div>
 
@@ -306,9 +192,7 @@
         <input id="newTitle" placeholder="Titolo (es. ... con SerCucTech)">
         <textarea id="newSpeech" placeholder="Testo fisso (description + voice.text). Inserisci anche numeri telefono qui."></textarea>
         <button class="btn green" id="createBtn">Crea e scarica JSON</button>
-        <div class="small">
-          Link utente: <b>link.html?id=ID</b>
-        </div>
+        <div class="small">Dopo crea: si apre GitHub data/ID.json + modal vetrine.json</div>
       </div>
     </div>
 
@@ -318,9 +202,7 @@
         <select id="cloneFrom"></select>
         <input id="cloneTo" placeholder="Nuovo ID (es. renzo14)">
         <button class="btn amber" id="cloneBtn">Duplica e scarica JSON</button>
-        <div class="small">
-          Riscrive automaticamente: <b>media/vecchio-</b> → <b>media/nuovo-</b>
-        </div>
+        <div class="small">Riscrive automaticamente: media/vecchio- → media/nuovo-</div>
       </div>
     </div>
   </div>
@@ -330,9 +212,6 @@
     <div class="row">
       <button class="btn green" id="backupJsonBtn">Scarica ZIP (solo JSON)</button>
       <button class="btn" id="backupFullBtn">Scarica ZIP (JSON + media referenziati)</button>
-      <div class="small">
-        “JSON + media” prova a includere anche file indicati nel JSON (se esistono).
-      </div>
     </div>
   </div>
 
@@ -344,6 +223,18 @@
 </div>
 
 <script>
+/* ===================== REPO ===================== */
+const REPO_OWNER = "creamiaappsercuctech";
+const REPO_NAME  = "SerCucTech";
+const BRANCH     = "main";
+
+function githubPath(path){
+  return `https://github.com/${REPO_OWNER}/${REPO_NAME}/tree/${BRANCH}/${path}`;
+}
+function githubFile(path){
+  return `https://github.com/${REPO_OWNER}/${REPO_NAME}/blob/${BRANCH}/${path}`;
+}
+
 /* ===================== SICUREZZA ===================== */
 const PINKEY = "sercuctech_pin";
 const ADMIN_UNLOCK_KEY = "sercuctech_admin_unlock_until";
@@ -410,6 +301,14 @@ const cloneBtn = document.getElementById("cloneBtn");
 const backupJsonBtn = document.getElementById("backupJsonBtn");
 const backupFullBtn = document.getElementById("backupFullBtn");
 
+/* GitHub quick buttons */
+document.getElementById("openGithubMediaBtn").addEventListener("click", ()=>{
+  window.open(githubPath("media"), "_blank");
+});
+document.getElementById("openGithubDataBtn").addEventListener("click", ()=>{
+  window.open(githubPath("data"), "_blank");
+});
+
 /* Modal indice */
 const openIndexBtn = document.getElementById("openIndexBtn");
 const indexModal = document.getElementById("indexModal");
@@ -423,7 +322,6 @@ const openGithubNewJsonBtn = document.getElementById("openGithubNewJsonBtn");
 let vetrineIndex = [];
 let vetrineDataCache = new Map();
 
-/* ===================== HELPERS ===================== */
 function escapeHtml(s){
   return String(s||"").replace(/[&<>"']/g, c => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
@@ -447,10 +345,10 @@ function openLinkPage(id){
   window.open(`link.html?id=${encodeURIComponent(id)}`, "_blank");
 }
 function openGithubDataJson(id){
-  window.open(`https://github.com/creamiaappsercuctech/SerCucTech/blob/main/data/${encodeURIComponent(id)}.json`, "_blank");
+  window.open(githubFile(`data/${id}.json`), "_blank");
 }
 
-/* ===================== INDEX vetrine.json ===================== */
+/* ========== INDEX ========== */
 function normalizeIndex(list){
   const map = new Map();
   (list||[]).forEach(v=>{
@@ -477,7 +375,6 @@ function showIndexModal(withNewId){
     openGithubNewJsonBtn.onclick = null;
   }
 }
-
 openIndexBtn.addEventListener("click", ()=>showIndexModal(""));
 closeModal.addEventListener("click", ()=> indexModal.classList.remove("show"));
 
@@ -500,10 +397,10 @@ downloadIndexBtn.addEventListener("click", ()=>{
   }
 });
 openGithubIndexBtn.addEventListener("click", ()=>{
-  window.open("https://github.com/creamiaappsercuctech/SerCucTech/blob/main/data/vetrine.json", "_blank");
+  window.open(githubFile("data/vetrine.json"), "_blank");
 });
 
-/* ===================== LISTA ===================== */
+/* ========== LISTA ========== */
 function renderList(){
   listEl.innerHTML = "";
   vetrineIndex.forEach(v=>{
@@ -541,7 +438,7 @@ function addToIndex(id, title){
   fillCloneSelect();
 }
 
-/* ===================== CREATE / CLONE ===================== */
+/* ========== CREATE/CLONE ========== */
 createMainBtn.addEventListener("click", ()=>{
   createCard.hidden = !createCard.hidden;
   if(!createCard.hidden) newId.focus();
@@ -575,18 +472,14 @@ createBtn.addEventListener("click", ()=>{
 
   openLinkPage(vid);
   addToIndex(vid, title);
-
-  // Modal indice + bottone GitHub ID.json
   showIndexModal(vid);
-
-  // apre GitHub sul file data/ID.json per incolla/commit
   openGithubDataJson(vid);
 
   alert(
     "✅ Creato.\n\n" +
-    "1) GitHub data/" + vid + ".json è aperto (incolla e commit)\n" +
-    "2) Aggiorna data/vetrine.json (modal aperta)\n" +
-    "3) Metti immagini in media/\n" +
+    "1) GitHub data/" + vid + ".json aperto (incolla e commit)\n" +
+    "2) Modal vetrine.json pronta\n" +
+    "3) Carica immagini in GitHub cartella media\n" +
     "4) Condividi: link.html?id=" + vid
   );
 
@@ -639,15 +532,14 @@ cloneBtn.addEventListener("click", async ()=>{
 
     openLinkPage(toId);
     addToIndex(toId, out.title || toId);
-
     showIndexModal(toId);
     openGithubDataJson(toId);
 
     alert(
       "✅ Clonato.\n\n" +
-      "1) GitHub data/" + toId + ".json è aperto (incolla e commit)\n" +
-      "2) Aggiorna data/vetrine.json (modal aperta)\n" +
-      "3) Rinomina/Carica immagini: media/" + toId + "-XXX.jpg\n" +
+      "1) GitHub data/" + toId + ".json aperto (incolla e commit)\n" +
+      "2) Modal vetrine.json pronta\n" +
+      "3) Carica/ri-nomina immagini in media/" + toId + "-XXX.jpg\n" +
       "4) Condividi: link.html?id=" + toId
     );
   }catch(e){
@@ -658,7 +550,7 @@ cloneBtn.addEventListener("click", async ()=>{
   }
 });
 
-/* ===================== BACKUP ZIP ===================== */
+/* ========== BACKUP ZIP ========== */
 function downloadBlob(filename, blob){
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -708,7 +600,7 @@ async function backupZipFull(){
 backupJsonBtn.addEventListener("click", backupZipJsonOnly);
 backupFullBtn.addEventListener("click", backupZipFull);
 
-/* ===================== BOOT ===================== */
+/* ========== BOOT ========== */
 async function boot(){
   try{
     statePill.textContent = "Leggo data/vetrine.json…";
