@@ -7,6 +7,10 @@
     "text": "Benvenuto nella vetrina del Bazar di Bostone. Qui da noi trovi ottime cose e oggetti di ogni genere usati. Contatta Renzo al 3332927842 per chiarimenti o appuntamento, oppure Sergio su WhatsApp al 3208852858. Facciamo svuota cantine e soffitti, anche a pagamento."
   },
   "tags": ["commercio"],
+  "contacts": [
+  { "name": "Renzo", "phone": "3332927842" },
+  { "name": "Sergio", "phone": "3208852858" }
+],
   "media": [
     { "type": "image", "url": "media/renzo11-010.jpg", "label": "Foto 010" },
     { "type": "image", "url": "media/renzo11-011.jpg", "label": "Foto 011" },
