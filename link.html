@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Link Vetrina</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:rgba(255,255,255,.06); --line:rgba(255,255,255,.12);
+      --txt:#eaf0ff; --muted:rgba(234,240,255,.72); --btn:rgba(255,255,255,.10);
+      --green:#23c55e;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background: radial-gradient(900px 600px at 20% -20%, rgba(130,170,255,.20), transparent 60%),
+                  radial-gradient(900px 600px at 90% 10%, rgba(120,255,210,.10), transparent 60%),
+                  var(--bg);
+      color:var(--txt);
+      padding:16px;
+    }
+    .wrap{max-width:720px;margin:0 auto;display:grid;gap:12px}
+    .card{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:14px}
+    h1{margin:0;font-size:20px;font-weight:1000;text-align:center}
+    .sub{margin:8px 0 0;text-align:center;color:var(--muted);font-weight:900}
+    .btn{
+      display:block; width:100%;
+      border:1px solid var(--line); background:var(--btn); color:var(--txt);
+      border-radius:16px; padding:14px 14px; font-weight:1000; text-align:center;
+      text-decoration:none; user-select:none;
+    }
+    .btn:active{transform:scale(.99)}
+    .btn.green{background:var(--green);color:#06110a;border-color:rgba(0,0,0,.2)}
+    .row{display:grid;gap:10px}
+    .small{font-size:12px;color:var(--muted);font-weight:900;line-height:1.35;text-align:center}
+    .mono{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px dashed var(--line);
+      background:rgba(0,0,0,.18);
+      font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size:12px;
+      color:var(--muted);
+      word-break:break-all;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 id="t">Vetrina</h1>
+      <div class="sub" id="d">Pagina link rapida</div>
+      <div class="mono" id="shareLink"></div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <a class="btn green" id="openV" href="#">👤 Apri Vetrina</a>
+        <a class="btn green" id="shareWA" href="#" target="_blank" rel="noopener">📲 Condividi su WhatsApp</a>
+        <a class="btn" id="copyBtn" href="#">📋 Copia link</a>
+      </div>
+      <div class="small">Consiglio: condividi questo link (pagina link), non direttamente vetrina.html</div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <a class="btn" href="admin.html">🔒 Admin</a>
+        <a class="btn" href="index.html">🏠 Torna all’indice principale</a>
+      </div>
+      <div class="small">Admin è solo per te. Gli utenti useranno “Apri Vetrina”.</div>
+    </div>
+  </div>
+
+<script>
+  const id = (new URLSearchParams(location.search).get("id") || "renzo11").trim();
+  const vurl = `${location.origin}${location.pathname.replace(/link\.html$/,"")}vetrina.html?id=${encodeURIComponent(id)}`;
+  const lurl = `${location.origin}${location.pathname}?id=${encodeURIComponent(id)}`;
+
+  document.getElementById("t").textContent = `Vetrina: ${id}`;
+  document.getElementById("d").textContent = `Apri e condividi in 1 click`;
+  document.getElementById("openV").href = vurl;
+
+  const waText = `Guarda questa vetrina: ${id}\n${vurl}`;
+  document.getElementById("shareWA").href = `https://wa.me/?text=${encodeURIComponent(waText)}`;
+
+  document.getElementById("shareLink").textContent = "Link pagina indice (da condividere):\n" + lurl;
+
+  document.getElementById("copyBtn").addEventListener("click", async (e)=>{
+    e.preventDefault();
+    try{
+      await navigator.clipboard.writeText(lurl);
+      alert("Copiato ✅");
+    }catch(err){
+      alert("Copia non riuscita: tieni premuto sul link e copia manualmente.");
+    }
+  });
+</script>
+</body>
+</html>
