@@ -1,4 +1,22 @@
-"contacts": [
-  { "name": "Renzo", "phone": "+393332927842" },
-  { "name": "Sergio", "phone": "+393208852858" }
-]
+{
+  "id": "renzo11",
+  "title": "Bazar di Bostone con SerCucTech",
+  "description": "Vetrina commerciale del Bazar di Bostone.",
+  "voice": {
+    "lang": "it-IT",
+    "text": "Benvenuto nella vetrina del Bazar di Bostone. Qui da noi trovi ottime cose e oggetti di ogni genere usati. Contatta Renzo al 3 3 3 2 9 2 7 8 4 2 oppure Sergio su WhatsApp al 3 2 0 8 8 5 2 8 5 8. Facciamo svuota cantine e soffitti, anche a pagamento."
+  },
+  "contacts": [
+    { "name": "Renzo", "phone": "+393332927842" },
+    { "name": "Sergio", "phone": "+393208852858" }
+  ],
+  "tags": ["commercio"],
+  "media": [
+    { "type": "image", "url": "media/renzo11-010.jpg", "label": "Foto 010" },
+    { "type": "image", "url": "media/renzo11-011.jpg", "label": "Foto 011" },
+    { "type": "image", "url": "media/renzo11-012.jpg", "label": "Foto 012" }
+  ],
+  "files": [],
+  "createdAt": "2025-12-19T07:00:00+01:00",
+  "updatedAt": "2025-12-19T07:03:00+01:00"
+}
