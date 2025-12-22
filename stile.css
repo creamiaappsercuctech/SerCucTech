@@ -155,6 +155,23 @@
   q.addEventListener("input", () => render(q.value));
   render("");
 })();
+    /* PATCH VISIBILITA WhatsApp sulla foto */
+.waOnPhoto{
+  position:absolute !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  bottom:16px !important;
+  z-index:9999 !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:12px 14px !important;
+  border-radius:999px !important;
+  border:1px solid rgba(56,210,122,.45) !important;
+  background:rgba(0,0,0,.45) !important;
+  color:#fff !important;
+  font-weight:900 !important;
+}
 </script>
 </body>
 </html>
