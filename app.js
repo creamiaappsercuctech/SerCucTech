@@ -234,6 +234,7 @@ closeWaModal();
 
     waModal.hidden = false;
     waModal.style.display = "flex";
+    waModal.classList.add("open");
   }
 
   // chiudi sempre
