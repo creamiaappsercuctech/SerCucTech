@@ -4,44 +4,20 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Admin SerCucTech</title>
-
-  <!-- usa stile.css (quello grande che mi hai incollato) -->
-  <link rel="stylesheet" href="stile.css?v=3004">
-
+  <link rel="stylesheet" href="stile.css?v=4001">
   <style>
     .wrap{padding:14px}
-    .gate{
-      max-width:560px; margin:12px auto;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.04);
-      border-radius:18px; padding:14px
-    }
+    .gate{max-width:560px; margin:12px auto; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); border-radius:18px; padding:14px}
     .words{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
-    .wordBtn{
-      padding:12px 14px; border-radius:16px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.06);
-      color:#fff; font-weight:900; font-size:18px;
-      cursor:pointer;
-    }
-    .row{display:flex; gap:10px; margin-top:10px}
-    input{
-      flex:1; padding:12px 14px; border-radius:16px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.20); color:#fff; font-size:18px
-    }
-    .btn{
-      padding:12px 14px; border-radius:16px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.06);
-      color:#fff; font-weight:900; font-size:18px;
-      cursor:pointer;
-    }
-    .status{margin-top:10px; color:rgba(255,255,255,.80); font-size:14px}
+    .wordBtn{padding:12px 14px; border-radius:16px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); color:#fff; font-weight:900; font-size:18px}
+    .row{display:flex; gap:10px; margin-top:12px}
+    input{flex:1; padding:12px 14px; border-radius:16px; border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.20); color:#fff; font-size:18px}
+    .btn{padding:12px 14px; border-radius:16px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); color:#fff; font-weight:900; font-size:18px}
+    .status{margin-top:10px; color:rgba(255,255,255,.8); font-size:14px}
   </style>
 </head>
-
 <body>
+
 <header class="topbar">
   <div class="topbar-inner">
     <div class="brandDot" aria-hidden="true"></div>
@@ -53,11 +29,9 @@
 </header>
 
 <main class="wrap">
-
-  <!-- GATE -->
   <div class="gate" id="gate">
-    <div style="font-weight:900; font-size:18px">
-      Tocca prima <b>SerCucTech</b> poi <b>qualsiasi</b> (in quest’ordine).
+    <div style="font-weight:900; font-size:16px">
+      Tocca prima <b id="w1Label">SerCucTech</b> poi <b id="w2Label">qualsiasi</b> (in quest’ordine).
     </div>
 
     <div class="words">
@@ -66,131 +40,89 @@
     </div>
 
     <div class="row">
-      <input id="pin" placeholder="PIN" inputmode="numeric" autocomplete="off" />
+      <input id="pin" placeholder="PIN" inputmode="numeric" />
       <button class="btn" id="enter" type="button">Entra</button>
     </div>
 
-    <div class="status" id="unlockStatus">Stato: blocco attivo (tocca SerCucTech)</div>
-
-    <div style="margin-top:10px; color:rgba(255,255,255,.65); font-size:13px">
-      Se non va: apri il link con <b>?v=99999</b> per evitare cache.
-    </div>
+    <div class="status" id="status">Stato: blocco attivo</div>
   </div>
 
-  <!-- OK -->
   <div class="gate" id="ok" hidden>
-    <div style="font-weight:900; margin-bottom:10px; font-size:20px">✅ Sbloccato</div>
-
+    <div style="font-weight:900; margin-bottom:10px">✅ Sbloccato</div>
     <div class="row">
-      <button class="btn" type="button" id="openLinks">Apri indice link</button>
-      <button class="btn" type="button" id="reload">Ricarica</button>
+      <button class="btn" type="button" onclick="location.href='link.html'">Apri indice link</button>
+      <button class="btn" type="button" onclick="location.href='vetrina.html?id=renzo11'">Apri vetrina</button>
     </div>
-
-    <div class="status">
-      Ora carico <b>admin.js</b>…
-    </div>
+    <div class="status">Ora puoi usare la tua UI admin completa (admin.js), se presente.</div>
   </div>
 
-  <!-- la tua UI admin vera -->
   <div id="adminRoot"></div>
-
 </main>
 
 <script>
-(() => {
-  const KEY_UNTIL = "adminUnlockedUntil";
-  const ADMIN_PIN = "1234"; // <-- cambia se vuoi
-
+(function(){
+  const KEY = "adminUnlockedUntil";
   const gate = document.getElementById("gate");
   const ok = document.getElementById("ok");
   const w1 = document.getElementById("w1");
   const w2 = document.getElementById("w2");
   const pin = document.getElementById("pin");
   const enter = document.getElementById("enter");
-  const status = document.getElementById("unlockStatus");
+  const status = document.getElementById("status");
 
-  const openLinks = document.getElementById("openLinks");
-  const reload = document.getElementById("reload");
+  // ✅ cambia qui
+  const ADMIN_PIN = "1234";
+  const WORD1 = "SerCucTech";
+  const WORD2 = "qualsiasi";
+
+  w1.textContent = WORD1;
+  w2.textContent = WORD2;
+  document.getElementById("w1Label").textContent = WORD1;
+  document.getElementById("w2Label").textContent = WORD2;
 
   let step = 0;
 
-  function msg(t){ if(status) status.textContent = t; }
-
   function isUnlocked(){
-    const until = parseInt(localStorage.getItem(KEY_UNTIL) || "0", 10);
+    const until = parseInt(localStorage.getItem(KEY)||"0",10);
     return Date.now() < until;
   }
-
   function setUnlocked24h(){
-    localStorage.setItem(KEY_UNTIL, String(Date.now() + 24*60*60*1000));
+    localStorage.setItem(KEY, String(Date.now() + 24*60*60*1000));
   }
-
   function showUnlocked(){
     gate.hidden = true;
     ok.hidden = false;
-
-    // carica admin.js una sola volta
-    if (!document.getElementById("adminScript")) {
-      const s = document.createElement("script");
-      s.id = "adminScript";
-      s.src = "admin.js?v=3004";
-      document.body.appendChild(s);
-    }
   }
+  function msg(t){ status.textContent = t; }
 
-  // bottoni ok
-  openLinks.addEventListener("click", () => location.href = "link.html?v=3004");
-  reload.addEventListener("click", () => location.href = "admin.html?v=3004");
+  if(isUnlocked()) showUnlocked();
 
-  // se già sbloccato
-  if (isUnlocked()) {
-    showUnlocked();
-    return;
-  }
-
-  // stato iniziale
-  msg("Stato: blocco attivo (tocca SerCucTech)");
-  w1.style.opacity = "1";
-  w2.style.opacity = "1";
-  pin.value = "";
-
-  w1.addEventListener("click", () => {
+  w1.addEventListener("click", ()=>{
     step = 1;
-    msg("✅ Primo ok. Ora tocca “qualsiasi”.");
-    w1.style.opacity = "1";
-    w2.style.opacity = "0.75";
+    msg("✅ Primo ok. Ora tocca la seconda parola.");
   });
 
-  w2.addEventListener("click", () => {
-    if (step !== 1) {
+  w2.addEventListener("click", ()=>{
+    if(step === 1){
+      step = 2;
+      msg("✅ Frase ok. Ora inserisci PIN e premi Entra.");
+    } else {
       step = 0;
-      msg("❌ Ordine sbagliato. Riprova: prima SerCucTech.");
-      w1.style.opacity = "1";
-      w2.style.opacity = "1";
-      return;
+      msg("❌ Ordine sbagliato. Riparti dalla prima parola.");
     }
-    step = 2;
-    msg("✅ Sblocco parole completato. Ora inserisci il PIN.");
-    w2.style.opacity = "1";
-    pin.focus();
   });
 
-  function tryEnter(){
-    if (step !== 2) {
-      alert("Prima tocca le 2 parole in ordine.");
-      return;
-    }
-    if ((pin.value || "").trim() !== ADMIN_PIN) {
-      alert("PIN errato.");
-      return;
-    }
+  enter.addEventListener("click", ()=>{
+    if(step !== 2) return alert("Prima tocca le 2 parole in ordine.");
+    if((pin.value||"").trim() !== ADMIN_PIN) return alert("PIN errato.");
     setUnlocked24h();
     showUnlocked();
-  }
 
-  enter.addEventListener("click", tryEnter);
-  pin.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") tryEnter();
+    // se hai admin.js nel repo, lo carico
+    const s = document.createElement("script");
+    s.src = "admin.js?v=4001";
+    s.onerror = () => console.log("admin.js non trovato (ok se non lo usi).");
+    document.body.appendChild(s);
   });
 })();
 </script>
