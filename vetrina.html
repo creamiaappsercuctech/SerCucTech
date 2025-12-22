@@ -5,8 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Vetrina</title>
 
-  <!-- USA stile.css (come nel tuo repo) -->
-  <link rel="stylesheet" href="stile.css?v=99">
+  <!-- CSS principale -->
+  <link id="mainCss" rel="stylesheet" href="stile.css?v=1001">
+
+  <!-- CSS fallback (resta disattivo finché non serve) -->
+  <link id="fallbackCss" rel="stylesheet" href="style.css?v=1001" disabled>
+
+  <script>
+    // Se stile.css non esiste / non si carica, attivo style.css
+    (function () {
+      const main = document.getElementById('mainCss');
+      const fallback = document.getElementById('fallbackCss');
+
+      function enableFallback(){
+        try { fallback.disabled = false; } catch(e){}
+      }
+
+      // 1) Se il browser segnala errore sul link
+      main.addEventListener('error', enableFallback);
+
+      // 2) Controllo extra: se dopo un attimo il CSS non ha impostato le variabili, abilito fallback
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const v = getComputedStyle(document.documentElement).getPropertyValue('--radius').trim();
+          // nello stile.css che mi hai incollato, --radius esiste
+          if (!v) enableFallback();
+        }, 250);
+      });
+    })();
+  </script>
 </head>
 
 <body>
@@ -22,7 +49,6 @@
       <span id="badgeId" class="idBadge">id: -</span>
     </div>
 
-    <!-- TESTO AUDIO FISSO + CONTATTI (cliccabile per ascoltare) -->
     <section class="voicePanel" id="voicePanel" hidden>
       <div class="voicePanelInner" id="voicePanelInner" title="Tocca per ascoltare">
         <div class="voiceTop">
@@ -37,7 +63,6 @@
       </div>
     </section>
 
-    <!-- INDICE ALTRE VETRINE -->
     <section class="indexPanel" id="indexPanel" hidden>
       <div class="indexPanelInner">
         <div class="indexHead">
@@ -51,7 +76,6 @@
   </header>
 
   <main class="content">
-    <!-- GALLERIA -->
     <section class="card heroCard">
       <div class="hero">
         <button class="navBtn left" id="prevBtn" aria-label="Immagine precedente" type="button">‹</button>
@@ -63,7 +87,7 @@
             <img id="heroImg" class="heroImg" alt="Immagine vetrina">
             <div id="pinsLayer" class="pinsLayer" aria-hidden="true"></div>
 
-            <!-- ✅ WhatsApp SULLA FOTO (overlay) -->
+            <!-- ✅ WhatsApp SULLA FOTO -->
             <button class="waOnPhoto" id="waOnPhotoBtn" type="button">
               WhatsApp: chiedi info su questa foto
             </button>
@@ -75,7 +99,7 @@
         <button class="navBtn right" id="nextBtn" aria-label="Immagine successiva" type="button">›</button>
       </div>
 
-      <!-- ✅ WhatsApp SOTTO LA FOTO (sempre visibile) -->
+      <!-- WhatsApp SOTTO LA FOTO -->
       <div class="photoActions">
         <button class="waBtn" id="waInfoBtn" type="button">WhatsApp: chiedi info su questa foto</button>
       </div>
@@ -89,13 +113,11 @@
       </div>
     </section>
 
-    <!-- FILES (opzionale) -->
     <section class="card" id="filesCard" hidden>
       <h2 class="h2">Files</h2>
       <div id="filesList" class="filesList"></div>
     </section>
 
-    <!-- TOOL NUMERINI -->
     <section class="card labelCard" id="labelCard" hidden>
       <div class="labelHead">
         <h2 class="h2" style="margin:0">🧷 Numerini manuali sugli oggetti</h2>
@@ -129,12 +151,10 @@
     </section>
   </main>
 
-  <!-- SHARE sopra la barra -->
   <div class="shareDock">
     <button class="shareBtn" id="shareBtn" type="button">Condividi questa vetrina su WhatsApp</button>
   </div>
 
-  <!-- BOTTOM BAR -->
   <nav class="bottombar" id="bottombar">
     <button class="barBtn" id="homeBtn" type="button">Home</button>
     <button class="barBtn" id="voiceBtn" type="button">Voice</button>
@@ -144,7 +164,6 @@
     <button class="barBtn" id="kioskBtn" type="button">Kiosk</button>
   </nav>
 
-  <!-- MODALE WhatsApp -->
   <div class="waModal" id="waModal" hidden>
     <div class="waModalCard">
       <div class="waModalTitle">📩 Invia richiesta info</div>
@@ -156,6 +175,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=99"></script>
+  <script src="app.js?v=1001"></script>
 </body>
 </html>
