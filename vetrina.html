@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Vetrina</title>
 
-  <!-- USA SOLO stile.css (tu lo hai in repo) -->
+  <!-- TU hai in repo: stile.css -->
   <link rel="stylesheet" href="stile.css?v=99">
 </head>
 
@@ -22,7 +22,7 @@
       <span id="badgeId" class="idBadge">id: -</span>
     </div>
 
-    <!-- TESTO AUDIO FISSO + CONTATTI (cliccabile per ascoltare) -->
+    <!-- TESTO AUDIO FISSO + CONTATTI (clicca OVUNQUE per ascoltare) -->
     <section class="voicePanel" id="voicePanel" hidden>
       <div class="voicePanelInner" id="voicePanelInner" title="Tocca per ascoltare">
         <div class="voiceTop">
@@ -44,7 +44,7 @@
           <div class="indexTitle">📚 Altre vetrine</div>
           <button class="indexBtn" id="refreshIndexBtn" type="button">Aggiorna</button>
         </div>
-        <div class="indexHint">Questo indice è uguale in tutte le vetrine: così da una vetrina puoi entrare nelle altre.</div>
+        <div class="indexHint">Indice uguale in tutte le vetrine: da qui passi alle altre.</div>
         <div class="indexList" id="indexList"></div>
       </div>
     </section>
@@ -70,15 +70,15 @@
         <button class="navBtn right" id="nextBtn" aria-label="Immagine successiva" type="button">›</button>
       </div>
 
-      <!-- ✅ TASTO WhatsApp SOTTO OGNI FOTO (sempre visibile) -->
+      <!-- ✅ WhatsApp sotto OGNI FOTO (sempre visibile) -->
       <div class="photoActions">
-        <button class="waBtn" id="waInfoBtn" type="button">WhatsApp: chiedi info su questa foto</button>
+        <button class="waBtn" id="waInfoBtn" type="button">📩 WhatsApp: chiedi info su questa foto</button>
       </div>
 
       <div class="thumbRow" id="thumbRow"></div>
 
       <div class="smallHint">
-        Swipe sull’immagine • Tap = schermo intero • Tap di nuovo = normale
+        Swipe sulle foto • Tap foto = schermo intero • Tap di nuovo = normale
         <br>
         <span class="smallHint2">Modalità numerini: tap sul titolo 5 volte (solo sul tuo telefono)</span>
       </div>
@@ -90,43 +90,44 @@
       <div id="filesList" class="filesList"></div>
     </section>
 
-    <!-- TOOL NUMERINI (nascosto finché attivi la modalità segreta) -->
+    <!-- TOOL NUMERINI (si apre solo con modalità segreta) -->
     <section class="card labelCard" id="labelCard" hidden>
       <div class="labelHead">
-        <h2 class="h2" style="margin:0">🧷 Numerini manuali sugli oggetti</h2>
+        <h2 class="h2" style="margin:0">🧷 Editor numerini (tap sulla foto per aggiungere)</h2>
         <span class="labelBadge" id="labelModeBadge">OFF</span>
       </div>
 
-      <div class="labelControls">
-        <button class="labelBtn" id="labelToggleBtn" type="button">Attiva/Disattiva</button>
-        <button class="labelBtn" id="labelUndoBtn" type="button">Annulla ultimo</button>
-        <button class="labelBtn danger" id="labelClearBtn" type="button">Pulisci tutti</button>
+      <div class="labelTip" style="margin-top:6px">
+        1) Tocca sulla foto per piazzare numeri 1,2,3…<br>
+        2) Cambia grandezza se serve<br>
+        3) Quando finito: Scarica PNG (consigliato)
       </div>
 
-      <div class="labelSliderRow">
-        <div class="labelSliderTitle">Grandezza numerino</div>
+      <div class="labelControls">
+        <button class="labelBtn" id="labelUndoBtn" type="button">↩️ Undo</button>
+        <button class="labelBtn danger" id="labelClearBtn" type="button">🧹 Clear</button>
+        <div style="flex:1"></div>
+        <div class="labelSliderTitle">Grandezza</div>
         <input type="range" id="pinSizeRange" min="14" max="64" value="28">
         <div class="labelSliderValue"><span id="pinSizeValue">28</span> px</div>
       </div>
 
       <div class="labelExportRow">
-        <button class="labelBtn" id="exportPinsBtn" type="button">Export JSON (pins)</button>
-        <button class="labelBtn" id="copyPinsBtn" type="button">Copia JSON</button>
+        <button class="labelBtn" id="downloadPngBtn" type="button">⬇️ Scarica PNG con numerini</button>
       </div>
 
-      <textarea id="pinsJsonBox" class="pinsJsonBox" placeholder="Qui comparirà il JSON dei pins…"></textarea>
-
-      <div class="labelTip">
-        ✅ Quando la modalità è attiva: tocca l’immagine per piazzare un numerino (1,2,3…).<br>
-        ✅ I numerini restano salvati sul tuo telefono (localStorage).<br>
-        ✅ Gli utenti vedono i numerini SOLO se tu li metti nel JSON della vetrina.
+      <textarea id="pinsJsonBox" class="pinsJsonBox" placeholder="(Opzionale) JSON pins…"></textarea>
+      <div class="labelExportRow">
+        <button class="labelBtn" id="exportPinsBtn" type="button">Export JSON (pins)</button>
+        <button class="labelBtn" id="copyPinsBtn" type="button">Copia JSON</button>
+        <button class="labelBtn" id="closeLabelBtn" type="button">Chiudi</button>
       </div>
     </section>
   </main>
 
   <!-- SHARE sopra la barra -->
   <div class="shareDock">
-    <button class="shareBtn" id="shareBtn" type="button">Condividi questa vetrina su WhatsApp</button>
+    <button class="shareBtn" id="shareBtn" type="button">Condividi questa vetrina</button>
   </div>
 
   <!-- BOTTOM BAR -->
@@ -138,6 +139,18 @@
     <button class="barBtn" id="themeBtn" type="button">Tema</button>
     <button class="barBtn" id="kioskBtn" type="button">Kiosk</button>
   </nav>
+
+  <!-- ✅ AUDIO GATE (MANCAVA: senza questo app.js spesso si rompe) -->
+  <div class="audioGate" id="audioGate" hidden>
+    <div class="audioGateCard">
+      <div class="audioGateTitle">Audio bloccato dal telefono</div>
+      <div class="audioGateText">Tocca “Attiva audio”. Poi partirà automaticamente.</div>
+      <div class="audioGateBtns">
+        <button class="primary" id="enableAudioBtn" type="button">Attiva audio</button>
+        <button class="ghost" id="skipAudioBtn" type="button">Non ora</button>
+      </div>
+    </div>
+  </div>
 
   <!-- MODALE WhatsApp (scegli contatto / entrambi) -->
   <div class="waModal" id="waModal" hidden>
