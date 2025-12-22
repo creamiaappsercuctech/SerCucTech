@@ -1,3 +1,178 @@
-/* Ponte di compatibilità:
-   Se qualche pagina carica "style.css", in realtà usa "stile.css". */
-@import url("./stile.css");
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Indice Link SerCucTech</title>
+  <link rel="stylesheet" href="stile.css?v=99">
+  <style>
+    .linksWrap{padding:14px}
+    .searchBox{
+      width:100%;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.25);
+      color:#fff;
+      font-size:16px;
+    }
+    .linksList{margin-top:12px; display:flex; flex-direction:column; gap:10px}
+    .linkRow{
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.05);
+      border-radius:16px;
+      padding:12px;
+    }
+    .linkRow a{color:#fff; text-decoration:none; font-weight:900}
+    .linkMeta{font-size:12px; opacity:.8}
+    .miniBtn2{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(56,210,122,.18);
+      color:#fff;
+      font-weight:900;
+      white-space:nowrap;
+    }
+    .pop{
+      position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+      background:rgba(0,0,0,.55); padding:18px; z-index:99;
+    }
+    .popCard{
+      width:min(560px,100%); border-radius:18px; padding:14px;
+      background:rgba(15,27,49,.96); border:1px solid rgba(255,255,255,.14);
+    }
+    .popTitle{font-weight:900; margin-bottom:8px}
+    .popText{white-space:pre-wrap; opacity:.9}
+    .popBtns{display:flex; gap:10px; margin-top:12px}
+    .popBtns button{flex:1; padding:12px; border-radius:14px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); color:#fff; font-weight:900}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brandDot" aria-hidden="true"></div>
+      <div class="titleWrap">
+        <h1 class="pageTitle">📌 Indice Link SerCucTech</h1>
+        <p class="pageDesc">Scrivi cosa devi fare e trovi la pagina giusta.</p>
+      </div>
+      <span class="idBadge">v99</span>
+    </div>
+  </header>
+
+  <main class="linksWrap">
+    <input id="q" class="searchBox" placeholder="Scrivi cosa devi fare… es. numerare oggetti foto">
+    <div id="list" class="linksList"></div>
+  </main>
+
+  <div class="pop" id="pop">
+    <div class="popCard">
+      <div class="popTitle" id="popTitle">Spiegazione</div>
+      <div class="popText" id="popText"></div>
+      <div class="popBtns">
+        <button id="popClose" type="button">Chiudi</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(async () => {
+  const list = document.getElementById("list");
+  const q = document.getElementById("q");
+  const pop = document.getElementById("pop");
+  const popTitle = document.getElementById("popTitle");
+  const popText = document.getElementById("popText");
+  const popClose = document.getElementById("popClose");
+
+  popClose.onclick = () => pop.style.display = "none";
+
+  const data = await fetch("data/vetrine.json?v=" + Date.now(), {cache:"no-store"}).then(r => r.json()).catch(() => null);
+
+  const items = (data && Array.isArray(data.vetrine)) ? data.vetrine : [];
+  if (!items.length) {
+    list.innerHTML = "<div class='card'>Nessuna vetrina trovata in <b>data/vetrine.json</b></div>";
+    return;
+  }
+
+  // descrizioni semplici
+  const desc = {
+    vetrina: "Apri la vetrina pubblica (foto, WhatsApp, audio, numerini).",
+    admin: "Apri l’admin per creare/modificare vetrine e JSON.",
+    link: "Apri questo indice link per trovare le pagine velocemente."
+  };
+
+  function render(filterText="") {
+    const f = filterText.trim().toLowerCase();
+    list.innerHTML = "";
+
+    items
+      .filter(x => !f || (x.title || x.id).toLowerCase().includes(f) || x.id.toLowerCase().includes(f))
+      .forEach((x, i) => {
+        const row = document.createElement("div");
+        row.className = "linkRow";
+
+        const left = document.createElement("div");
+        left.innerHTML = `
+          <div style="font-weight:900">#${String(i+1).padStart(2,"0")} — <a href="vetrina.html?id=${encodeURIComponent(x.id)}&v=99">${escapeHtml(x.title || x.id)}</a></div>
+          <div class="linkMeta">id: ${escapeHtml(x.id)} • pagina: vetrina.html</div>
+        `;
+
+        const btn = document.createElement("button");
+        btn.className = "miniBtn2";
+        btn.type = "button";
+        btn.textContent = "🔊 Spiega";
+        btn.onclick = () => {
+          const t = `Link #${i+1} — ${x.title || x.id}\n\n` +
+                    `Aprilo per vedere le foto e usare WhatsApp.\n\n` +
+                    `Cosa fai qui:\n- Swipe per cambiare foto\n- Tasto WhatsApp sotto la foto\n- Tocca il messaggio per ascoltare l’audio\n- 5 tap sul titolo = editor numerini`;
+          popTitle.textContent = "Spiegazione";
+          popText.textContent = t;
+          pop.style.display = "flex";
+          speak(t);
+        };
+
+        row.appendChild(left);
+        row.appendChild(btn);
+        list.appendChild(row);
+      });
+  }
+
+  function speak(text){
+    try{
+      if(!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "it-IT";
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  function escapeHtml(s){
+    return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+  }
+
+  q.addEventListener("input", () => render(q.value));
+  render("");
+})();
+    /* PATCH VISIBILITA WhatsApp sulla foto */
+.waOnPhoto{
+  position:absolute !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  bottom:16px !important;
+  z-index:9999 !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:12px 14px !important;
+  border-radius:999px !important;
+  border:1px solid rgba(56,210,122,.45) !important;
+  background:rgba(0,0,0,.45) !important;
+  color:#fff !important;
+  font-weight:900 !important;
+}
+</script>
+</body>
+</html>
+
