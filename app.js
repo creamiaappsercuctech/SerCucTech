@@ -168,6 +168,28 @@ if (waCloseBtn) {
     e.stopPropagation();
     closeWaModal();
   }, { passive: false });
+   function closeWaModal() {
+  const waModal = document.getElementById("waModal");
+  if (!waModal) return;
+  waModal.hidden = true;
+  waModal.style.display = "none";
+  waModal.classList.remove("open");
+}
+
+const waCloseBtn = document.getElementById("waCloseBtn");
+if (waCloseBtn) {
+  const handler = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeWaModal();
+  };
+  waCloseBtn.addEventListener("pointerdown", handler, { passive:false });
+  waCloseBtn.addEventListener("touchstart", handler, { passive:false });
+  waCloseBtn.addEventListener("click", handler, { passive:false });
+
+  // ✅ fallback brutale (se Android mangia eventi)
+  waCloseBtn.onclick = handler;
+}
 }
 
 // ✅ click fuori = chiude sempre
