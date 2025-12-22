@@ -1,589 +1,283 @@
-/* SerCucTech — app.js (vetrina)
-   Fix: tasti sempre cliccabili, WA per foto (overlay), swipe, cache-safe, audio gate stabile.
-*/
+/* =========================
+   SerCucTech - Vetrina app.js
+   (compatibile con vetrina.html che hai incollato)
+   ========================= */
 
-(function () {
+(() => {
   "use strict";
 
+  // ---- Helpers
   const $ = (id) => document.getElementById(id);
+  const qs = new URLSearchParams(location.search);
+  const vParam = qs.get("v") || String(Date.now());
 
-  const els = {
-    pageTitle: $("pageTitle"),
-    pageDesc: $("pageDesc"),
-    badgeId: $("badgeId"),
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  const pad2 = (n) => String(n).padStart(2, "0");
 
-    voicePanel: $("voicePanel"),
-    voicePanelInner: $("voicePanelInner"),
-    voiceText: $("voiceText"),
-    contactsRow: $("contactsRow"),
-
-    indexPanel: $("indexPanel"),
-    refreshIndexBtn: $("refreshIndexBtn"),
-    indexList: $("indexList"),
-
-    prevBtn: $("prevBtn"),
-    nextBtn: $("nextBtn"),
-    heroImg: $("heroImg"),
-    imgCounter: $("imgCounter"),
-    imgBadge: $("imgBadge"),
-    thumbRow: $("thumbRow"),
-    imgWrap: $("imgWrap"),
-
-    waInfoBtn: $("waInfoBtn"),         // sotto foto
-    waOnPhotoBtn: $("waOnPhotoBtn"),   // overlay sulla foto
-    shareBtn: $("shareBtn"),
-
-    homeBtn: $("homeBtn"),
-    voiceBtn: $("voiceBtn"),
-    stopBtn: $("stopBtn"),
-    fullBtn: $("fullBtn"),
-    themeBtn: $("themeBtn"),
-    kioskBtn: $("kioskBtn"),
-
-    audioGate: $("audioGate"),
-    enableAudioBtn: $("enableAudioBtn"),
-    noAudioBtn: $("noAudioBtn"),
-
-    waModal: $("waModal"),
-    waModalText: $("waModalText"),
-    waModalBtns: $("waModalBtns"),
-    waCloseBtn: $("waCloseBtn"),
-
-    // numerini
-    labelCard: $("labelCard"),
-    labelModeBadge: $("labelModeBadge"),
-    labelToggleBtn: $("labelToggleBtn"),
-    labelUndoBtn: $("labelUndoBtn"),
-    labelClearBtn: $("labelClearBtn"),
-    pinSizeRange: $("pinSizeRange"),
-    pinSizeValue: $("pinSizeValue"),
-    exportPinsBtn: $("exportPinsBtn"),
-    copyPinsBtn: $("copyPinsBtn"),
-    pinsJsonBox: $("pinsJsonBox"),
-  };
-
-  // --------- utils
-  function qs(name) {
-    return new URLSearchParams(location.search).get(name);
-  }
-  function pad2(n) {
-    return String(n).padStart(2, "0");
-  }
-  function safeText(s) {
-    return (s ?? "").toString();
-  }
-  function nowTs() {
-    return Date.now();
+  function safeText(t) {
+    return (t ?? "").toString();
   }
 
-  // --------- data
-  const id = qs("id") || "scalvini10";
-  els.badgeId.textContent = "id: " + id;
-
-  let vetrina = null;
-  let media = [];
-  let idx = 0;
-
-  // --------- speech
-  let audioEnabled = false;
-  let lastSpoken = "";
-  let speaking = false;
-
-  function canSpeak() {
-    return "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined";
+  function encodeWA(text) {
+    return encodeURIComponent(text);
   }
 
-  function speak(text, lang) {
-    text = safeText(text).trim();
-    if (!text) return;
+  // ---- DOM
+  const pageTitle = $("pageTitle");
+  const pageDesc = $("pageDesc");
+  const badgeId = $("badgeId");
 
-    // blocco tipico mobile: serve gesture -> mostro gate
-    if (!audioEnabled) {
-      lastSpoken = text;
-      showAudioGate();
-      return;
-    }
+  const voicePanel = $("voicePanel");
+  const voicePanelInner = $("voicePanelInner");
+  const voiceTextEl = $("voiceText");
+  const contactsRow = $("contactsRow");
 
-    if (!canSpeak()) return;
+  const indexPanel = $("indexPanel");
+  const refreshIndexBtn = $("refreshIndexBtn");
+  const indexList = $("indexList");
 
-    try {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = lang || "it-IT";
-      u.rate = 1;
-      u.pitch = 1;
-      u.volume = 1;
+  const prevBtn = $("prevBtn");
+  const nextBtn = $("nextBtn");
+  const heroImg = $("heroImg");
+  const imgWrap = $("imgWrap");
+  const imgCounter = $("imgCounter");
+  const imgBadge = $("imgBadge");
+  const thumbRow = $("thumbRow");
+  const pinsLayer = $("pinsLayer");
 
-      speaking = true;
-      u.onend = () => { speaking = false; };
-      u.onerror = () => { speaking = false; };
+  const waInfoBtn = $("waInfoBtn");
 
-      window.speechSynthesis.speak(u);
-    } catch (e) {
-      // se fallisce, riproponi gate
-      lastSpoken = text;
-      showAudioGate();
-    }
-  }
+  const filesCard = $("filesCard");
+  const filesList = $("filesList");
 
-  function stopSpeak() {
-    if (!canSpeak()) return;
-    try { window.speechSynthesis.cancel(); } catch {}
-    speaking = false;
-  }
+  const labelCard = $("labelCard");
+  const labelModeBadge = $("labelModeBadge");
+  const labelToggleBtn = $("labelToggleBtn");
+  const labelUndoBtn = $("labelUndoBtn");
+  const labelClearBtn = $("labelClearBtn");
+  const pinSizeRange = $("pinSizeRange");
+  const pinSizeValue = $("pinSizeValue");
+  const exportPinsBtn = $("exportPinsBtn");
+  const copyPinsBtn = $("copyPinsBtn");
+  const pinsJsonBox = $("pinsJsonBox");
 
-  function showAudioGate() {
-    els.audioGate.hidden = false;
-  }
-  function hideAudioGate() {
-    els.audioGate.hidden = true;
-  }
+  const shareBtn = $("shareBtn");
 
-  // --------- fetch helpers
-  async function fetchJson(url) {
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error(`${res.status} ${res.statusText} @ ${url}`);
-    return res.json();
-  }
+  const homeBtn = $("homeBtn");
+  const voiceBtn = $("voiceBtn");
+  const stopBtn = $("stopBtn");
+  const fullBtn = $("fullBtn");
+  const themeBtn = $("themeBtn");
+  const kioskBtn = $("kioskBtn");
 
-  async function loadVetrinaJson() {
-    // prova prima data/id.json poi id.json (compatibilità)
-    const tries = [
-      `data/${id}.json?ts=${nowTs()}`,
-      `${id}.json?ts=${nowTs()}`
-    ];
+  const waModal = $("waModal");
+  const waModalText = $("waModalText");
+  const waModalBtns = $("waModalBtns");
+  const waCloseBtn = $("waCloseBtn");
 
-    let lastErr = null;
-    for (const u of tries) {
-      try {
-        return await fetchJson(u);
-      } catch (e) {
-        lastErr = e;
-      }
-    }
-    throw lastErr || new Error("JSON non trovato");
-  }
+  // ---- State
+  let vetrinaId = (qs.get("id") || "renzo11").trim();
+  let vetrinaData = null;
 
-  async function loadIndexJson() {
-    // prova data/vetrine.json poi vetrine.json poi index.json
-    const tries = [
-      `data/vetrine.json?ts=${nowTs()}`,
-      `vetrine.json?ts=${nowTs()}`,
-      `index.json?ts=${nowTs()}`
-    ];
-    for (const u of tries) {
-      try {
-        return await fetchJson(u);
-      } catch {}
-    }
-    return null;
-  }
+  let media = []; // [{type:'image', url, label}]
+  let files = []; // [{label,url}]
+  let cur = 0;
 
-  // --------- WhatsApp
-  function normalizePhone(p) {
-    return safeText(p).replace(/[^\d+]/g, "");
-  }
+  // audio
+  let speechEnabled = true;
+  let speechRate = 1.0;
+  let isSpeaking = false;
+  let pendingSpeakText = "";
 
-  function waLink(phone, message) {
-    const p = normalizePhone(phone).replace(/^\+/, "");
-    const txt = encodeURIComponent(message);
-    return `https://wa.me/${p}?text=${txt}`;
-  }
+  // theme/kiosk/full
+  let darkTheme = true; // CSS già scuro
+  let kiosk = false;
 
-  function openWaModal(message) {
-    const contacts = Array.isArray(vetrina?.contacts) ? vetrina.contacts : [];
-    if (!contacts.length) {
-      alert("Nessun contatto WhatsApp configurato nella vetrina (contacts).");
-      return;
-    }
-
-    els.waModalText.textContent = message;
-    els.waModalBtns.innerHTML = "";
-
-    // 1 bottone per ogni contatto
-    contacts.forEach((c) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "primary";
-      btn.textContent = `WhatsApp ${c.name || ""}`.trim();
-      btn.addEventListener("click", () => {
-        location.href = waLink(c.phone, message);
-      });
-      els.waModalBtns.appendChild(btn);
-    });
-
-    // bottone "a tutti" (apre 2 chat una dopo l'altra)
-    if (contacts.length >= 2) {
-      const btnAll = document.createElement("button");
-      btnAll.type = "button";
-      btnAll.textContent = "Invia a tutti (apre 2 chat)";
-      btnAll.addEventListener("click", () => {
-        // apre prima chat, poi seconda dopo 700ms (mobile)
-        location.href = waLink(contacts[0].phone, message);
-        setTimeout(() => {
-          window.open(waLink(contacts[1].phone, message), "_blank");
-        }, 700);
-      });
-      els.waModalBtns.appendChild(btnAll);
-    }
-
-    els.waModal.hidden = false;
-  }
-
-  function closeWaModal() {
-    els.waModal.hidden = true;
-  }
-
-  // --------- render
-  function setTitleTapUnlock() {
-    // 5 tap sul titolo -> mostra tool numerini
-    let taps = 0;
-    let t0 = 0;
-    els.pageTitle.addEventListener("click", () => {
-      const t = Date.now();
-      if (t - t0 > 1200) taps = 0;
-      t0 = t;
-      taps++;
-      if (taps >= 5) {
-        taps = 0;
-        els.labelCard.hidden = !els.labelCard.hidden;
-        els.labelModeBadge.textContent = els.labelCard.hidden ? "OFF" : "ON";
-      }
-    });
-  }
-
-  function renderContacts() {
-    const contacts = Array.isArray(vetrina?.contacts) ? vetrina.contacts : [];
-    els.contactsRow.innerHTML = "";
-    contacts.forEach((c) => {
-      const a = document.createElement("a");
-      a.className = "contactChip";
-      a.href = waLink(c.phone, `Ciao ${c.name || ""}, ti scrivo dalla vetrina ${vetrina?.title || id}.`);
-      a.innerHTML = `💬 <b>${safeText(c.name || "WhatsApp")}</b> <span>${safeText(c.phone || "")}</span>`;
-      a.target = "_blank";
-      a.rel = "noopener";
-      els.contactsRow.appendChild(a);
-
-      const a2 = document.createElement("a");
-      a2.className = "contactChip";
-      a2.href = `tel:${normalizePhone(c.phone)}`;
-      a2.innerHTML = `📞 <b>${safeText(c.name || "Chiama")}</b> <span>Chiama</span>`;
-      els.contactsRow.appendChild(a2);
-    });
-  }
-
-  function renderMedia() {
-    if (!media.length) {
-      els.heroImg.removeAttribute("src");
-      els.imgCounter.textContent = "00/00";
-      els.imgBadge.textContent = "00";
-      return;
-    }
-    idx = Math.max(0, Math.min(idx, media.length - 1));
-
-    const m = media[idx];
-    const n = idx + 1;
-
-    els.heroImg.src = m.url;
-    els.heroImg.alt = m.label || `Foto ${pad2(n)}`;
-    els.imgCounter.textContent = `${pad2(n)}/${pad2(media.length)}`;
-    els.imgBadge.textContent = pad2(n);
-
-    // evidenzia thumbs
-    [...els.thumbRow.children].forEach((el, i) => {
-      el.classList.toggle("active", i === idx);
-    });
-
-    // abilita overlay WA
-    if (els.waOnPhotoBtn) els.waOnPhotoBtn.style.display = "inline-flex";
-  }
-
-  function renderThumbs() {
-    els.thumbRow.innerHTML = "";
-    media.forEach((m, i) => {
-      const t = document.createElement("div");
-      t.className = "thumb" + (i === idx ? " active" : "");
-      const img = document.createElement("img");
-      img.src = m.url;
-      img.alt = m.label || `Thumb ${i + 1}`;
-      t.appendChild(img);
-      t.addEventListener("click", () => {
-        idx = i;
-        renderMedia();
-      });
-      els.thumbRow.appendChild(t);
-    });
-  }
-
-  async function renderIndex() {
-    const data = await loadIndexJson();
-    if (!data) return;
-
-    // supporta diversi formati
-    const list = Array.isArray(data) ? data : (Array.isArray(data.vetrine) ? data.vetrine : []);
-    if (!list.length) return;
-
-    els.indexList.innerHTML = "";
-    list.forEach((it) => {
-      const vid = it.id || it;
-      const title = it.title || vid;
-      const a = document.createElement("a");
-      a.className = "indexLink";
-      a.href = `vetrina.html?id=${encodeURIComponent(vid)}`;
-      a.innerHTML = `<span class="dot"></span> ${safeText(title)}`;
-      els.indexList.appendChild(a);
-    });
-
-    els.indexPanel.hidden = false;
-  }
-
-  // --------- controls / events
-  function goPrev() {
-    if (!media.length) return;
-    idx = (idx - 1 + media.length) % media.length;
-    renderMedia();
-  }
-  function goNext() {
-    if (!media.length) return;
-    idx = (idx + 1) % media.length;
-    renderMedia();
-  }
-
-  function setupSwipe() {
-    let x0 = null;
-    els.heroImg.addEventListener("touchstart", (e) => {
-      if (!e.touches || !e.touches[0]) return;
-      x0 = e.touches[0].clientX;
-    }, { passive: true });
-
-    els.heroImg.addEventListener("touchend", (e) => {
-      if (x0 == null) return;
-      const x1 = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : null;
-      if (x1 == null) return;
-      const dx = x1 - x0;
-      x0 = null;
-      if (Math.abs(dx) < 40) return;
-      if (dx > 0) goPrev(); else goNext();
-    }, { passive: true });
-  }
-
-  function setupFullscreenTap() {
-    els.heroImg.addEventListener("click", () => {
-      document.body.classList.toggle("fs");
-    });
-  }
-
-  function setupButtons() {
-    els.prevBtn.addEventListener("click", goPrev);
-    els.nextBtn.addEventListener("click", goNext);
-
-    const askPhoto = () => {
-      const n = idx + 1;
-      const msg = `Ciao! Vorrei info sulla foto ${pad2(n)}/${pad2(media.length)} della vetrina "${vetrina?.title || id}" (id: ${id}).`;
-      openWaModal(msg);
-    };
-
-    els.waInfoBtn.addEventListener("click", askPhoto);
-    if (els.waOnPhotoBtn) els.waOnPhotoBtn.addEventListener("click", askPhoto);
-
-    els.shareBtn.addEventListener("click", () => {
-      const msg = `Ciao! Ti mando la vetrina: ${location.href}`;
-      // se c'è almeno un contatto, apri modale; altrimenti apri condivisione generica
-      if (Array.isArray(vetrina?.contacts) && vetrina.contacts.length) openWaModal(msg);
-      else location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-    });
-
-    els.homeBtn.addEventListener("click", () => location.href = "index.html");
-    els.voiceBtn.addEventListener("click", () => {
-      speak(vetrina?.voiceText || vetrina?.description || vetrina?.title || id, vetrina?.voiceLang || "it-IT");
-    });
-    els.stopBtn.addEventListener("click", () => stopSpeak());
-    els.fullBtn.addEventListener("click", () => document.body.classList.toggle("fs"));
-    els.themeBtn.addEventListener("click", () => document.body.classList.toggle("altTheme"));
-    els.kioskBtn.addEventListener("click", () => document.body.classList.toggle("kiosk"));
-
-    els.voicePanelInner.addEventListener("click", () => {
-      speak(vetrina?.voiceText || vetrina?.description || vetrina?.title || id, vetrina?.voiceLang || "it-IT");
-    });
-
-    els.refreshIndexBtn.addEventListener("click", () => renderIndex());
-
-    // audio gate
-    els.enableAudioBtn.addEventListener("click", () => {
-      audioEnabled = true;
-      hideAudioGate();
-      if (lastSpoken) speak(lastSpoken, vetrina?.voiceLang || "it-IT");
-    });
-    els.noAudioBtn.addEventListener("click", () => hideAudioGate());
-
-    // wa modal
-    els.waCloseBtn.addEventListener("click", closeWaModal);
-    els.waModal.addEventListener("click", (e) => {
-      if (e.target === els.waModal) closeWaModal();
-    });
-  }
-
-  // --------- numerini (semplice: overlay dal JSON, editor base locale)
-  let pins = []; // {x,y,n}
-  let pinSize = 28;
+  // secret label mode
+  let titleTapCount = 0;
+  let titleTapTimer = null;
   let labelMode = false;
 
-  function pinsKey() {
-    return `pins_${id}_${idx}`;
-  }
+  // pins: per immagine
+  // pinsByUrl[url] = [{n, x, y}]  x,y in normalized image coords (0..1)
+  let pinsByUrl = {};
+  let nextPinNumber = 1;
 
-  function loadPinsLocal() {
-    try {
-      const s = localStorage.getItem(pinsKey());
-      pins = s ? JSON.parse(s) : [];
-    } catch { pins = []; }
-  }
-  function savePinsLocal() {
-    try { localStorage.setItem(pinsKey(), JSON.stringify(pins)); } catch {}
-  }
+  // zoom/pan (solo label mode)
+  let zoomScale = 1;
+  let lastScale = 1;
+  let panX = 0;
+  let panY = 0;
+  let startDist = 0;
+  let startX = 0;
+  let startY = 0;
+  let isPanning = false;
+  let lastTap = 0;
 
-  function renderPins() {
-    const layer = $("pinsLayer");
-    if (!layer) return;
-    layer.innerHTML = "";
-    pins.forEach((p) => {
-      const d = document.createElement("div");
-      d.className = "pin";
-      d.style.left = (p.x * 100) + "%";
-      d.style.top = (p.y * 100) + "%";
-      d.style.width = pinSize + "px";
-      d.style.height = pinSize + "px";
-      d.style.fontSize = Math.max(12, Math.round(pinSize * 0.45)) + "px";
-      d.textContent = p.n;
-      layer.appendChild(d);
-    });
-  }
+  // ---- Storage keys
+  const LS_KEY = () => `SerCucTech:pins:${vetrinaId}`;
 
-  function setupLabels() {
-    if (!els.labelToggleBtn) return;
-
-    els.pinSizeRange.addEventListener("input", () => {
-      pinSize = parseInt(els.pinSizeRange.value, 10) || 28;
-      els.pinSizeValue.textContent = String(pinSize);
-      renderPins();
-    });
-
-    els.labelToggleBtn.addEventListener("click", () => {
-      labelMode = !labelMode;
-      els.labelModeBadge.textContent = labelMode ? "ON" : "OFF";
-    });
-
-    els.labelUndoBtn.addEventListener("click", () => {
-      pins.pop();
-      savePinsLocal();
-      renderPins();
-      syncPinsBox();
-    });
-
-    els.labelClearBtn.addEventListener("click", () => {
-      pins = [];
-      savePinsLocal();
-      renderPins();
-      syncPinsBox();
-    });
-
-    function syncPinsBox() {
-      if (!els.pinsJsonBox) return;
-      els.pinsJsonBox.value = JSON.stringify(pins, null, 2);
-    }
-
-    els.exportPinsBtn.addEventListener("click", () => {
-      const blob = new Blob([JSON.stringify(pins, null, 2)], { type: "application/json" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `${id}-foto${pad2(idx + 1)}-pins.json`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    });
-
-    els.copyPinsBtn.addEventListener("click", async () => {
+  // ---- Loaders
+  async function fetchJsonTry(urls) {
+    for (const u of urls) {
       try {
-        await navigator.clipboard.writeText(JSON.stringify(pins, null, 2));
-        alert("Copiato!");
-      } catch {
-        alert("Non riesco a copiare (clipboard bloccato).");
-      }
-    });
-
-    // click sulla foto per aggiungere pin (solo in labelMode)
-    els.imgWrap.addEventListener("click", (e) => {
-      if (!labelMode) return;
-      const rect = els.imgWrap.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
-      const n = pins.length + 1;
-      pins.push({ x: Math.max(0, Math.min(1, x)), y: Math.max(0, Math.min(1, y)), n });
-      savePinsLocal();
-      renderPins();
-      els.pinsJsonBox.value = JSON.stringify(pins, null, 2);
-    });
-
-    // quando cambio foto ricarico pins locali di quella foto
-    const oldRender = renderMedia;
-    window.__renderMediaOverride = () => {}; // no-op
+        const r = await fetch(u, { cache: "no-store" });
+        if (r.ok) return await r.json();
+      } catch (e) {}
+    }
+    throw new Error("JSON non trovato: " + urls.join(" | "));
   }
 
-  // --------- init
-  async function init() {
-    setTitleTapUnlock();
+  async function loadVetrina(id) {
+    // Nel tuo repo hai: /data/renzo11.json (si vede dallo screenshot)
+    const urls = [
+      `data/${id}.json?v=${vParam}`,
+      `${id}.json?v=${vParam}`, // fallback
+    ];
+    return await fetchJsonTry(urls);
+  }
 
-    try {
-      vetrina = await loadVetrinaJson();
+  async function loadIndex() {
+    // nel tuo repo c'è "vetrine.json" in root (si vede dallo screenshot)
+    const urls = [
+      `vetrine.json?v=${vParam}`,
+      `data/vetrine.json?v=${vParam}`,
+      `index.json?v=${vParam}`,
+      `data/index.json?v=${vParam}`,
+    ];
+    return await fetchJsonTry(urls);
+  }
 
-      els.pageTitle.textContent = vetrina.title || id;
-      els.pageDesc.textContent = vetrina.description || "";
+  // ---- UI builders
+  function setHeader(data) {
+    pageTitle.textContent = safeText(data.title || "Vetrina");
+    pageDesc.textContent = safeText(data.description || "");
+    badgeId.textContent = `id: ${safeText(data.id || vetrinaId)}`;
+  }
 
-      // voice panel
-      const voiceText = vetrina.voiceText || vetrina.description || "";
-      if (voiceText.trim()) {
-        els.voiceText.textContent = voiceText;
-        renderContacts();
-        els.voicePanel.hidden = false;
-      }
+  function buildContacts(data) {
+    const contacts = Array.isArray(data.contacts) ? data.contacts : [];
+    if (!contacts.length && !safeText(data.text)) {
+      voicePanel.hidden = true;
+      return;
+    }
 
-      // media
-      const arr = Array.isArray(vetrina.media) ? vetrina.media : [];
-      media = arr
-        .filter(m => m && (m.type === "image" || !m.type))
-        .map((m) => ({
-          url: m.url,
-          label: m.label || ""
-        }));
+    voicePanel.hidden = false;
+    voiceTextEl.textContent = safeText(data.text || "");
 
-      if (!media.length) {
-        // fallback: se hai "images" o "photos"
-        const alt = Array.isArray(vetrina.images) ? vetrina.images : (Array.isArray(vetrina.photos) ? vetrina.photos : []);
-        media = alt.map((u, i) => ({ url: u, label: `Foto ${pad2(i + 1)}` }));
-      }
+    contactsRow.innerHTML = "";
+    for (const c of contacts) {
+      const name = safeText(c.name || "Contatto");
+      const phone = safeText(c.phone || "").replace(/\s+/g, "");
+      if (!phone) continue;
 
-      // index
-      renderIndex().catch(() => {});
+      // WhatsApp
+      const a1 = document.createElement("a");
+      a1.className = "contactChip";
+      a1.href = `https://wa.me/${phone.replace(/^\+/, "")}`;
+      a1.target = "_blank";
+      a1.rel = "noopener";
+      a1.innerHTML = `💬 <b>${name}</b> ${phone} <span style="opacity:.8">WhatsApp</span>`;
+      contactsRow.appendChild(a1);
 
-      // build UI
-      renderThumbs();
-      renderMedia();
-
-      setupButtons();
-      setupSwipe();
-      setupFullscreenTap();
-      setupLabels();
-
-      // pins init
-      loadPinsLocal();
-      renderPins();
-
-    } catch (e) {
-      els.pageTitle.textContent = "Errore";
-      els.pageDesc.textContent = "Non riesco a leggere il JSON della vetrina.";
-      console.error(e);
-      alert(String(e.message || e));
+      // Call
+      const a2 = document.createElement("a");
+      a2.className = "contactChip";
+      a2.href = `tel:${phone}`;
+      a2.innerHTML = `📞 <b>${name}</b> <span style="opacity:.85">Chiama</span>`;
+      contactsRow.appendChild(a2);
     }
   }
 
-  init();
-})();
+  function buildFiles(data) {
+    files = Array.isArray(data.files) ? data.files : [];
+    if (!files.length) {
+      filesCard.hidden = true;
+      return;
+    }
+    filesCard.hidden = false;
+    filesList.innerHTML = "";
+    for (const f of files) {
+      const a = document.createElement("a");
+      a.className = "fileLink";
+      a.href = f.url || "#";
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = f.label || f.url || "File";
+      filesList.appendChild(a);
+    }
+  }
+
+  function buildThumbs() {
+    thumbRow.innerHTML = "";
+    media.forEach((m, i) => {
+      const b = document.createElement("button");
+      b.className = "thumb" + (i === cur ? " active" : "");
+      b.type = "button";
+      const img = document.createElement("img");
+      img.alt = m.label || `Foto ${i + 1}`;
+      img.loading = "lazy";
+      img.src = m.url;
+      b.appendChild(img);
+      b.addEventListener("click", () => {
+        goTo(i);
+      });
+      thumbRow.appendChild(b);
+    });
+  }
+
+  function updateCounter() {
+    const total = media.length || 1;
+    imgCounter.textContent = `${pad2(cur + 1)}/${pad2(total)}`;
+    imgBadge.textContent = pad2(cur + 1);
+  }
+
+  function setActiveThumb() {
+    [...thumbRow.querySelectorAll(".thumb")].forEach((t, i) => {
+      if (i === cur) t.classList.add("active");
+      else t.classList.remove("active");
+    });
+  }
+
+  function goTo(i) {
+    if (!media.length) return;
+    cur = (i + media.length) % media.length;
+
+    // reset zoom when changing photo (soprattutto in numerini)
+    zoomScale = 1;
+    panX = 0;
+    panY = 0;
+    applyTransform();
+
+    heroImg.src = media[cur].url;
+    heroImg.alt = media[cur].label || `Foto ${cur + 1}`;
+
+    updateCounter();
+    setActiveThumb();
+    renderPinsForCurrent();
+    updateWaButton();
+  }
+
+  function prev() { goTo(cur - 1); }
+  function next() { goTo(cur + 1); }
+
+  function updateWaButton() {
+    // rende più visibile e sempre coerente col numero foto
+    const total = media.length || 1;
+    waInfoBtn.textContent = `WhatsApp: chiedi info su questa foto (${pad2(cur + 1)}/${pad2(total)})`;
+  }
+
+  // ---- WhatsApp modal
+  function openWaModal() {
+    const contacts = Array.isArray(vetrinaData?.contacts) ? vetrinaData.contacts : [];
+    const m = media[cur] || {};
+    const title = safeText(vetrinaData?.title || vetrinaId);
+    const photoLabel = m.label ? ` - ${m.label}` : "";
+    const link = location.href.split("#")[0];
+
+    const msg =
+      `Ciao! Info su: ${title}\n` +
+      `Foto ${cur + 1}/${media.length}${photoLabel}\n` +
+      `Link: ${link}`;
+
+    waModalText.text
