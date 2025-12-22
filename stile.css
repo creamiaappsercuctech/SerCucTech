@@ -1,1 +1,436 @@
+/* =========================================================
+   SERCUCTECH – STILE PRINCIPALE (DEFINITIVO)
+   File ufficiale: stile.css
+   ========================================================= */
 
+/* ---------- VARIABILI ---------- */
+:root{
+  --bg:#0b1220;
+  --card:#0f1b31;
+  --card2:#122041;
+  --text:#eaf0ff;
+  --muted:#b9c4e6;
+  --muted2:#8fa0d6;
+  --line:rgba(255,255,255,.10);
+  --accent:#38d27a;
+  --danger:#ff4d4d;
+  --shadow: 0 16px 40px rgba(0,0,0,.35);
+  --radius:18px;
+}
+
+/* ---------- RESET ---------- */
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background:
+    radial-gradient(1200px 700px at 50% -200px, rgba(79,140,255,.25), transparent 60%),
+    var(--bg);
+  color:var(--text);
+  padding-bottom: 110px; /* spazio bottom bar + share */
+}
+
+/* ---------- TOPBAR ---------- */
+.topbar{
+  position: sticky;
+  top:0;
+  z-index: 20;
+  background: linear-gradient(to bottom, rgba(11,18,32,.96), rgba(11,18,32,.72));
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.topbar-inner{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  padding: 14px 14px 10px;
+}
+.brandDot{
+  width:14px;height:14px;border-radius:50%;
+  background: linear-gradient(135deg, var(--accent), rgba(79,140,255,.9));
+  box-shadow: 0 0 0 6px rgba(56,210,122,.12);
+  flex: 0 0 auto;
+}
+.titleWrap{ flex: 1; min-width: 0; }
+.pageTitle{
+  margin:0;
+  font-size: 22px;
+  line-height: 1.15;
+  font-weight: 900;
+  letter-spacing:.2px;
+  text-align:center;
+  text-shadow: 0 2px 16px rgba(0,0,0,.35);
+}
+.pageDesc{
+  margin:6px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+  text-align:center;
+}
+.idBadge{
+  font-size: 12px;
+  color: var(--muted2);
+  border: 1px solid var(--line);
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.04);
+  flex: 0 0 auto;
+}
+
+/* ---------- VOICE PANEL ---------- */
+.voicePanel{ padding: 0 14px 12px; }
+.voicePanelInner{
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(18,32,65,.85), rgba(15,27,49,.9));
+  border-radius: var(--radius);
+  padding: 12px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+.voiceTop{
+  display:flex;
+  justify-content: space-between;
+  gap:10px;
+  align-items:flex-start;
+  margin-bottom: 8px;
+}
+.voiceTitle{ font-weight: 900; font-size: 14px; }
+.voiceHint{
+  font-size: 12px;
+  color: var(--muted2);
+  white-space: nowrap;
+}
+.voiceText{
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--text);
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.04);
+  border: 1px dashed rgba(255,255,255,.10);
+}
+.contactsRow{
+  display:flex;
+  flex-wrap: wrap;
+  gap:10px;
+  margin-top: 10px;
+}
+.contactChip{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  text-decoration:none;
+  font-size: 13px;
+}
+.contactChip b{ font-weight: 900; }
+.contactsHint{
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted2);
+}
+
+/* ---------- INDICE VETRINE ---------- */
+.indexPanel{ padding: 0 14px 12px; }
+.indexPanelInner{
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.03);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+.indexHead{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap:10px;
+}
+.indexTitle{ font-weight: 900; }
+.indexBtn{
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.05);
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 12px;
+}
+.indexHint{
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted2);
+}
+.indexList{
+  margin-top: 10px;
+  display:flex;
+  flex-wrap: wrap;
+  gap:10px;
+}
+.indexLink{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(18,32,65,.35);
+  color: var(--text);
+  text-decoration:none;
+  font-size: 13px;
+}
+.indexLink .dot{
+  width:10px;height:10px;border-radius:50%;
+  background: rgba(79,140,255,.9);
+}
+
+/* ---------- CONTENT / CARD ---------- */
+.content{ padding: 14px; }
+.card{
+  background: rgba(15,27,49,.92);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+}
+.h2{
+  margin:0 0 10px;
+  font-size: 16px;
+  font-weight: 900;
+}
+.heroCard{ padding: 12px; }
+
+/* ---------- HERO / GALLERIA ---------- */
+.hero{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.navBtn{
+  width:40px;
+  height:44px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.05);
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 900;
+}
+.mediaStage{
+  position: relative;
+  flex:1;
+  min-width: 0;
+}
+.imgWrap{
+  position: relative;
+  border-radius: 18px;
+  overflow:hidden;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.25);
+  height: min(58vh, 520px);
+  touch-action: manipulation;
+}
+.heroImg{
+  width:100%;
+  height:100%;
+  object-fit: contain;
+  background: rgba(0,0,0,.35);
+  display:block;
+}
+.imgCounter{
+  position:absolute;
+  top:10px;
+  left:10px;
+  z-index: 5;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.45);
+  border: 1px solid rgba(255,255,255,.15);
+  font-size: 12px;
+}
+.imgBadge{
+  position:absolute;
+  right:10px;
+  bottom:10px;
+  z-index: 5;
+  width:38px;
+  height:38px;
+  border-radius: 999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 900;
+  background: rgba(56,210,122,.18);
+  border: 1px solid rgba(56,210,122,.35);
+}
+
+/* ---------- THUMBNAILS ---------- */
+.thumbRow{
+  display:flex;
+  gap:8px;
+  overflow:auto;
+  padding: 10px 2px 0;
+}
+.thumb{
+  width:56px;
+  height:56px;
+  border-radius: 14px;
+  overflow:hidden;
+  flex:0 0 auto;
+  border: 1px solid rgba(255,255,255,.12);
+  opacity:.75;
+}
+.thumb img{ width:100%; height:100%; object-fit: cover; display:block; }
+.thumb.active{ opacity:1; outline: 2px solid rgba(79,140,255,.9); }
+
+/* ---------- AZIONI FOTO (WHATSAPP) ---------- */
+.photoActions{
+  display:flex;
+  justify-content:center;
+  margin-top: 10px;
+}
+.waBtn{
+  width: min(560px, 92%);
+  border-radius: 16px;
+  border: 1px solid rgba(56,210,122,.35);
+  background: linear-gradient(180deg, rgba(56,210,122,.22), rgba(0,0,0,.30));
+  color: var(--text);
+  padding: 12px 14px;
+  font-weight: 900;
+  box-shadow: var(--shadow);
+}
+
+/* ---------- NUMERINI (PINS) ---------- */
+.pinsLayer{
+  position:absolute;
+  inset:0;
+  z-index: 4;
+  pointer-events:none;
+}
+.pin{
+  position:absolute;
+  transform: translate(-50%, -50%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius: 999px;
+  border: 2px solid rgba(255,255,255,.9);
+  background: rgba(0,0,0,.35);
+  color: #fff;
+  font-weight: 900;
+  text-shadow: 0 1px 6px rgba(0,0,0,.6);
+}
+
+/* ---------- FILES ---------- */
+.filesList{ display:flex; flex-direction:column; gap:10px; }
+.fileLink{
+  display:flex;
+  justify-content: space-between;
+  gap:10px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  text-decoration:none;
+}
+
+/* ---------- SHARE ---------- */
+.shareDock{
+  position: fixed;
+  left: 0; right: 0;
+  bottom: 62px;
+  z-index: 40;
+  display:flex;
+  justify-content:center;
+  pointer-events:none;
+}
+.shareBtn{
+  pointer-events:auto;
+  width: min(520px, calc(100% - 18px));
+  border-radius: 16px;
+  border: 1px solid rgba(56,210,122,.35);
+  background: linear-gradient(180deg, rgba(56,210,122,.22), rgba(0,0,0,.30));
+  color: var(--text);
+  padding: 12px 14px;
+  font-weight: 900;
+  box-shadow: var(--shadow);
+}
+
+/* ---------- BOTTOM BAR ---------- */
+.bottombar{
+  position: fixed;
+  left:0; right:0;
+  bottom:0;
+  z-index: 50;
+  display:flex;
+  gap:10px;
+  padding: 10px;
+  background: rgba(11,18,32,.92);
+  border-top: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+}
+.barBtn{
+  flex:1;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.05);
+  color: var(--text);
+  padding: 10px 6px;
+  font-weight: 900;
+  font-size: 12px;
+}
+.barBtn.danger{
+  border-color: rgba(255,77,77,.35);
+  background: rgba(255,77,77,.10);
+}
+
+/* ---------- FULLSCREEN ---------- */
+body.fs .topbar,
+body.fs .thumbRow,
+body.fs .smallHint,
+body.fs .shareDock,
+body.fs .bottombar,
+body.fs .photoActions{
+  display:none !important;
+}
+body.fs .content{ padding:0; }
+body.fs .heroCard{
+  margin:0; border-radius:0; border:none;
+  box-shadow:none; background: transparent;
+}
+body.fs .imgWrap{
+  height: 100vh;
+  border-radius:0;
+  border:none;
+}
+
+/* ---------- AUDIO GATE (NON BLOCCA) ---------- */
+.audioGate{
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 18px;
+  background: rgba(0,0,0,.35);
+  pointer-events:none;
+}
+.audioGateCard{
+  pointer-events:auto;
+  width: min(520px, 100%);
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(15,27,49,.96);
+  box-shadow: var(--shadow);
+  padding: 14px;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (min-width: 900px){
+  .pageTitle{ font-size: 26px; }
+  .imgWrap{ height: min(62vh, 620px); }
+}
