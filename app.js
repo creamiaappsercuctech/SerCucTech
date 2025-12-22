@@ -1,38 +1,100 @@
-/* SerCucTech Vetrina - app.js
-   ✅ anti-blocco overlay
-   ✅ whatsapp per foto (sotto + sopra)
-   ✅ click + touch sempre
-   ✅ modalità numerini con export JSON + PNG
+/* app.js — UNIVERSALE SerCucTech
+   - carica vetrina da data/vetrine.json
+   - trova automaticamente le immagini (anche se partono da 010)
+   - gallery, swipe, thumbs
+   - WhatsApp per foto corrente con modale chiudibile al TAP
+   - overlay audio non blocca i tasti
 */
-(function () {
+
+(() => {
   "use strict";
 
-  // ---------------------------
-  // Helpers
-  // ---------------------------
+  // ---------- Helpers ----------
   const $ = (id) => document.getElementById(id);
+  const qs = (sel, root = document) => root.querySelector(sel);
+  const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-  function onTap(el, fn) {
-    if (!el) return;
-    el.addEventListener("click", (e) => { e.preventDefault(); fn(e); }, { passive: false });
-    el.addEventListener("touchstart", (e) => { fn(e); }, { passive: true });
-  }
-
-  function qsParam(name, fallback = "") {
+  function getParam(name, def = "") {
     const u = new URL(location.href);
-    return u.searchParams.get(name) || fallback;
+    return u.searchParams.get(name) ?? def;
   }
 
-  function pad2(n) {
-    return String(n).padStart(2, "0");
+  function pad3(n) {
+    return String(n).padStart(3, "0");
   }
 
-  // ---------------------------
-  // Elements
-  // ---------------------------
+  function safeText(el, text) {
+    if (!el) return;
+    el.textContent = text ?? "";
+  }
+
+  function clamp(n, a, b) {
+    return Math.max(a, Math.min(b, n));
+  }
+
+  function normalizePhone(phoneRaw) {
+    if (!phoneRaw) return "";
+    // Mantieni + e numeri
+    return String(phoneRaw).trim().replace(/[^\d+]/g, "");
+  }
+
+  function waLink(phone, message) {
+    const p = normalizePhone(phone).replace(/^\+/, "");
+    const txt = encodeURIComponent(message || "");
+    // wa.me funziona bene su mobile
+    return `https://wa.me/${p}?text=${txt}`;
+  }
+
+  function telLink(phone) {
+    return `tel:${normalizePhone(phone)}`;
+  }
+
+  async function fetchJSON(url) {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status} su ${url}`);
+    return await res.json();
+  }
+
+  // Prova se un'immagine esiste davvero (carica solo header via <img>)
+  function probeImage(url, timeoutMs = 6000) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      let done = false;
+      const t = setTimeout(() => {
+        if (done) return;
+        done = true;
+        try { img.src = ""; } catch {}
+        resolve(false);
+      }, timeoutMs);
+
+      img.onload = () => {
+        if (done) return;
+        done = true;
+        clearTimeout(t);
+        resolve(true);
+      };
+      img.onerror = () => {
+        if (done) return;
+        done = true;
+        clearTimeout(t);
+        resolve(false);
+      };
+      img.src = url + (url.includes("?") ? "&" : "?") + "cb=" + Date.now();
+    });
+  }
+
+  // ---------- DOM refs ----------
   const pageTitle = $("pageTitle");
   const pageDesc = $("pageDesc");
   const badgeId = $("badgeId");
+
+  const heroImg = $("heroImg");
+  const imgCounter = $("imgCounter");
+  const imgBadge = $("imgBadge");
+  const prevBtn = $("prevBtn");
+  const nextBtn = $("nextBtn");
+  const thumbRow = $("thumbRow");
+  const imgWrap = $("imgWrap");
 
   const voicePanel = $("voicePanel");
   const voicePanelInner = $("voicePanelInner");
@@ -40,18 +102,10 @@
   const contactsRow = $("contactsRow");
 
   const indexPanel = $("indexPanel");
-  const refreshIndexBtn = $("refreshIndexBtn");
   const indexList = $("indexList");
-
-  const prevBtn = $("prevBtn");
-  const nextBtn = $("nextBtn");
-  const heroImg = $("heroImg");
-  const imgCounter = $("imgCounter");
-  const imgBadge = $("imgBadge");
-  const thumbRow = $("thumbRow");
+  const refreshIndexBtn = $("refreshIndexBtn");
 
   const waInfoBtn = $("waInfoBtn");
-  const waOnPhotoBtn = $("waOnPhotoBtn");
   const shareBtn = $("shareBtn");
 
   const waModal = $("waModal");
@@ -65,599 +119,460 @@
   const fullBtn = $("fullBtn");
   const themeBtn = $("themeBtn");
   const kioskBtn = $("kioskBtn");
+  const bottombar = $("bottombar");
 
-  // numerini tool
-  const labelCard = $("labelCard");
-  const labelModeBadge = $("labelModeBadge");
-  const labelToggleBtn = $("labelToggleBtn");
-  const labelUndoBtn = $("labelUndoBtn");
-  const labelClearBtn = $("labelClearBtn");
-  const pinSizeRange = $("pinSizeRange");
-  const pinSizeValue = $("pinSizeValue");
-  const pinsLayer = $("pinsLayer");
-  const pinsJsonBox = $("pinsJsonBox");
-  const exportPinsBtn = $("exportPinsBtn");
-  const copyPinsBtn = $("copyPinsBtn");
-  const exportPngBtn = $("exportPngBtn");
+  // ---------- State ----------
+  const vetrinaId = (getParam("id", "") || "").trim();
+  const DATA_URL = "data/vetrine.json";
 
-  // ---------------------------
-  // Data model (fallback)
-  // ---------------------------
-  const id = qsParam("id", "renzo11");
-  const DATA_URL = `data/vetrine.json?v=${qsParam("v", "1")}`;
+  let vetrine = [];
+  let v = null;
 
-  // fallback se JSON non carica
-  const fallbackVetrina = {
-    id,
-    title: "Vetrina SerCucTech",
-    desc: "",
-    voiceLang: "it-IT",
-    voiceText: "",
-    contacts: [
-      { name: "Renzo", phone: "+393332927842" },
-      { name: "Sergio", phone: "+393208852858" }
-    ],
-    images: [
-      `media/${id}-010.jpg`
-    ],
-    index: [
-      { label: "Indice link", url: "link.html" }
-    ]
-  };
-
-  let vetrina = null;
+  // images list: array di oggetti {url, label, idxNumber}
   let images = [];
-  let current = 0;
-// ---------------------------
-// WhatsApp Modal (FIX DEFINITIVO CHIUDI)
-// ---------------------------
-function closeWaModal() {
-  if (!waModal) return;
+  let current = 0; // index su images[]
+  let isFs = false;
+  let muted = false;
 
-  // Spegne davvero tutto
-  waModal.setAttribute("hidden", "");
-  waModal.classList.remove("open");
-  waModal.style.display = "none";
-
-  if (waModalBtns) waModalBtns.innerHTML = "";
-
-  // sicurezza: se per caso restano blocchi
-  document.body.classList.remove("modalOpen");
-}
-
-function openWaModal(text, contacts) {
-  if (!waModal) return;
-
-  if (waModalText) waModalText.textContent = text || "";
-  if (waModalBtns) waModalBtns.innerHTML = "";
-
-  (contacts || []).forEach((c) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "primary";
-    btn.textContent = `Apri WhatsApp: ${c.name}`;
-
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const phone = (c.phone || "").replace(/\s+/g, "");
-      const url = `https://wa.me/${phone.replace(/^\+/, "")}?text=${encodeURIComponent(text || "")}`;
-      window.open(url, "_blank");
-      closeWaModal();
-    }, { passive: false });
-
-    waModalBtns.appendChild(btn);
-  });
-
-  waModal.removeAttribute("hidden");
-  waModal.classList.add("open");
-  waModal.style.display = "flex";
-  document.body.classList.add("modalOpen");
-}
-
-// ✅ listener super-robusti: pointerdown + click
-if (waCloseBtn) {
-  waCloseBtn.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeWaModal();
-  }, { passive: false });
-
-  waCloseBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeWaModal();
-  }, { passive: false });
-   function closeWaModal() {
-  const waModal = document.getElementById("waModal");
-  if (!waModal) return;
-  waModal.hidden = true;
-  waModal.style.display = "none";
-  waModal.classList.remove("open");
-}
-
-const waCloseBtn = document.getElementById("waCloseBtn");
-if (waCloseBtn) {
-  const handler = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeWaModal();
-  };
-  waCloseBtn.addEventListener("pointerdown", handler, { passive:false });
-  waCloseBtn.addEventListener("touchstart", handler, { passive:false });
-  waCloseBtn.addEventListener("click", handler, { passive:false });
-
-  // ✅ fallback brutale (se Android mangia eventi)
-  waCloseBtn.onclick = handler;
-}
-}
-
-// ✅ click fuori = chiude sempre
-if (waModal) {
-  waModal.addEventListener("pointerdown", (e) => {
-    if (e.target === waModal) closeWaModal();
-  }, { passive: true });
-
-  waModal.addEventListener("click", (e) => {
-    if (e.target === waModal) closeWaModal();
-  }, { passive: true });
-}
-
-// ✅ sicurezza all'avvio
-closeWaModal();
-  function closeWaModal() {
-    if (!waModal) return;
-    waModal.hidden = true;
-    waModal.style.display = "none";
-    if (waModalBtns) waModalBtns.innerHTML = "";
+  // ---------- Audio (TTS) ----------
+  function speak(text) {
+    try {
+      if (!text) return;
+      if (muted) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "it-IT";
+      window.speechSynthesis.speak(u);
+    } catch {}
   }
 
-  function openWaModal(text, contacts) {
-    if (!waModal) return;
-    if (waModalText) waModalText.textContent = text || "";
-    if (waModalBtns) waModalBtns.innerHTML = "";
+  function stopSpeak() {
+    try { window.speechSynthesis.cancel(); } catch {}
+  }
 
-    (contacts || []).forEach((c) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "primary";
-      btn.textContent = `Apri WhatsApp: ${c.name}`;
-      onTap(btn, () => {
-        const phone = (c.phone || "").replace(/\s+/g, "");
-        const url = `https://wa.me/${phone.replace(/^\+/, "")}?text=${encodeURIComponent(text || "")}`;
-        window.open(url, "_blank");
-        // non lasciare overlay appeso
-        closeWaModal();
-      });
-      waModalBtns.appendChild(btn);
-    });
+  // Overlay audio gate (non blocca i tasti)
+  function showAudioGateOnce() {
+    // se già sbloccato, non mostrare
+    const KEY = "sercuc_audio_ok";
+    if (localStorage.getItem(KEY) === "1") return;
 
+    // crea overlay non bloccante, ma con bottoni cliccabili
+    const gate = document.createElement("div");
+    gate.className = "audioGate";
+    gate.innerHTML = `
+      <div class="audioGateCard">
+        <div class="audioGateTitle">Audio bloccato dal telefono</div>
+        <div class="audioGateText">Tocca “Attiva audio”. Poi l’audio funzionerà normalmente.</div>
+        <div class="audioGateBtns">
+          <button class="primary" type="button" id="ag_ok">Attiva audio</button>
+          <button class="ghost" type="button" id="ag_no">Non ora</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(gate);
+
+    const ok = gate.querySelector("#ag_ok");
+    const no = gate.querySelector("#ag_no");
+
+    const close = () => {
+      gate.remove();
+    };
+
+    ok.addEventListener("click", () => {
+      // “sblocca” audio facendo parlare una sillaba (molti telefoni richiedono gesto)
+      localStorage.setItem(KEY, "1");
+      try {
+        const u = new SpeechSynthesisUtterance(" ");
+        u.lang = "it-IT";
+        window.speechSynthesis.speak(u);
+      } catch {}
+      close();
+    }, { passive: true });
+
+    no.addEventListener("click", () => close(), { passive: true });
+
+    // IMPORTANTISSIMO: non bloccare resto pagina
+    // (la CSS già fa pointer-events:none sull’overlay e pointer-events:auto sulla card)
+  }
+
+  // ---------- WhatsApp Modal ----------
+  function openWaModal(msg, contacts = []) {
+    if (!waModal || !waModalText || !waModalBtns) return;
     waModal.hidden = false;
-    waModal.style.display = "flex";
-    waModal.classList.add("open");
+    waModalText.textContent = msg || "";
+
+    waModalBtns.innerHTML = "";
+    contacts.forEach((c) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "primary";
+      b.textContent = `Apri WhatsApp: ${c.name}`;
+      b.addEventListener("click", () => {
+        location.href = waLink(c.phone, msg);
+      }, { passive: true });
+      waModalBtns.appendChild(b);
+    });
+
+    // chiudi al TAP (non tenere premuto)
+    if (waCloseBtn) {
+      waCloseBtn.onclick = () => {
+        waModal.hidden = true;
+      };
+    }
+    // chiudi tappando fuori
+    waModal.addEventListener("click", (e) => {
+      if (e.target === waModal) waModal.hidden = true;
+    }, { passive: true });
   }
 
-  // chiudi sempre
-  onTap(waCloseBtn, closeWaModal);
-  // click fuori chiude
-  if (waModal) {
-    waModal.addEventListener("click", (e) => {
-      if (e.target === waModal) closeWaModal();
+  // ---------- Image system (UNIVERSALE) ----------
+  function makeImgUrl(id, num) {
+    return `media/${id}-${pad3(num)}.jpg`;
+  }
+
+  // Caso 1: vetrina ha images[] con url già pronti
+  function imagesFromJson(vetrinaObj) {
+    const arr = vetrinaObj?.images;
+    if (!Array.isArray(arr) || arr.length === 0) return null;
+
+    const out = [];
+    for (const it of arr) {
+      if (!it) continue;
+      const url = it.url || it.src || it.path;
+      if (!url) continue;
+      // prova a estrarre numero tipo -010
+      let idxNumber = null;
+      const m = String(url).match(/-(\d{3})\.(jpg|jpeg|png|webp)/i);
+      if (m) idxNumber = parseInt(m[1], 10);
+      out.push({
+        url: url,
+        label: it.label || "",
+        idxNumber
+      });
+    }
+    return out.length ? out : null;
+  }
+
+  // Caso 2: scan immagini (trova start/end reali anche se partono da 010)
+  async function scanImagesByProbing(id) {
+    // strategia:
+    // 1) prova alcuni "start comuni": 1, 10, 100
+    // 2) se trovato un match, espandi avanti finché non trovi N errori consecutivi
+    // 3) includi solo quelle che esistono
+    const startsToTry = [1, 10, 100];
+    let foundStart = null;
+
+    for (const s of startsToTry) {
+      const url = makeImgUrl(id, s);
+      // eslint-disable-next-line no-await-in-loop
+      const ok = await probeImage(url);
+      if (ok) { foundStart = s; break; }
+    }
+
+    // se non trovato, prova a cercare tra 1..200 step 1
+    if (foundStart == null) {
+      for (let n = 1; n <= 200; n++) {
+        // eslint-disable-next-line no-await-in-loop
+        const ok = await probeImage(makeImgUrl(id, n));
+        if (ok) { foundStart = n; break; }
+      }
+    }
+
+    if (foundStart == null) return [];
+
+    const out = [];
+    let n = foundStart;
+    let misses = 0;
+
+    while (n <= 999) {
+      const url = makeImgUrl(id, n);
+      // eslint-disable-next-line no-await-in-loop
+      const ok = await probeImage(url);
+      if (ok) {
+        out.push({ url, label: "", idxNumber: n });
+        misses = 0;
+      } else {
+        misses++;
+        // se trovi troppi buchi di fila, fermati
+        if (misses >= 8) break;
+      }
+      n++;
+    }
+
+    return out;
+  }
+
+  // ---------- Gallery render ----------
+  function setCurrent(i) {
+    if (!images.length) return;
+    current = clamp(i, 0, images.length - 1);
+    renderCurrent();
+    renderThumbs();
+  }
+
+  function renderCurrent() {
+    if (!heroImg || !images.length) return;
+
+    const it = images[current];
+    heroImg.src = it.url + (it.url.includes("?") ? "&" : "?") + "v=" + Date.now();
+
+    if (imgCounter) {
+      const a = String(current + 1).padStart(2, "0");
+      const b = String(images.length).padStart(2, "0");
+      imgCounter.textContent = `${a}/${b}`;
+    }
+    if (imgBadge) {
+      imgBadge.textContent = String(current + 1).padStart(2, "0");
+    }
+  }
+
+  function renderThumbs() {
+    if (!thumbRow) return;
+    thumbRow.innerHTML = "";
+    images.forEach((it, idx) => {
+      const d = document.createElement("div");
+      d.className = "thumb" + (idx === current ? " active" : "");
+      d.innerHTML = `<img alt="thumb" loading="lazy">`;
+      const im = d.querySelector("img");
+      im.src = it.url;
+      d.addEventListener("click", () => setCurrent(idx), { passive: true });
+      thumbRow.appendChild(d);
     });
   }
-  // sicurezza all'avvio
-  closeWaModal();
 
-  // ---------------------------
-  // Render base
-  // ---------------------------
-  function renderHeader() {
-    pageTitle.textContent = vetrina.title || vetrina.id || "Vetrina";
-    pageDesc.textContent = vetrina.desc || "";
-    badgeId.textContent = `id: ${vetrina.id || "-"}`;
+  function bindNav() {
+    if (prevBtn) prevBtn.addEventListener("click", () => setCurrent(current - 1), { passive: true });
+    if (nextBtn) nextBtn.addEventListener("click", () => setCurrent(current + 1), { passive: true });
+
+    // Swipe su imgWrap (touch)
+    if (imgWrap) {
+      let x0 = null;
+      imgWrap.addEventListener("touchstart", (e) => {
+        x0 = e.touches?.[0]?.clientX ?? null;
+      }, { passive: true });
+
+      imgWrap.addEventListener("touchend", (e) => {
+        if (x0 == null) return;
+        const x1 = e.changedTouches?.[0]?.clientX ?? x0;
+        const dx = x1 - x0;
+        x0 = null;
+        if (Math.abs(dx) < 35) return;
+        if (dx < 0) setCurrent(current + 1);
+        else setCurrent(current - 1);
+      }, { passive: true });
+
+      // Tap per fullscreen
+      imgWrap.addEventListener("click", () => toggleFullscreen(), { passive: true });
+    }
   }
 
-  function renderContacts() {
-    const txt = (vetrina.voiceText || "").trim();
-    if (!txt && (!vetrina.contacts || !vetrina.contacts.length)) {
+  function toggleFullscreen() {
+    isFs = !isFs;
+    document.body.classList.toggle("fullscreenMode", isFs);
+  }
+
+  // ---------- Voice panel / Contacts ----------
+  function renderVoiceAndContacts(vetrinaObj) {
+    if (!voicePanel || !voiceText || !contactsRow) return;
+
+    const txt = vetrinaObj.voiceText || vetrinaObj.description || "";
+    const contacts = Array.isArray(vetrinaObj.contacts) ? vetrinaObj.contacts : [];
+
+    if (!txt && !contacts.length) {
       voicePanel.hidden = true;
       return;
     }
-
     voicePanel.hidden = false;
-    voiceText.textContent = txt || "Messaggio disponibile.";
+    voiceText.textContent = txt || "—";
 
     contactsRow.innerHTML = "";
-    (vetrina.contacts || []).forEach((c) => {
-      const phoneClean = (c.phone || "").replace(/\s+/g, "");
+    contacts.forEach((c) => {
+      const phone = normalizePhone(c.phone);
+      if (!phone) return;
 
       const wa = document.createElement("a");
       wa.className = "contactChip";
-      wa.href = `https://wa.me/${phoneClean.replace(/^\+/, "")}`;
+      wa.href = waLink(phone, `Ciao! Info vetrina ${vetrinaId}. Foto ${current + 1}/${images.length}.`);
+      wa.innerHTML = `💬 <b>${c.name || "WhatsApp"}</b> <span>${phone}</span>`;
       wa.target = "_blank";
       wa.rel = "noopener";
-      wa.innerHTML = `💬 <b>${c.name}</b> ${c.phone}`;
-      contactsRow.appendChild(wa);
 
-      const call = document.createElement("a");
-      call.className = "contactChip";
-      call.href = `tel:${phoneClean}`;
-      call.innerHTML = `📞 <b>${c.name}</b> Chiama`;
-      contactsRow.appendChild(call);
+      const tel = document.createElement("a");
+      tel.className = "contactChip";
+      tel.href = telLink(phone);
+      tel.innerHTML = `📞 <b>${c.name || "Chiama"}</b> <span>Chiama</span>`;
+
+      contactsRow.appendChild(wa);
+      contactsRow.appendChild(tel);
     });
 
-    // voice click (autorizzazione audio)
-    onTap(voicePanelInner, () => speakText(vetrina.voiceText || "", vetrina.voiceLang || "it-IT"));
+    // Tappa sul riquadro messaggio per parlare
+    if (voicePanelInner) {
+      voicePanelInner.addEventListener("click", () => {
+        showAudioGateOnce();
+        speak(txt);
+      }, { passive: true });
+    }
   }
 
-  function renderIndex() {
-    const arr = vetrina.index || [];
-    if (!arr.length) {
+  // ---------- Index altre vetrine ----------
+  function renderIndex(list) {
+    if (!indexPanel || !indexList) return;
+    if (!Array.isArray(list) || list.length <= 1) {
       indexPanel.hidden = true;
       return;
     }
     indexPanel.hidden = false;
     indexList.innerHTML = "";
-    arr.forEach((it) => {
+    list.forEach((x) => {
+      if (!x?.id) return;
+      if (x.id === vetrinaId) return;
+
       const a = document.createElement("a");
       a.className = "indexLink";
-      a.href = it.url;
-      a.innerHTML = `<span class="dot"></span> ${it.label}`;
+      a.href = `vetrina.html?id=${encodeURIComponent(x.id)}`;
+      a.innerHTML = `<span class="dot"></span> ${x.title || x.id}`;
       indexList.appendChild(a);
     });
   }
 
-  // ---------------------------
-  // Gallery
-  // ---------------------------
-  function setImage(i) {
-    if (!images.length) return;
-    current = (i + images.length) % images.length;
+  // ---------- WhatsApp per foto corrente ----------
+  function bindWhatsappButtons(vetrinaObj) {
+    const contacts = Array.isArray(vetrinaObj.contacts) ? vetrinaObj.contacts : [];
 
-    const src = images[current];
-    heroImg.src = src;
+    function buildMsgForCurrent() {
+      const title = vetrinaObj.title || vetrinaId;
+      const photoNum = `${String(current + 1).padStart(2, "0")}/${String(images.length).padStart(2, "0")}`;
+      const imgUrl = location.origin + location.pathname.replace(/\/[^/]+$/, "/") + images[current].url;
+      return `Ciao! Vorrei info su questa foto (${photoNum}) della vetrina "${title}".\nFoto: ${imgUrl}\nPagina: ${location.href}`;
+    }
 
-    const n = current + 1;
-    imgCounter.textContent = `${pad2(n)}/${pad2(images.length)}`;
-    imgBadge.textContent = pad2(n);
+    if (waInfoBtn) {
+      waInfoBtn.addEventListener("click", () => {
+        const msg = buildMsgForCurrent();
+        if (!contacts.length) {
+          openWaModal(msg, [{ name: "WhatsApp", phone: "" }]);
+          // se non hai numero, almeno copia testo
+          try { navigator.clipboard.writeText(msg); } catch {}
+          return;
+        }
+        openWaModal(msg, contacts);
+      }, { passive: true });
+    }
 
-    // thumbs active
-    [...thumbRow.querySelectorAll(".thumb")].forEach((t) => t.classList.remove("active"));
-    const t = thumbRow.querySelector(`[data-i="${current}"]`);
-    if (t) t.classList.add("active");
-
-    // pins overlay
-    renderPins();
-  }
-
-  function renderThumbs() {
-    thumbRow.innerHTML = "";
-    images.forEach((src, i) => {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "thumb";
-      b.dataset.i = String(i);
-      b.innerHTML = `<img alt="thumb ${i + 1}" src="${src}">`;
-      onTap(b, () => setImage(i));
-      thumbRow.appendChild(b);
-    });
-  }
-
-  onTap(prevBtn, () => setImage(current - 1));
-  onTap(nextBtn, () => setImage(current + 1));
-
-  // Fullscreen: tap foto
-  onTap(heroImg, () => {
-    document.body.classList.toggle("fullscreenMode");
-  });
-
-  // ---------------------------
-  // WhatsApp per foto
-  // ---------------------------
-  function getPhotoInfoText() {
-    const num = current + 1;
-    const title = vetrina.title || vetrina.id || "Vetrina";
-    return `Ciao! Vorrei info sulla foto ${pad2(num)}/${pad2(images.length)} della vetrina "${title}" (id: ${vetrina.id}).`;
-  }
-
-  function openWhatsAppForCurrent() {
-    const text = getPhotoInfoText();
-    openWaModal(text, vetrina.contacts || []);
-  }
-
-  onTap(waInfoBtn, openWhatsAppForCurrent);
-  onTap(waOnPhotoBtn, openWhatsAppForCurrent);
-
-  // Share vetrina
-  onTap(shareBtn, () => {
-    const url = location.href;
-    const text = `Guarda questa vetrina: ${url}`;
-    const wa = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(wa, "_blank");
-  });
-
-  // ---------------------------
-  // Bottom bar (tasti grandi = CSS)
-  // ---------------------------
-  onTap(homeBtn, () => location.href = "index.html");
-  onTap(voiceBtn, () => {
-    // scroll su voice panel
-    if (voicePanel && !voicePanel.hidden) voicePanel.scrollIntoView({ behavior: "smooth", block: "start" });
-    else alert("Nessun messaggio vocale in questa vetrina.");
-  });
-  onTap(stopBtn, () => stopSpeak());
-  onTap(fullBtn, () => document.body.classList.toggle("fullscreenMode"));
-  onTap(themeBtn, () => {
-    document.body.classList.toggle("themeAlt");
-  });
-  onTap(kioskBtn, () => {
-    document.body.classList.toggle("kioskMode");
-  });
-
-  // ---------------------------
-  // Speech (Android: parte solo dopo interazione)
-  // ---------------------------
-  let utter = null;
-  function stopSpeak() {
-    try { window.speechSynthesis.cancel(); } catch {}
-    utter = null;
-  }
-
-  function speakText(text, lang) {
-    const t = (text || "").trim();
-    if (!t) return;
-
-    stopSpeak();
-
-    try {
-      utter = new SpeechSynthesisUtterance(t);
-      utter.lang = lang || "it-IT";
-      window.speechSynthesis.speak(utter);
-    } catch (e) {
-      alert("Audio non disponibile su questo browser.");
+    if (shareBtn) {
+      shareBtn.addEventListener("click", () => {
+        const txt = `Guarda questa vetrina: ${location.href}`;
+        // share nativo se disponibile
+        if (navigator.share) {
+          navigator.share({ text: txt, url: location.href }).catch(() => {});
+        } else {
+          // fallback: se c'è almeno un contatto usa il primo
+          if (contacts[0]?.phone) {
+            location.href = waLink(contacts[0].phone, txt);
+          } else {
+            try { navigator.clipboard.writeText(txt); } catch {}
+            alert("Link copiato negli appunti (se permesso).");
+          }
+        }
+      }, { passive: true });
     }
   }
 
-  // ---------------------------
-  // Modalità segreta numerini (tap titolo 5 volte)
-  // ---------------------------
-  const LS_PINS = (vId) => `pins_${vId}`;
-  const LS_PIN_SIZE = (vId) => `pinSize_${vId}`;
-  const LS_LABEL_ON = (vId) => `labelOn_${vId}`;
-
-  let titleTapCount = 0;
-  let titleTapTimer = null;
-
-  if (pageTitle) {
-    onTap(pageTitle, () => {
-      titleTapCount++;
-      clearTimeout(titleTapTimer);
-      titleTapTimer = setTimeout(() => (titleTapCount = 0), 900);
-
-      if (titleTapCount >= 5) {
-        titleTapCount = 0;
-        labelCard.hidden = false;
-        alert("Modalità numerini: pannello visibile.");
-        syncLabelUI();
-      }
-    });
-  }
-
-  function getPins() {
-    try {
-      return JSON.parse(localStorage.getItem(LS_PINS(vetrina.id)) || "[]");
-    } catch {
-      return [];
-    }
-  }
-
-  function setPins(arr) {
-    localStorage.setItem(LS_PINS(vetrina.id), JSON.stringify(arr));
-  }
-
-  function getPinSize() {
-    return Number(localStorage.getItem(LS_PIN_SIZE(vetrina.id)) || "28");
-  }
-
-  function setPinSize(n) {
-    localStorage.setItem(LS_PIN_SIZE(vetrina.id), String(n));
-  }
-
-  function isLabelOn() {
-    return localStorage.getItem(LS_LABEL_ON(vetrina.id)) === "1";
-  }
-
-  function setLabelOn(v) {
-    localStorage.setItem(LS_LABEL_ON(vetrina.id), v ? "1" : "0");
-  }
-
-  function syncLabelUI() {
-    const size = getPinSize();
-    if (pinSizeRange) pinSizeRange.value = String(size);
-    if (pinSizeValue) pinSizeValue.textContent = String(size);
-
-    const on = isLabelOn();
-    if (labelModeBadge) labelModeBadge.textContent = on ? "ON" : "OFF";
-    if (pinsJsonBox) pinsJsonBox.value = JSON.stringify(getPins(), null, 2);
-    renderPins();
-  }
-
-  function renderPins() {
-    if (!pinsLayer) return;
-    pinsLayer.innerHTML = "";
-
-    const pins = getPins().filter(p => p.img === current);
-    const size = getPinSize();
-
-    pins.forEach((p) => {
-      const el = document.createElement("div");
-      el.className = "pin";
-      el.textContent = String(p.n);
-      el.style.left = `${p.x * 100}%`;
-      el.style.top = `${p.y * 100}%`;
-      el.style.width = `${size}px`;
-      el.style.height = `${size}px`;
-      el.style.fontSize = `${Math.max(12, Math.round(size * 0.55))}px`;
-      pinsLayer.appendChild(el);
-    });
-  }
-
-  // piazza pin su tap foto (solo se ON)
-  if (heroImg) {
-    heroImg.addEventListener("click", (e) => {
-      if (!vetrina || !isLabelOn()) return;
-
-      const rect = heroImg.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
-
-      const pins = getPins();
-      const nextN = (pins.filter(p => p.img === current).length) + 1;
-
-      pins.push({ img: current, n: nextN, x: Math.max(0, Math.min(1, x)), y: Math.max(0, Math.min(1, y)) });
-      setPins(pins);
-      syncLabelUI();
+  // ---------- Bottom bar ----------
+  function bindBottomBar() {
+    if (homeBtn) homeBtn.addEventListener("click", () => location.href = "index.html", { passive: true });
+    if (voiceBtn) voiceBtn.addEventListener("click", () => {
+      showAudioGateOnce();
+      if (v?.voiceText) speak(v.voiceText);
     }, { passive: true });
+    if (stopBtn) stopBtn.addEventListener("click", () => stopSpeak(), { passive: true });
+    if (fullBtn) fullBtn.addEventListener("click", () => toggleFullscreen(), { passive: true });
+
+    if (themeBtn) themeBtn.addEventListener("click", () => {
+      document.body.classList.toggle("themeAlt");
+      localStorage.setItem("sercuc_themeAlt", document.body.classList.contains("themeAlt") ? "1" : "0");
+    }, { passive: true });
+
+    if (kioskBtn) kioskBtn.addEventListener("click", () => {
+      // kiosk: nasconde barra e tocchi “lunghi” non richiesti
+      bottombar?.classList.toggle("hideKiosk");
+      document.body.classList.toggle("kioskMode");
+    }, { passive: true });
+
+    if (localStorage.getItem("sercuc_themeAlt") === "1") {
+      document.body.classList.add("themeAlt");
+    }
   }
 
-  onTap(labelToggleBtn, () => { setLabelOn(!isLabelOn()); syncLabelUI(); });
-  onTap(labelUndoBtn, () => {
-    const pins = getPins();
-    // rimuove ultimo della foto corrente
-    for (let i = pins.length - 1; i >= 0; i--) {
-      if (pins[i].img === current) { pins.splice(i, 1); break; }
+  // ---------- Init ----------
+  async function init() {
+    if (!vetrinaId) {
+      safeText(pageTitle, "Manca id vetrina");
+      safeText(pageDesc, "Apri: vetrina.html?id=xxx");
+      return;
     }
-    setPins(pins);
-    syncLabelUI();
-  });
-  onTap(labelClearBtn, () => {
-    const pins = getPins().filter(p => p.img !== current);
-    setPins(pins);
-    syncLabelUI();
-  });
+    safeText(badgeId, `id: ${vetrinaId}`);
 
-  if (pinSizeRange) {
-    pinSizeRange.addEventListener("input", () => {
-      const v = Number(pinSizeRange.value || "28");
-      setPinSize(v);
-      if (pinSizeValue) pinSizeValue.textContent = String(v);
-      renderPins();
-    });
-  }
-
-  onTap(exportPinsBtn, () => {
-    const json = JSON.stringify(getPins(), null, 2);
-    const blob = new Blob([json], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `pins-${vetrina.id}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  });
-
-  onTap(copyPinsBtn, async () => {
+    // 1) carica json vetrine
     try {
-      await navigator.clipboard.writeText(JSON.stringify(getPins(), null, 2));
-      alert("Copiato!");
-    } catch {
-      alert("Clipboard non disponibile.");
-    }
-  });
-
-  // Export PNG con pins
-  onTap(exportPngBtn, async () => {
-    try {
-      const src = images[current];
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.src = src;
-
-      await new Promise((res, rej) => {
-        img.onload = () => res();
-        img.onerror = () => rej(new Error("Immagine non caricata"));
-      });
-
-      const canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext("2d");
-
-      ctx.drawImage(img, 0, 0);
-
-      const pins = getPins().filter(p => p.img === current);
-      const size = getPinSize();
-      const r = size * 1.1;
-
-      pins.forEach((p) => {
-        const x = p.x * canvas.width;
-        const y = p.y * canvas.height;
-
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(0,0,0,.45)";
-        ctx.fill();
-
-        ctx.lineWidth = Math.max(2, r * 0.18);
-        ctx.strokeStyle = "rgba(255,255,255,.9)";
-        ctx.stroke();
-
-        ctx.fillStyle = "white";
-        ctx.font = `bold ${Math.max(18, Math.round(r * 1.15))}px system-ui, Arial`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(String(p.n), x, y);
-      });
-
-      canvas.toBlob((blob) => {
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = `${vetrina.id}-${pad2(current + 1)}-numerini.png`;
-        a.click();
-        URL.revokeObjectURL(a.href);
-      }, "image/png");
+      const data = await fetchJSON(DATA_URL);
+      vetrine = Array.isArray(data) ? data : (Array.isArray(data?.vetrine) ? data.vetrine : []);
     } catch (e) {
-      alert("Errore export PNG: " + (e.message || e));
-    }
-  });
-
-  // ---------------------------
-  // Load JSON
-  // ---------------------------
-  async function loadData() {
-    try {
-      const r = await fetch(DATA_URL, { cache: "no-store" });
-      if (!r.ok) throw new Error("JSON non trovato");
-      const all = await r.json();
-
-      // supporta sia array che oggetto {vetrine:[]}
-      const arr = Array.isArray(all) ? all : (all.vetrine || []);
-      const found = arr.find(x => (x.id || "").toLowerCase() === id.toLowerCase());
-
-      vetrina = found || fallbackVetrina;
-    } catch {
-      vetrina = fallbackVetrina;
+      safeText(pageTitle, "Errore dati");
+      safeText(pageDesc, String(e?.message || e));
+      return;
     }
 
-    // immagini
-    images = (vetrina.images && vetrina.images.length) ? vetrina.images : fallbackVetrina.images;
+    // 2) trova vetrina
+    v = vetrine.find((x) => String(x.id || "").trim() === vetrinaId) || null;
+    if (!v) {
+      safeText(pageTitle, "Vetrina non trovata");
+      safeText(pageDesc, `Nessuna vetrina con id=${vetrinaId} in ${DATA_URL}`);
+      return;
+    }
 
-    renderHeader();
-    renderContacts();
-    renderIndex();
+    safeText(pageTitle, v.title || vetrinaId);
+    safeText(pageDesc, v.desc || v.description || "");
 
-    renderThumbs();
-    setImage(0);
+    // 3) immagini: prima da json, altrimenti scan
+    const fromJson = imagesFromJson(v);
+    if (fromJson) {
+      images = fromJson;
+    } else {
+      images = await scanImagesByProbing(vetrinaId);
+    }
 
-    // label panel init
-    if (labelCard) labelCard.hidden = true;
-    syncLabelUI();
+    if (!images.length) {
+      // fallback: mostra almeno una immagine “diretta” se esiste media/id-001
+      safeText(pageDesc, (pageDesc?.textContent || "") + "\n(Nessuna immagine trovata in /media)");
+      return;
+    }
+
+    // 4) render
+    bindNav();
+    bindBottomBar();
+    renderVoiceAndContacts(v);
+    renderIndex(vetrine);
+
+    // refresh index (solo ricostruzione, dati già in memoria)
+    if (refreshIndexBtn) {
+      refreshIndexBtn.addEventListener("click", () => renderIndex(vetrine), { passive: true });
+    }
+
+    // 5) whatsapp
+    bindWhatsappButtons(v);
+
+    // 6) start
+    setCurrent(0);
+
+    // 7) audio gate hint (una volta)
+    showAudioGateOnce();
   }
 
-  // refresh index button: ricarica pagina (semplice)
-  onTap(refreshIndexBtn, () => location.reload());
-
-  // sicurezza: nessun modal aperto all'avvio
-  closeWaModal();
-
-  loadData();
+  // Start
+  init().catch((e) => {
+    safeText(pageTitle, "Errore");
+    safeText(pageDesc, String(e?.message || e));
+  });
 })();
