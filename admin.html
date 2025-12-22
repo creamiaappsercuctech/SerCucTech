@@ -144,6 +144,49 @@
   });
 })();
 </script>
+<script>
+(() => {
+  const w1 = document.getElementById("w1");
+  const w2 = document.getElementById("w2");
+  const status = document.getElementById("unlockStatus");
 
+  if (!w1 || !w2 || !status) return;
+
+  const LS = "SerCucTechAdminUnlockStep";
+  function setStep(n){
+    localStorage.setItem(LS, String(n));
+  }
+  function getStep(){
+    return Number(localStorage.getItem(LS) || "0");
+  }
+
+  function okMsg(msg){
+    status.textContent = msg;
+  }
+
+  // reset all’avvio
+  setStep(0);
+  okMsg("Stato: blocco attivo (tocca SerCucTech)");
+
+  w1.addEventListener("click", () => {
+    setStep(1);
+    okMsg("✅ Primo ok. Ora tocca “qualsiasi”.");
+  });
+
+  w2.addEventListener("click", () => {
+    if (getStep() !== 1) {
+      setStep(0);
+      okMsg("❌ Ordine sbagliato. Riprova: prima SerCucTech.");
+      return;
+    }
+    setStep(2);
+    okMsg("✅ Sblocco frase completato. Ora inserisci il PIN.");
+    // qui puoi anche sbloccare il form PIN:
+    const pin = document.querySelector('input[type="password"], input[type="text"]');
+    if (pin) pin.disabled = false;
+    if (pin) pin.focus();
+  });
+})();
+</script>
 </body>
 </html>
