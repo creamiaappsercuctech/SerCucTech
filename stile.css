@@ -1,1 +1,3 @@
-
+/* Ponte compatibilità: se una pagina carica style.css,
+   in realtà usa lo stile vero stile.css */
+@import url("./stile.css");
