@@ -1,7 +1,56 @@
 {
   "vetrine": [
-    { "id": "renzo11", "title": "Bazar di Bostone con SerCucTech" },
-    { "id": "renzo12", "title": "Nuova Vetrina" },
-    { "id": "scalvini11", "title": "Scalvini 11" }
+    {
+      "id": "renzo11",
+      "title": "Bazar di Bostone con SerCucTech",
+      "desc": "Vetrina commerciale del Bazar di Bostone.",
+      "voiceText": "Benvenuto nella vetrina del Bazar di Bostone. Contatta Renzo o Sergio per informazioni.",
+      "contacts": [
+        { "name": "Renzo", "phone": "+3933332927842" },
+        { "name": "Sergio", "phone": "+393208852858" }
+      ],
+      "images": [
+        { "url": "media/renzo11-010.jpg", "label": "Foto 010" },
+        { "url": "media/renzo11-011.jpg", "label": "Foto 011" },
+        { "url": "media/renzo11-012.jpg", "label": "Foto 012" },
+        { "url": "media/renzo11-013.jpg", "label": "Foto 013" },
+        { "url": "media/renzo11-014.jpg", "label": "Foto 014" },
+        { "url": "media/renzo11-015.jpg", "label": "Foto 015" },
+        { "url": "media/renzo11-016.jpg", "label": "Foto 016" },
+        { "url": "media/renzo11-017.jpg", "label": "Foto 017" },
+        { "url": "media/renzo11-018.jpg", "label": "Foto 018" },
+        { "url": "media/renzo11-019.jpg", "label": "Foto 019" },
+        { "url": "media/renzo11-020.jpg", "label": "Foto 020" },
+        { "url": "media/renzo11-021.jpg", "label": "Foto 021" },
+        { "url": "media/renzo11-022.jpg", "label": "Foto 022" },
+        { "url": "media/renzo11-023.jpg", "label": "Foto 023" },
+        { "url": "media/renzo11-024.jpg", "label": "Foto 024" },
+        { "url": "media/renzo11-025.jpg", "label": "Foto 025" },
+        { "url": "media/renzo11-026.jpg", "label": "Foto 026" },
+        { "url": "media/renzo11-027.jpg", "label": "Foto 027" },
+        { "url": "media/renzo11-028.jpg", "label": "Foto 028" },
+        { "url": "media/renzo11-029.jpg", "label": "Foto 029" },
+        { "url": "media/renzo11-030.jpg", "label": "Foto 030" },
+        { "url": "media/renzo11-031.jpg", "label": "Foto 031" },
+        { "url": "media/renzo11-032.jpg", "label": "Foto 032" },
+        { "url": "media/renzo11-033.jpg", "label": "Foto 033" }
+      ]
+    },
+    {
+      "id": "renzo12",
+      "title": "Nuova Vetrina",
+      "desc": "",
+      "voiceText": "",
+      "contacts": [],
+      "images": []
+    },
+    {
+      "id": "scalvini11",
+      "title": "Scalvini 11",
+      "desc": "",
+      "voiceText": "",
+      "contacts": [],
+      "images": []
+    }
   ]
 }
