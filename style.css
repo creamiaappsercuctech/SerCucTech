@@ -1,17 +1,3 @@
-/* CONTENITORE ZOOM */
-.imgWrap{
-  position: relative;
-  overflow: hidden;
-  touch-action: none; /* NECESSARIO per pinch */
-}
-
-/* IMMAGINE ZOOMABILE */
-.heroImg{
-  width:100%;
-  height:100%;
-  object-fit: contain;
-  transform-origin: center center;
-  will-change: transform;
-  user-select: none;
-  pointer-events: auto;
-}
+/* style.css = ponte compatibilità.
+   Se una pagina carica "style.css", usa in realtà lo stile principale "stile.css". */
+@import url("./stile.css");
