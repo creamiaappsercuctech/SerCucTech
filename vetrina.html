@@ -5,35 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Vetrina</title>
 
-  <!-- CSS principale -->
-  <link id="mainCss" rel="stylesheet" href="stile.css?v=1001">
+  <!-- ✅ usa stile.css -->
+  <link rel="stylesheet" href="stile.css?v=3003">
 
-  <!-- CSS fallback (resta disattivo finché non serve) -->
-  <link id="fallbackCss" rel="stylesheet" href="style.css?v=1001" disabled>
-
-  <script>
-    // Se stile.css non esiste / non si carica, attivo style.css
-    (function () {
-      const main = document.getElementById('mainCss');
-      const fallback = document.getElementById('fallbackCss');
-
-      function enableFallback(){
-        try { fallback.disabled = false; } catch(e){}
-      }
-
-      // 1) Se il browser segnala errore sul link
-      main.addEventListener('error', enableFallback);
-
-      // 2) Controllo extra: se dopo un attimo il CSS non ha impostato le variabili, abilito fallback
-      window.addEventListener('load', () => {
-        setTimeout(() => {
-          const v = getComputedStyle(document.documentElement).getPropertyValue('--radius').trim();
-          // nello stile.css che mi hai incollato, --radius esiste
-          if (!v) enableFallback();
-        }, 250);
-      });
-    })();
-  </script>
+  <!-- mini fallback se per qualche motivo css non carica -->
+  <style>
+    .waOnPhoto{display:none}
+    .cssOk .waOnPhoto{display:inline-flex}
+  </style>
 </head>
 
 <body>
@@ -49,6 +28,7 @@
       <span id="badgeId" class="idBadge">id: -</span>
     </div>
 
+    <!-- TESTO AUDIO + CONTATTI -->
     <section class="voicePanel" id="voicePanel" hidden>
       <div class="voicePanelInner" id="voicePanelInner" title="Tocca per ascoltare">
         <div class="voiceTop">
@@ -63,6 +43,7 @@
       </div>
     </section>
 
+    <!-- INDICE ALTRE VETRINE -->
     <section class="indexPanel" id="indexPanel" hidden>
       <div class="indexPanelInner">
         <div class="indexHead">
@@ -85,12 +66,13 @@
 
           <div class="imgWrap" id="imgWrap">
             <img id="heroImg" class="heroImg" alt="Immagine vetrina">
-            <div id="pinsLayer" class="pinsLayer" aria-hidden="true"></div>
 
-            <!-- ✅ WhatsApp SULLA FOTO -->
+            <!-- ✅ WhatsApp SULLA FOTO (overlay) -->
             <button class="waOnPhoto" id="waOnPhotoBtn" type="button">
-              WhatsApp: chiedi info su questa foto
+              💬 WhatsApp • chiedi info (foto)
             </button>
+
+            <div id="pinsLayer" class="pinsLayer" aria-hidden="true"></div>
           </div>
 
           <div class="imgBadge" id="imgBadge">01</div>
@@ -99,7 +81,7 @@
         <button class="navBtn right" id="nextBtn" aria-label="Immagine successiva" type="button">›</button>
       </div>
 
-      <!-- WhatsApp SOTTO LA FOTO -->
+      <!-- ✅ WhatsApp anche sotto (sempre visibile) -->
       <div class="photoActions">
         <button class="waBtn" id="waInfoBtn" type="button">WhatsApp: chiedi info su questa foto</button>
       </div>
@@ -164,6 +146,19 @@
     <button class="barBtn" id="kioskBtn" type="button">Kiosk</button>
   </nav>
 
+  <!-- AUDIO GATE -->
+  <div class="audioGate" id="audioGate" hidden>
+    <div class="audioGateCard">
+      <div class="audioGateTitle">Audio bloccato dal telefono</div>
+      <div class="audioGateText">Tocca “Attiva audio”. Poi partirà automaticamente.</div>
+      <div class="audioGateBtns">
+        <button class="primary" id="enableAudioBtn" type="button">Attiva audio</button>
+        <button class="ghost" id="noAudioBtn" type="button">Non ora</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALE WhatsApp -->
   <div class="waModal" id="waModal" hidden>
     <div class="waModalCard">
       <div class="waModalTitle">📩 Invia richiesta info</div>
@@ -175,6 +170,10 @@
     </div>
   </div>
 
-  <script src="app.js?v=1001"></script>
+  <script>
+    // segnale che almeno un po' di CSS è arrivato (se stile.css carica)
+    requestAnimationFrame(()=>document.documentElement.classList.add("cssOk"));
+  </script>
+  <script src="app.js?v=3003"></script>
 </body>
 </html>
