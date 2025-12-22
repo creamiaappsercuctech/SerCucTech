@@ -1,3 +1,3 @@
-/* style.css = ponte compatibilità.
-   Se una pagina carica "style.css", usa in realtà lo stile principale "stile.css". */
+/* Ponte compatibilità:
+   Se qualche pagina carica "style.css", usa lo stile principale "stile.css". */
 @import url("./stile.css");
