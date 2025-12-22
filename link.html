@@ -4,159 +4,214 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Indice Link • SerCucTech</title>
-  <link rel="stylesheet" href="stile.css?v=3003">
+
+  <!-- ✅ usa stile.css vero -->
+  <link rel="stylesheet" href="stile.css?v=9999">
+
+  <!-- fallback minimo (se css non carica) -->
   <style>
-    .wrap{padding:14px}
-    .searchBox{width:100%; padding:14px; border-radius:16px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); color:#fff; font-size:16px}
-    .list{margin-top:12px; display:flex; flex-direction:column; gap:10px}
-    .item{border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); border-radius:18px; padding:12px; display:flex; gap:12px; align-items:center; justify-content:space-between}
-    .num{font-weight:900; font-size:16px; min-width:46px}
-    .title{font-weight:900}
-    .desc{color:rgba(255,255,255,.72); font-size:13px; margin-top:4px}
-    .btns{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
-    .btn{padding:10px 12px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); color:#fff; font-weight:900}
-    .btn.primary{border-color:rgba(56,210,122,.35); background:rgba(56,210,122,.18)}
-    .popup{position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; padding:18px; z-index:80}
-    .card{width:min(560px, 100%); border-radius:18px; border:1px solid rgba(255,255,255,.12); background:rgba(15,27,49,.96); padding:14px}
-    .card h3{margin:0 0 8px}
-    .card p{margin:0; color:rgba(255,255,255,.75); white-space:pre-wrap}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
   </style>
 </head>
+
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brandDot" aria-hidden="true"></div>
       <div class="titleWrap">
         <h1 class="pageTitle">📌 Indice Link SerCucTech</h1>
-        <p class="pageDesc">Scrivi cosa devi fare: ti suggerisce il link giusto</p>
+        <p class="pageDesc">Scrivi cosa devi fare e trovi la pagina giusta.</p>
       </div>
+      <span class="idBadge" id="ver">v9999</span>
     </div>
   </header>
 
-  <main class="wrap">
-    <input id="q" class="searchBox" placeholder="Scrivi cosa devi fare… es. numerare oggetti foto renzo11" />
-    <div id="list" class="list"></div>
+  <main class="content">
+    <section class="card">
+      <input id="q" class="pinsJsonBox" style="min-height:auto" placeholder="Scrivi cosa devi fare… es. numerare oggetti foto renzo11" />
+      <div class="smallHint" style="text-align:left;margin-top:10px">
+        Suggerimento: prova “admin”, “upload”, “numerini”, “renzo11”, “scalvini”.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="h2">Risultati</h2>
+      <div id="list" class="filesList"></div>
+    </section>
   </main>
 
-  <div id="popup" class="popup">
-    <div class="card">
-      <h3 id="popTitle">Guida</h3>
-      <p id="popText"></p>
-      <div style="margin-top:12px; display:flex; gap:10px; justify-content:flex-end;">
-        <button id="popClose" class="btn">Chiudi</button>
+  <!-- popup guida -->
+  <div class="waModal" id="popup" hidden>
+    <div class="waModalCard">
+      <div class="waModalTitle" id="popTitle">Guida</div>
+      <div class="waModalText" id="popText"></div>
+
+      <div class="waModalBtns" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap">
+        <button type="button" id="popSpeak" class="labelBtn">🔊 Ripeti</button>
+        <button type="button" id="popOpen" class="labelBtn">Apri link</button>
+        <button type="button" id="popClose" class="labelBtn danger">Chiudi</button>
       </div>
     </div>
   </div>
 
 <script>
-(async function(){
+(() => {
   const q = document.getElementById("q");
   const list = document.getElementById("list");
+
   const popup = document.getElementById("popup");
   const popTitle = document.getElementById("popTitle");
   const popText = document.getElementById("popText");
-  document.getElementById("popClose").onclick = ()=> popup.style.display="none";
-  popup.addEventListener("click", (e)=>{ if(e.target===popup) popup.style.display="none"; });
+  const popClose = document.getElementById("popClose");
+  const popSpeak = document.getElementById("popSpeak");
+  const popOpen  = document.getElementById("popOpen");
+
+  let lastOpenUrl = "";
 
   function speak(text){
     try{
+      if(!("speechSynthesis" in window)) return;
       speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
+      const u = new SpeechSynthesisUtterance(String(text||""));
       u.lang = "it-IT";
+      u.rate = 1;
       speechSynthesis.speak(u);
-    }catch{}
+    }catch(e){}
   }
 
-  async function getJson(url){
-    const r = await fetch(url, {cache:"no-store"});
+  function showPopup(title, text, openUrl){
+    lastOpenUrl = openUrl || "";
+    popTitle.textContent = title || "Guida";
+    popText.textContent  = text || "";
+    popup.hidden = false;
+    // prova a parlare (se bloccato dal telefono l’utente deve tappare ancora)
+    speak(popText.textContent);
+  }
+
+  function hidePopup(){ popup.hidden = true; }
+
+  popClose.onclick = hidePopup;
+  popSpeak.onclick = () => speak(popText.textContent);
+  popOpen.onclick  = () => { if(lastOpenUrl) location.href = lastOpenUrl; };
+
+  popup.addEventListener("click", (e)=>{ if(e.target === popup) hidePopup(); });
+
+  async function fetchJson(url){
+    const r = await fetch(url, { cache:"no-store" });
     if(!r.ok) throw new Error(url);
     return r.json();
   }
 
-  // carica vetrine
-  let data = null;
-  const tries = ["data/vetrine.json", "vetrine.json", "index.json"];
-  for(const u of tries){
-    try { data = await getJson(u + "?ts=" + Date.now()); break; } catch {}
+  // Carica elenco vetrine dal tuo repo (in 2 posizioni possibili)
+  async function loadVetrine(){
+    const tries = [
+      "data/vetrine.json?ts=" + Date.now(),
+      "vetrine.json?ts=" + Date.now()
+    ];
+    for(const u of tries){
+      try { return await fetchJson(u); } catch(e) {}
+    }
+    return { vetrine: [] };
   }
 
-  // set base links (sempre)
+  // Base link “fissi”
   const base = [
-    { title:"Admin", url:"admin.html", keywords:["admin","pin","crea vetrina","duplica","upload","media","json"], guide:"Apri Admin. Sblocca con 2 parole in ordine, poi PIN. Da lì puoi creare/duplicare vetrine e aggiornare i JSON." },
-    { title:"Indice Vetrine (pubblico)", url:"index.html", keywords:["home","elenco","vetrine"], guide:"Qui vedi l’elenco delle vetrine pubbliche." },
-    { title:"Vetrina renzo11", url:"vetrina.html?id=renzo11", keywords:["renzo11","bazar boston","foto renzo"], guide:"Questa è la vetrina renzo11: scorro foto, WhatsApp per chiedere info sulla foto, voice." },
-    { title:"Tool Rinominare", url:"rename.html", keywords:["rinomina","rename","file"], guide:"Tool per rinominare file velocemente." }
+    {
+      title: "Admin (gestione vetrine)",
+      url: "admin.html",
+      guide: "Apri Admin. Sblocca con 2 parole in ordine + PIN. Poi gestisci vetrine e file.",
+      keywords: ["admin","pin","gestione","upload","json","media"]
+    },
+    {
+      title: "Indice pubblico vetrine (Home)",
+      url: "index.html",
+      guide: "Pagina principale con elenco vetrine pubbliche.",
+      keywords: ["home","indice","vetrine","pubblico"]
+    },
+    {
+      title: "Indice link (questa pagina)",
+      url: "link.html",
+      guide: "Qui cerchi un compito e trovi il link giusto. Usa Spiega per voce + popup.",
+      keywords: ["link","indice","guida","cerca"]
+    }
   ];
 
-  const vetrine = Array.isArray(data?.vetrine) ? data.vetrine : (Array.isArray(data) ? data : []);
-  vetrine.forEach(v=>{
-    if(v?.id){
+  function normalizeList(data){
+    const arr = Array.isArray(data?.vetrine) ? data.vetrine : (Array.isArray(data) ? data : []);
+    arr.forEach(v=>{
+      if(!v || !v.id) return;
       base.push({
-        title: "Vetrina: " + (v.title || v.id),
-        url: "vetrina.html?id=" + encodeURIComponent(v.id),
-        keywords:[v.id, (v.title||"").toLowerCase()],
-        guide:"Apri la vetrina '" + (v.title||v.id) + "'. Poi usa WhatsApp sulla foto per chiedere info."
+        title: `Vetrina: ${v.title || v.id}`,
+        url: `vetrina.html?id=${encodeURIComponent(v.id)}`,
+        guide: `Apri la vetrina "${v.title || v.id}". Poi usa il pulsante WhatsApp per chiedere info sulla foto.`,
+        keywords: [String(v.id).toLowerCase(), String(v.title||"").toLowerCase(), "vetrina", "foto", "whatsapp"]
       });
-    }
-  });
+    });
+  }
 
-  // numerazione
-  base.forEach((x,i)=> x.num = i+1);
+  function buildItems(filter){
+    const f = String(filter||"").trim().toLowerCase();
+    const items = base
+      .map((it, i) => ({...it, num: i+1}))
+      .filter(it => {
+        if(!f) return true;
+        return (it.title||"").toLowerCase().includes(f)
+          || (it.url||"").toLowerCase().includes(f)
+          || (it.keywords||[]).some(k => String(k||"").toLowerCase().includes(f));
+      });
+    return items;
+  }
 
   function render(filter=""){
-    const f = filter.trim().toLowerCase();
+    const items = buildItems(filter);
     list.innerHTML = "";
-    const items = base.filter(it=>{
-      if(!f) return true;
-      return (it.title||"").toLowerCase().includes(f) ||
-             (it.keywords||[]).some(k => (k||"").toString().toLowerCase().includes(f));
-    });
+
+    if(!items.length){
+      const div = document.createElement("div");
+      div.className = "fileLink";
+      div.innerHTML = `<div><b>Nessun risultato</b><div style="opacity:.75;font-size:12px">Prova altre parole.</div></div><div></div>`;
+      list.appendChild(div);
+      return;
+    }
 
     items.forEach(it=>{
       const row = document.createElement("div");
-      row.className = "item";
+      row.className = "fileLink";
+      row.style.alignItems = "center";
+
       row.innerHTML = `
-        <div style="flex:1; min-width:0">
-          <div class="num">#${it.num}</div>
-          <div class="title">${it.title}</div>
-          <div class="desc">${it.url}</div>
+        <div style="min-width:0">
+          <div style="font-weight:900">#${String(it.num).padStart(2,"0")} — ${it.title}</div>
+          <div style="opacity:.75;font-size:12px;word-break:break-all">${it.url}</div>
         </div>
-        <div class="btns">
-          <button class="btn" data-audio="1">🔊</button>
-          <button class="btn primary" data-open="1">Apri</button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+          <button class="labelBtn" data-spiega>🔊 Spiega</button>
+          <button class="labelBtn" data-apri>Apri</button>
         </div>
       `;
 
-      row.querySelector('[data-audio]').onclick = ()=>{
-        popTitle.textContent = "Guida link #" + it.num;
-        popText.textContent = it.guide || "Nessuna guida.";
-        popup.style.display="flex";
-        speak(popText.textContent);
+      row.querySelector("[data-spiega]").onclick = () => {
+        showPopup(`Guida #${String(it.num).padStart(2,"0")}`, it.guide, it.url);
       };
 
-      row.querySelector('[data-open]').onclick = ()=>{
-        // prima mostra guida + voce, poi apre
-        const msg = it.guide || "Apro il link.";
-        popTitle.textContent = "Apro link #" + it.num;
-        popText.textContent = msg;
-        popup.style.display="flex";
-        speak(msg);
-        setTimeout(()=>{ location.href = it.url; }, 700);
+      row.querySelector("[data-apri]").onclick = () => {
+        // prima popup+voce, poi apri
+        showPopup(`Apro #${String(it.num).padStart(2,"0")}`, it.guide, it.url);
+        setTimeout(()=>{ location.href = it.url; }, 650);
       };
 
       list.appendChild(row);
     });
-
-    if(!items.length){
-      const empty = document.createElement("div");
-      empty.className = "item";
-      empty.innerHTML = `<div style="flex:1"><div class="title">Nessun risultato</div><div class="desc">Prova altre parole.</div></div>`;
-      list.appendChild(empty);
-    }
   }
 
-  q.addEventListener("input", ()=> render(q.value));
-  render("");
+  // avvio
+  (async () => {
+    const data = await loadVetrine();
+    normalizeList(data);
+    render("");
+
+    q.addEventListener("input", ()=> render(q.value));
+  })();
 
 })();
 </script>
