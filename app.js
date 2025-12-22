@@ -1,23 +1,16 @@
-/* app.js - Vetrina SerCucTech (WhatsApp per foto + overlay)
-   Funziona con: data/<id>.json e data/vetrine.json (o index.json se vuoi)
+/* SerCucTech — app.js (vetrina)
+   Fix: tasti sempre cliccabili, WA per foto (overlay), swipe, cache-safe, audio gate stabile.
 */
 
 (function () {
+  "use strict";
+
   const $ = (id) => document.getElementById(id);
 
   const els = {
     pageTitle: $("pageTitle"),
     pageDesc: $("pageDesc"),
     badgeId: $("badgeId"),
-
-    heroImg: $("heroImg"),
-    pinsLayer: $("pinsLayer"),
-    imgCounter: $("imgCounter"),
-    imgBadge: $("imgBadge"),
-
-    prevBtn: $("prevBtn"),
-    nextBtn: $("nextBtn"),
-    thumbRow: $("thumbRow"),
 
     voicePanel: $("voicePanel"),
     voicePanelInner: $("voicePanelInner"),
@@ -28,113 +21,210 @@
     refreshIndexBtn: $("refreshIndexBtn"),
     indexList: $("indexList"),
 
-    waInfoBtn: $("waInfoBtn"),          // sotto foto
-    waOnPhotoBtn: $("waOnPhotoBtn"),    // sulla foto
+    prevBtn: $("prevBtn"),
+    nextBtn: $("nextBtn"),
+    heroImg: $("heroImg"),
+    imgCounter: $("imgCounter"),
+    imgBadge: $("imgBadge"),
+    thumbRow: $("thumbRow"),
+    imgWrap: $("imgWrap"),
 
+    waInfoBtn: $("waInfoBtn"),         // sotto foto
+    waOnPhotoBtn: $("waOnPhotoBtn"),   // overlay sulla foto
     shareBtn: $("shareBtn"),
+
+    homeBtn: $("homeBtn"),
+    voiceBtn: $("voiceBtn"),
+    stopBtn: $("stopBtn"),
+    fullBtn: $("fullBtn"),
+    themeBtn: $("themeBtn"),
+    kioskBtn: $("kioskBtn"),
+
+    audioGate: $("audioGate"),
+    enableAudioBtn: $("enableAudioBtn"),
+    noAudioBtn: $("noAudioBtn"),
 
     waModal: $("waModal"),
     waModalText: $("waModalText"),
     waModalBtns: $("waModalBtns"),
     waCloseBtn: $("waCloseBtn"),
+
+    // numerini
+    labelCard: $("labelCard"),
+    labelModeBadge: $("labelModeBadge"),
+    labelToggleBtn: $("labelToggleBtn"),
+    labelUndoBtn: $("labelUndoBtn"),
+    labelClearBtn: $("labelClearBtn"),
+    pinSizeRange: $("pinSizeRange"),
+    pinSizeValue: $("pinSizeValue"),
+    exportPinsBtn: $("exportPinsBtn"),
+    copyPinsBtn: $("copyPinsBtn"),
+    pinsJsonBox: $("pinsJsonBox"),
   };
 
-  const qs = new URLSearchParams(location.search);
-  const vId = (qs.get("id") || "").trim();
-  const basePath = ""; // repo root
+  // --------- utils
+  function qs(name) {
+    return new URLSearchParams(location.search).get(name);
+  }
+  function pad2(n) {
+    return String(n).padStart(2, "0");
+  }
+  function safeText(s) {
+    return (s ?? "").toString();
+  }
+  function nowTs() {
+    return Date.now();
+  }
 
-  let data = null;
+  // --------- data
+  const id = qs("id") || "scalvini10";
+  els.badgeId.textContent = "id: " + id;
+
+  let vetrina = null;
   let media = [];
   let idx = 0;
 
-  // ---- Helpers
-  function safeText(s) { return (s ?? "").toString(); }
+  // --------- speech
+  let audioEnabled = false;
+  let lastSpoken = "";
+  let speaking = false;
 
-  function formatPhoneForText(phoneRaw) {
-    // +393332927842 -> +39 333 292 7842 (semplice, leggibile)
-    const p = safeText(phoneRaw).replace(/\s+/g, "");
-    if (!p) return "";
-    if (p.startsWith("+39") && p.length >= 6) {
-      const rest = p.slice(3);
-      // prova a formattare 3-3-4 se possibile
-      const a = rest.slice(0, 3);
-      const b = rest.slice(3, 6);
-      const c = rest.slice(6);
-      return `+39 ${a} ${b}${c ? " " + c : ""}`.trim();
-    }
-    return p;
+  function canSpeak() {
+    return "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined";
   }
 
-  function waUrl(phone, text) {
-    // wa.me funziona bene su Android
-    const p = safeText(phone).replace(/[^\d+]/g, "").replace(/^\+/, "");
-    return `https://wa.me/${p}?text=${encodeURIComponent(text)}`;
-  }
+  function speak(text, lang) {
+    text = safeText(text).trim();
+    if (!text) return;
 
-  function ensureArray(x) {
-    return Array.isArray(x) ? x : [];
-  }
-
-  function currentMedia() {
-    return media[idx] || null;
-  }
-
-  function currentPhotoLabel() {
-    // numero umano 1..N
-    const n = idx + 1;
-    const pad = String(n).padStart(2, "0");
-    const m = currentMedia();
-    const label = m?.label ? ` (${m.label})` : "";
-    return { n, pad, label };
-  }
-
-  // ---- WhatsApp modal
-  function openWaModal(message) {
-    els.waModalText.textContent = message;
-    els.waModalBtns.innerHTML = "";
-
-    const contacts = ensureArray(data?.contacts);
-
-    // se non configurati: mostra un bottone disabilitato
-    if (!contacts.length) {
-      const b = document.createElement("button");
-      b.textContent = "Nessun contatto configurato";
-      b.disabled = true;
-      els.waModalBtns.appendChild(b);
-      els.waModal.hidden = false;
+    // blocco tipico mobile: serve gesture -> mostro gate
+    if (!audioEnabled) {
+      lastSpoken = text;
+      showAudioGate();
       return;
     }
 
-    // Bottone per ogni contatto
+    if (!canSpeak()) return;
+
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = lang || "it-IT";
+      u.rate = 1;
+      u.pitch = 1;
+      u.volume = 1;
+
+      speaking = true;
+      u.onend = () => { speaking = false; };
+      u.onerror = () => { speaking = false; };
+
+      window.speechSynthesis.speak(u);
+    } catch (e) {
+      // se fallisce, riproponi gate
+      lastSpoken = text;
+      showAudioGate();
+    }
+  }
+
+  function stopSpeak() {
+    if (!canSpeak()) return;
+    try { window.speechSynthesis.cancel(); } catch {}
+    speaking = false;
+  }
+
+  function showAudioGate() {
+    els.audioGate.hidden = false;
+  }
+  function hideAudioGate() {
+    els.audioGate.hidden = true;
+  }
+
+  // --------- fetch helpers
+  async function fetchJson(url) {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText} @ ${url}`);
+    return res.json();
+  }
+
+  async function loadVetrinaJson() {
+    // prova prima data/id.json poi id.json (compatibilità)
+    const tries = [
+      `data/${id}.json?ts=${nowTs()}`,
+      `${id}.json?ts=${nowTs()}`
+    ];
+
+    let lastErr = null;
+    for (const u of tries) {
+      try {
+        return await fetchJson(u);
+      } catch (e) {
+        lastErr = e;
+      }
+    }
+    throw lastErr || new Error("JSON non trovato");
+  }
+
+  async function loadIndexJson() {
+    // prova data/vetrine.json poi vetrine.json poi index.json
+    const tries = [
+      `data/vetrine.json?ts=${nowTs()}`,
+      `vetrine.json?ts=${nowTs()}`,
+      `index.json?ts=${nowTs()}`
+    ];
+    for (const u of tries) {
+      try {
+        return await fetchJson(u);
+      } catch {}
+    }
+    return null;
+  }
+
+  // --------- WhatsApp
+  function normalizePhone(p) {
+    return safeText(p).replace(/[^\d+]/g, "");
+  }
+
+  function waLink(phone, message) {
+    const p = normalizePhone(phone).replace(/^\+/, "");
+    const txt = encodeURIComponent(message);
+    return `https://wa.me/${p}?text=${txt}`;
+  }
+
+  function openWaModal(message) {
+    const contacts = Array.isArray(vetrina?.contacts) ? vetrina.contacts : [];
+    if (!contacts.length) {
+      alert("Nessun contatto WhatsApp configurato nella vetrina (contacts).");
+      return;
+    }
+
+    els.waModalText.textContent = message;
+    els.waModalBtns.innerHTML = "";
+
+    // 1 bottone per ogni contatto
     contacts.forEach((c) => {
-      const name = safeText(c.name || "Contatto");
-      const phone = safeText(c.phone || "");
       const btn = document.createElement("button");
-      btn.className = "primary";
       btn.type = "button";
-      btn.textContent = `WhatsApp ${name}`;
-      btn.onclick = () => {
-        if (!phone) return;
-        location.href = waUrl(phone, message);
-      };
+      btn.className = "primary";
+      btn.textContent = `WhatsApp ${c.name || ""}`.trim();
+      btn.addEventListener("click", () => {
+        location.href = waLink(c.phone, message);
+      });
       els.waModalBtns.appendChild(btn);
     });
 
-    // Bottone "Entrambi" (apre 2 chat una dopo l’altra)
+    // bottone "a tutti" (apre 2 chat una dopo l'altra)
     if (contacts.length >= 2) {
-      const btnBoth = document.createElement("button");
-      btnBoth.type = "button";
-      btnBoth.textContent = "Invia a entrambi (apre 2 chat)";
-      btnBoth.onclick = () => {
-        const first = contacts[0]?.phone;
-        const second = contacts[1]?.phone;
-        if (first) window.open(waUrl(first, message), "_blank");
-        // piccola pausa per non bloccare popup
+      const btnAll = document.createElement("button");
+      btnAll.type = "button";
+      btnAll.textContent = "Invia a tutti (apre 2 chat)";
+      btnAll.addEventListener("click", () => {
+        // apre prima chat, poi seconda dopo 700ms (mobile)
+        location.href = waLink(contacts[0].phone, message);
         setTimeout(() => {
-          if (second) window.open(waUrl(second, message), "_blank");
+          window.open(waLink(contacts[1].phone, message), "_blank");
         }, 700);
-      };
-      els.waModalBtns.appendChild(btnBoth);
+      });
+      els.waModalBtns.appendChild(btnAll);
     }
 
     els.waModal.hidden = false;
@@ -144,178 +234,354 @@
     els.waModal.hidden = true;
   }
 
-  // ---- Render
+  // --------- render
+  function setTitleTapUnlock() {
+    // 5 tap sul titolo -> mostra tool numerini
+    let taps = 0;
+    let t0 = 0;
+    els.pageTitle.addEventListener("click", () => {
+      const t = Date.now();
+      if (t - t0 > 1200) taps = 0;
+      t0 = t;
+      taps++;
+      if (taps >= 5) {
+        taps = 0;
+        els.labelCard.hidden = !els.labelCard.hidden;
+        els.labelModeBadge.textContent = els.labelCard.hidden ? "OFF" : "ON";
+      }
+    });
+  }
+
+  function renderContacts() {
+    const contacts = Array.isArray(vetrina?.contacts) ? vetrina.contacts : [];
+    els.contactsRow.innerHTML = "";
+    contacts.forEach((c) => {
+      const a = document.createElement("a");
+      a.className = "contactChip";
+      a.href = waLink(c.phone, `Ciao ${c.name || ""}, ti scrivo dalla vetrina ${vetrina?.title || id}.`);
+      a.innerHTML = `💬 <b>${safeText(c.name || "WhatsApp")}</b> <span>${safeText(c.phone || "")}</span>`;
+      a.target = "_blank";
+      a.rel = "noopener";
+      els.contactsRow.appendChild(a);
+
+      const a2 = document.createElement("a");
+      a2.className = "contactChip";
+      a2.href = `tel:${normalizePhone(c.phone)}`;
+      a2.innerHTML = `📞 <b>${safeText(c.name || "Chiama")}</b> <span>Chiama</span>`;
+      els.contactsRow.appendChild(a2);
+    });
+  }
+
+  function renderMedia() {
+    if (!media.length) {
+      els.heroImg.removeAttribute("src");
+      els.imgCounter.textContent = "00/00";
+      els.imgBadge.textContent = "00";
+      return;
+    }
+    idx = Math.max(0, Math.min(idx, media.length - 1));
+
+    const m = media[idx];
+    const n = idx + 1;
+
+    els.heroImg.src = m.url;
+    els.heroImg.alt = m.label || `Foto ${pad2(n)}`;
+    els.imgCounter.textContent = `${pad2(n)}/${pad2(media.length)}`;
+    els.imgBadge.textContent = pad2(n);
+
+    // evidenzia thumbs
+    [...els.thumbRow.children].forEach((el, i) => {
+      el.classList.toggle("active", i === idx);
+    });
+
+    // abilita overlay WA
+    if (els.waOnPhotoBtn) els.waOnPhotoBtn.style.display = "inline-flex";
+  }
+
   function renderThumbs() {
     els.thumbRow.innerHTML = "";
     media.forEach((m, i) => {
-      const t = document.createElement("button");
-      t.type = "button";
+      const t = document.createElement("div");
       t.className = "thumb" + (i === idx ? " active" : "");
       const img = document.createElement("img");
-      img.loading = "lazy";
-      img.alt = m?.label || `Foto ${i + 1}`;
-      img.src = basePath + (m?.url || "");
+      img.src = m.url;
+      img.alt = m.label || `Thumb ${i + 1}`;
       t.appendChild(img);
-      t.onclick = () => { idx = i; renderHero(); };
+      t.addEventListener("click", () => {
+        idx = i;
+        renderMedia();
+      });
       els.thumbRow.appendChild(t);
     });
   }
 
-  function renderHero() {
-    const m = currentMedia();
-    if (!m) return;
+  async function renderIndex() {
+    const data = await loadIndexJson();
+    if (!data) return;
 
-    els.heroImg.src = basePath + m.url;
+    // supporta diversi formati
+    const list = Array.isArray(data) ? data : (Array.isArray(data.vetrine) ? data.vetrine : []);
+    if (!list.length) return;
 
-    const total = media.length || 1;
-    const human = idx + 1;
-    els.imgCounter.textContent = `${String(human).padStart(2, "0")}/${String(total).padStart(2, "0")}`;
-    els.imgBadge.textContent = String(human).padStart(2, "0");
-
-    // aggiorna thumbs active
-    [...els.thumbRow.querySelectorAll(".thumb")].forEach((b, i) => {
-      b.classList.toggle("active", i === idx);
+    els.indexList.innerHTML = "";
+    list.forEach((it) => {
+      const vid = it.id || it;
+      const title = it.title || vid;
+      const a = document.createElement("a");
+      a.className = "indexLink";
+      a.href = `vetrina.html?id=${encodeURIComponent(vid)}`;
+      a.innerHTML = `<span class="dot"></span> ${safeText(title)}`;
+      els.indexList.appendChild(a);
     });
 
-    // aggiorna testo bottone (sotto e sopra foto) per essere chiaro
-    const info = currentPhotoLabel();
-    const btnText = `WhatsApp: chiedi info su questa foto (${info.pad}/${String(total).padStart(2, "0")})`;
-    if (els.waInfoBtn) els.waInfoBtn.textContent = btnText;
-    if (els.waOnPhotoBtn) els.waOnPhotoBtn.textContent = btnText;
+    els.indexPanel.hidden = false;
   }
 
-  // ---- Actions
-  function nextPhoto() {
-    if (!media.length) return;
-    idx = (idx + 1) % media.length;
-    renderHero();
-  }
-  function prevPhoto() {
+  // --------- controls / events
+  function goPrev() {
     if (!media.length) return;
     idx = (idx - 1 + media.length) % media.length;
-    renderHero();
+    renderMedia();
+  }
+  function goNext() {
+    if (!media.length) return;
+    idx = (idx + 1) % media.length;
+    renderMedia();
   }
 
-  function buildWaMessage() {
-    const info = currentPhotoLabel();
-    const m = currentMedia();
+  function setupSwipe() {
+    let x0 = null;
+    els.heroImg.addEventListener("touchstart", (e) => {
+      if (!e.touches || !e.touches[0]) return;
+      x0 = e.touches[0].clientX;
+    }, { passive: true });
 
-    // messaggio con foto e link
-    const pageUrl = location.href.split("#")[0];
-    const title = safeText(data?.title || "Vetrina");
-    const photoUrl = m?.url ? (new URL(m.url, location.href)).href : "";
-
-    return (
-      `Ciao! Vorrei informazioni su questa foto.\n\n` +
-      `Vetrina: ${title}\n` +
-      `ID: ${vId}\n` +
-      `Numero foto: ${info.n}${info.label}\n` +
-      (photoUrl ? `Foto: ${photoUrl}\n` : "") +
-      `Link vetrina: ${pageUrl}\n\n` +
-      `Grazie!`
-    );
+    els.heroImg.addEventListener("touchend", (e) => {
+      if (x0 == null) return;
+      const x1 = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : null;
+      if (x1 == null) return;
+      const dx = x1 - x0;
+      x0 = null;
+      if (Math.abs(dx) < 40) return;
+      if (dx > 0) goPrev(); else goNext();
+    }, { passive: true });
   }
 
-  function onWaClick() {
-    if (!data) return;
-    openWaModal(buildWaMessage());
+  function setupFullscreenTap() {
+    els.heroImg.addEventListener("click", () => {
+      document.body.classList.toggle("fs");
+    });
   }
 
-  // ---- Load JSON
-  async function loadJson(path) {
-    const res = await fetch(path, { cache: "no-store" });
-    if (!res.ok) throw new Error(`HTTP ${res.status} su ${path}`);
-    return await res.json();
+  function setupButtons() {
+    els.prevBtn.addEventListener("click", goPrev);
+    els.nextBtn.addEventListener("click", goNext);
+
+    const askPhoto = () => {
+      const n = idx + 1;
+      const msg = `Ciao! Vorrei info sulla foto ${pad2(n)}/${pad2(media.length)} della vetrina "${vetrina?.title || id}" (id: ${id}).`;
+      openWaModal(msg);
+    };
+
+    els.waInfoBtn.addEventListener("click", askPhoto);
+    if (els.waOnPhotoBtn) els.waOnPhotoBtn.addEventListener("click", askPhoto);
+
+    els.shareBtn.addEventListener("click", () => {
+      const msg = `Ciao! Ti mando la vetrina: ${location.href}`;
+      // se c'è almeno un contatto, apri modale; altrimenti apri condivisione generica
+      if (Array.isArray(vetrina?.contacts) && vetrina.contacts.length) openWaModal(msg);
+      else location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    });
+
+    els.homeBtn.addEventListener("click", () => location.href = "index.html");
+    els.voiceBtn.addEventListener("click", () => {
+      speak(vetrina?.voiceText || vetrina?.description || vetrina?.title || id, vetrina?.voiceLang || "it-IT");
+    });
+    els.stopBtn.addEventListener("click", () => stopSpeak());
+    els.fullBtn.addEventListener("click", () => document.body.classList.toggle("fs"));
+    els.themeBtn.addEventListener("click", () => document.body.classList.toggle("altTheme"));
+    els.kioskBtn.addEventListener("click", () => document.body.classList.toggle("kiosk"));
+
+    els.voicePanelInner.addEventListener("click", () => {
+      speak(vetrina?.voiceText || vetrina?.description || vetrina?.title || id, vetrina?.voiceLang || "it-IT");
+    });
+
+    els.refreshIndexBtn.addEventListener("click", () => renderIndex());
+
+    // audio gate
+    els.enableAudioBtn.addEventListener("click", () => {
+      audioEnabled = true;
+      hideAudioGate();
+      if (lastSpoken) speak(lastSpoken, vetrina?.voiceLang || "it-IT");
+    });
+    els.noAudioBtn.addEventListener("click", () => hideAudioGate());
+
+    // wa modal
+    els.waCloseBtn.addEventListener("click", closeWaModal);
+    els.waModal.addEventListener("click", (e) => {
+      if (e.target === els.waModal) closeWaModal();
+    });
   }
 
-  async function init() {
-    if (!vId) {
-      els.pageTitle.textContent = "Errore";
-      els.pageDesc.textContent = "Manca ?id=...";
-      return;
+  // --------- numerini (semplice: overlay dal JSON, editor base locale)
+  let pins = []; // {x,y,n}
+  let pinSize = 28;
+  let labelMode = false;
+
+  function pinsKey() {
+    return `pins_${id}_${idx}`;
+  }
+
+  function loadPinsLocal() {
+    try {
+      const s = localStorage.getItem(pinsKey());
+      pins = s ? JSON.parse(s) : [];
+    } catch { pins = []; }
+  }
+  function savePinsLocal() {
+    try { localStorage.setItem(pinsKey(), JSON.stringify(pins)); } catch {}
+  }
+
+  function renderPins() {
+    const layer = $("pinsLayer");
+    if (!layer) return;
+    layer.innerHTML = "";
+    pins.forEach((p) => {
+      const d = document.createElement("div");
+      d.className = "pin";
+      d.style.left = (p.x * 100) + "%";
+      d.style.top = (p.y * 100) + "%";
+      d.style.width = pinSize + "px";
+      d.style.height = pinSize + "px";
+      d.style.fontSize = Math.max(12, Math.round(pinSize * 0.45)) + "px";
+      d.textContent = p.n;
+      layer.appendChild(d);
+    });
+  }
+
+  function setupLabels() {
+    if (!els.labelToggleBtn) return;
+
+    els.pinSizeRange.addEventListener("input", () => {
+      pinSize = parseInt(els.pinSizeRange.value, 10) || 28;
+      els.pinSizeValue.textContent = String(pinSize);
+      renderPins();
+    });
+
+    els.labelToggleBtn.addEventListener("click", () => {
+      labelMode = !labelMode;
+      els.labelModeBadge.textContent = labelMode ? "ON" : "OFF";
+    });
+
+    els.labelUndoBtn.addEventListener("click", () => {
+      pins.pop();
+      savePinsLocal();
+      renderPins();
+      syncPinsBox();
+    });
+
+    els.labelClearBtn.addEventListener("click", () => {
+      pins = [];
+      savePinsLocal();
+      renderPins();
+      syncPinsBox();
+    });
+
+    function syncPinsBox() {
+      if (!els.pinsJsonBox) return;
+      els.pinsJsonBox.value = JSON.stringify(pins, null, 2);
     }
-    els.badgeId.textContent = `id: ${vId}`;
+
+    els.exportPinsBtn.addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(pins, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${id}-foto${pad2(idx + 1)}-pins.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    els.copyPinsBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(JSON.stringify(pins, null, 2));
+        alert("Copiato!");
+      } catch {
+        alert("Non riesco a copiare (clipboard bloccato).");
+      }
+    });
+
+    // click sulla foto per aggiungere pin (solo in labelMode)
+    els.imgWrap.addEventListener("click", (e) => {
+      if (!labelMode) return;
+      const rect = els.imgWrap.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      const n = pins.length + 1;
+      pins.push({ x: Math.max(0, Math.min(1, x)), y: Math.max(0, Math.min(1, y)), n });
+      savePinsLocal();
+      renderPins();
+      els.pinsJsonBox.value = JSON.stringify(pins, null, 2);
+    });
+
+    // quando cambio foto ricarico pins locali di quella foto
+    const oldRender = renderMedia;
+    window.__renderMediaOverride = () => {}; // no-op
+  }
+
+  // --------- init
+  async function init() {
+    setTitleTapUnlock();
 
     try {
-      // ✅ nel tuo repo i json sono in /data e si chiamano renzo11.json ecc.
-      data = await loadJson(`${basePath}data/${encodeURIComponent(vId)}.json`);
+      vetrina = await loadVetrinaJson();
 
-      els.pageTitle.textContent = safeText(data.title || vId);
-      els.pageDesc.textContent = safeText(data.description || "");
+      els.pageTitle.textContent = vetrina.title || id;
+      els.pageDesc.textContent = vetrina.description || "";
 
-      // Voice panel
-      const voiceText = safeText(data?.voice?.text || "");
-      if (voiceText) {
-        els.voicePanel.hidden = false;
+      // voice panel
+      const voiceText = vetrina.voiceText || vetrina.description || "";
+      if (voiceText.trim()) {
         els.voiceText.textContent = voiceText;
+        renderContacts();
+        els.voicePanel.hidden = false;
       }
 
-      // Contacts
-      els.contactsRow.innerHTML = "";
-      const contacts = ensureArray(data?.contacts);
-      contacts.forEach(c => {
-        const name = safeText(c.name || "Contatto");
-        const phone = safeText(c.phone || "");
-        const chip = document.createElement("a");
-        chip.className = "contactPill";
-        chip.href = phone ? waUrl(phone, `Ciao ${name}!`) : "#";
-        chip.target = "_blank";
-        chip.rel = "noopener";
-        chip.innerHTML = `<b>${name}</b> <span>${formatPhoneForText(phone)}</span>`;
-        els.contactsRow.appendChild(chip);
-      });
+      // media
+      const arr = Array.isArray(vetrina.media) ? vetrina.media : [];
+      media = arr
+        .filter(m => m && (m.type === "image" || !m.type))
+        .map((m) => ({
+          url: m.url,
+          label: m.label || ""
+        }));
 
-      // Media images only
-      media = ensureArray(data.media).filter(x => x && x.type === "image" && x.url);
       if (!media.length) {
-        els.pageDesc.textContent = (els.pageDesc.textContent ? els.pageDesc.textContent + " — " : "") + "Nessuna immagine trovata";
-        return;
+        // fallback: se hai "images" o "photos"
+        const alt = Array.isArray(vetrina.images) ? vetrina.images : (Array.isArray(vetrina.photos) ? vetrina.photos : []);
+        media = alt.map((u, i) => ({ url: u, label: `Foto ${pad2(i + 1)}` }));
       }
 
-      idx = 0;
+      // index
+      renderIndex().catch(() => {});
+
+      // build UI
       renderThumbs();
-      renderHero();
+      renderMedia();
 
-      // ✅ bottoni
-      if (els.prevBtn) els.prevBtn.onclick = prevPhoto;
-      if (els.nextBtn) els.nextBtn.onclick = nextPhoto;
+      setupButtons();
+      setupSwipe();
+      setupFullscreenTap();
+      setupLabels();
 
-      if (els.waInfoBtn) els.waInfoBtn.onclick = onWaClick;
-      if (els.waOnPhotoBtn) els.waOnPhotoBtn.onclick = onWaClick;
+      // pins init
+      loadPinsLocal();
+      renderPins();
 
-      // Chiudi modale
-      if (els.waCloseBtn) els.waCloseBtn.onclick = closeWaModal;
-      if (els.waModal) els.waModal.addEventListener("click", (e) => {
-        if (e.target === els.waModal) closeWaModal();
-      });
-
-      // (Indice vetrine) prova vetrine.json
-      try {
-        const list = await loadJson(`${basePath}data/vetrine.json`);
-        const vetrine = ensureArray(list?.vetrine);
-        if (vetrine.length) {
-          els.indexPanel.hidden = false;
-          els.indexList.innerHTML = "";
-          vetrine.forEach(v => {
-            const a = document.createElement("a");
-            a.className = "indexLink";
-            a.href = `vetrina.html?id=${encodeURIComponent(v.id)}`;
-            a.innerHTML = `<span class="dot"></span>${safeText(v.title || v.id)}`;
-            els.indexList.appendChild(a);
-          });
-        }
-      } catch (_) {
-        // non bloccare se manca
-      }
-
-      if (els.refreshIndexBtn) {
-        els.refreshIndexBtn.onclick = () => location.reload();
-      }
-
-    } catch (err) {
+    } catch (e) {
       els.pageTitle.textContent = "Errore";
-      els.pageDesc.textContent = `Non riesco a leggere data/${vId}.json`;
-      console.error(err);
+      els.pageDesc.textContent = "Non riesco a leggere il JSON della vetrina.";
+      console.error(e);
+      alert(String(e.message || e));
     }
   }
 
