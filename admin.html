@@ -1,619 +1,133 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Admin SerCucTech</title>
-
-  <!-- JSZip (per backup ZIP) -->
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-
+  <link rel="stylesheet" href="stile.css?v=3003">
   <style>
-    :root{
-      --bg:#0b1220;
-      --card:rgba(255,255,255,.06);
-      --line:rgba(255,255,255,.12);
-      --txt:#eaf0ff;
-      --muted:rgba(234,240,255,.72);
-      --green:#23c55e;
-      --amber:#ffcc66;
-      --btn:rgba(255,255,255,.10);
-      --shadow:0 10px 30px rgba(0,0,0,.35);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background: radial-gradient(900px 600px at 20% -20%, rgba(130,170,255,.20), transparent 60%),
-                  radial-gradient(900px 600px at 90% 10%, rgba(120,255,210,.10), transparent 60%),
-                  var(--bg);
-      color:var(--txt);
-      padding-bottom:120px;
-    }
-    header{
-      position:sticky; top:0; z-index:50;
-      padding:14px;
-      background:linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.18));
-      backdrop-filter:blur(10px);
-      border-bottom:1px solid var(--line);
-    }
-    h1{margin:0 0 10px;font-size:20px;font-weight:1000;text-align:center}
-    .wrap{max-width:980px;margin:0 auto;padding:16px;display:grid;gap:14px}
-    .card{border:1px solid var(--line);background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:14px}
-    .row{display:grid;gap:10px}
-    .grid2{display:grid;gap:12px}
-    @media(min-width:900px){ .grid2{grid-template-columns:1fr 1fr;} }
-
-    .createBtn{
-      display:block;width:100%;padding:18px 16px;font-size:18px;font-weight:1000;text-align:center;
-      border-radius:18px;background:var(--green);color:#06110a;border:none;cursor:pointer;box-shadow:var(--shadow)
-    }
-    .createBtn:active{transform:scale(.98)}
-
-    input, select, textarea{
-      width:100%;padding:14px;border-radius:14px;border:1px solid var(--line);
-      background:rgba(0,0,0,.25);color:var(--txt);font-size:15px;font-weight:900;outline:none
-    }
-    textarea{
-      min-height:140px;
-      font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size:12px;color:var(--muted);
-    }
-    .btn{
-      padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--btn);
-      color:var(--txt);font-weight:1000;font-size:14px;cursor:pointer
-    }
-    .btn.green{background:var(--green);color:#06110a;border-color:rgba(0,0,0,.2)}
-    .btn.amber{background:rgba(255,204,102,.18);color:#fff}
-    .btn:active{transform:scale(.99)}
-
-    .small{font-size:12px;color:var(--muted);font-weight:800;line-height:1.35}
-    .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--muted);font-weight:900;font-size:12px}
-
-    .list{display:grid; gap:10px}
-    .item{
-      display:flex;justify-content:space-between;align-items:center;gap:10px;
-      padding:12px;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.18);
-    }
-    .item strong{font-weight:1000}
-    .itemBtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-    a.linkBtn{
-      text-decoration:none;padding:8px 10px;border-radius:999px;border:1px solid var(--line);
-      background:rgba(255,255,255,.08);color:var(--txt);font-size:12px;font-weight:1000;
-    }
-
-    /* GATE admin */
-    .gate{position:fixed; inset:0; z-index:999;background:rgba(0,0,0,.68);display:flex;align-items:center;justify-content:center;padding:18px}
-    .gateCard{
-      width:min(560px,100%);border:1px solid rgba(255,255,255,.14);background:rgba(20,26,44,.92);
-      border-radius:18px;box-shadow:var(--shadow);padding:14px
-    }
-    .gateTitle{font-weight:1000;font-size:16px;text-align:center;margin-bottom:8px}
-    .gateText{color:rgba(255,255,255,.78);font-size:13px;text-align:center;line-height:1.35}
-    .phrase{
-      margin-top:10px;padding:12px;border-radius:14px;border:1px dashed rgba(255,255,255,.18);
-      background:rgba(0,0,0,.18);font-weight:900;line-height:1.4;text-align:center;user-select:none
-    }
-    .hot{display:inline-block;padding:2px 6px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14)}
-    .gateOkRow{margin-top:10px;display:grid;gap:10px}
-    .gateOkRow input{background:rgba(0,0,0,.28)}
-
-    /* Modal indice */
-    .modal{position:fixed; inset:0; z-index:900;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:18px}
-    .modal.show{display:flex;}
-    .modalCard{
-      width:min(900px,100%);border:1px solid rgba(255,255,255,.14);background:rgba(20,26,44,.95);
-      border-radius:18px;box-shadow:var(--shadow);padding:14px
-    }
-    .modalTitle{font-weight:1000;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .closeX{
-      border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:#fff;border-radius:12px;
-      padding:8px 10px;font-weight:1000;cursor:pointer
-    }
-    .modalBtns{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+    .wrap{padding:14px}
+    .gate{max-width:560px; margin:12px auto; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); border-radius:18px; padding:14px}
+    .words{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+    .wordBtn{padding:12px 14px; border-radius:16px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); color:#fff; font-weight:900; font-size:16px}
+    .row{display:flex; gap:10px; margin-top:10px}
+    input{flex:1; padding:12px 14px; border-radius:16px; border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.20); color:#fff; font-size:16px}
+    .btn{padding:12px 14px; border-radius:16px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); color:#fff; font-weight:900}
   </style>
 </head>
-
 <body>
 
-<!-- GATE -->
-<div class="gate" id="gate">
-  <div class="gateCard">
-    <div class="gateTitle">🔒 Accesso Admin</div>
-    <div class="gateText">Sblocco con 2 parole in sequenza, poi PIN. Valido 24 ore su questo dispositivo.</div>
-
-    <div class="phrase" id="phrase">
-      <span class="hot" data-word="SerCucTech">SerCucTech</span>.
-      con i suoi servizi ti aiuta a gestiscire qualsiasi genere di problematiche in modo semplice creando anche App personalizzate.
-      <span class="hot" data-word="qualsiasi">qualsiasi</span>
-    </div>
-
-    <div class="gateOkRow">
-      <input id="pinInput" placeholder="Inserisci PIN (es. 1234)" inputmode="numeric" autocomplete="off">
-      <button class="btn green" id="enterBtn">Entra</button>
-      <div class="small" style="text-align:center">Tocca prima <b>SerCucTech</b> poi <b>qualsiasi</b> (in quest’ordine).</div>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brandDot" aria-hidden="true"></div>
+    <div class="titleWrap">
+      <h1 class="pageTitle">🔒 Accesso Admin</h1>
+      <p class="pageDesc">Sblocco con 2 parole in sequenza, poi PIN. Valido 24 ore su questo dispositivo.</p>
     </div>
   </div>
-</div>
-
-<!-- MODAL INDICE -->
-<div class="modal" id="indexModal">
-  <div class="modalCard">
-    <div class="modalTitle">
-      <div>📌 Aggiorna <b>data/vetrine.json</b></div>
-      <button class="closeX" id="closeModal">Chiudi</button>
-    </div>
-
-    <div class="small">
-      1) “Copia” o “Scarica” → 2) GitHub data/vetrine.json → ✏️ Edit → incolla → Commit
-    </div>
-
-    <textarea id="indexBox" spellcheck="false"></textarea>
-
-    <div class="modalBtns">
-      <button class="btn green" id="copyIndexBtn">📋 Copia</button>
-      <button class="btn green" id="downloadIndexBtn">⬇️ Scarica vetrine.json</button>
-      <button class="btn" id="openGithubIndexBtn">Apri GitHub vetrine.json</button>
-      <button class="btn amber" id="openGithubNewJsonBtn" style="display:none;">Apri GitHub data/ID.json</button>
-    </div>
-  </div>
-</div>
-
-<header>
-  <h1>🔧 Admin SerCucTech</h1>
-  <button class="createBtn" id="createMainBtn">➕ CREA NUOVA VETRINA</button>
 </header>
 
-<div class="wrap" id="app" hidden>
+<main class="wrap">
+  <div class="gate" id="gate">
+    <div style="font-weight:900">Tocca prima <b>SerCucTech</b> poi <b>qualsiasi</b> (in quest’ordine).</div>
 
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-      <div style="font-weight:1000">Stato</div>
-      <span class="pill" id="statePill">Caricamento…</span>
+    <div class="words">
+      <button class="wordBtn" id="w1" type="button">SerCucTech</button>
+      <button class="wordBtn" id="w2" type="button">qualsiasi</button>
     </div>
-  </div>
 
-  <!-- GitHub quick -->
-  <div class="card">
-    <div style="font-weight:1000;margin-bottom:8px">⚡ Scorciatoie GitHub</div>
     <div class="row">
-      <button class="btn green" id="openGithubMediaBtn">Apri GitHub cartella media</button>
-      <button class="btn green" id="openGithubDataBtn">Apri GitHub cartella data</button>
-      <button class="btn" id="openIndexBtn">Aggiorna vetrine.json (modal)</button>
-      <div class="small">Comodo per caricare foto/video e incollare i JSON.</div>
+      <input id="pin" placeholder="PIN" inputmode="numeric" />
+      <button class="btn" id="enter" type="button">Entra</button>
+    </div>
+
+    <div style="margin-top:10px; color:rgba(255,255,255,.75); font-size:13px">
+      Se non va: cancella cache del sito (Chrome) e ricarica.
     </div>
   </div>
 
-  <div class="grid2">
-    <div class="card" id="createCard" hidden>
-      <div style="font-weight:1000;margin-bottom:8px">➕ Crea nuova vetrina</div>
-      <div class="row">
-        <input id="newId" placeholder="ID nuova vetrina (es. renzo13 / scalvini11)">
-        <input id="newTitle" placeholder="Titolo (es. ... con SerCucTech)">
-        <textarea id="newSpeech" placeholder="Testo fisso (description + voice.text). Inserisci anche numeri telefono qui."></textarea>
-        <button class="btn green" id="createBtn">Crea e scarica JSON</button>
-        <div class="small">Dopo crea: si apre GitHub data/ID.json + modal vetrine.json</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="font-weight:1000;margin-bottom:8px">🧬 Duplica vetrina (clone)</div>
-      <div class="row">
-        <select id="cloneFrom"></select>
-        <input id="cloneTo" placeholder="Nuovo ID (es. renzo14)">
-        <button class="btn amber" id="cloneBtn">Duplica e scarica JSON</button>
-        <div class="small">Riscrive automaticamente: media/vecchio- → media/nuovo-</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div style="font-weight:1000;margin-bottom:8px">🧰 Backup</div>
+  <div class="gate" id="ok" hidden>
+    <div style="font-weight:900; margin-bottom:10px">✅ Sbloccato</div>
     <div class="row">
-      <button class="btn green" id="backupJsonBtn">Scarica ZIP (solo JSON)</button>
-      <button class="btn" id="backupFullBtn">Scarica ZIP (JSON + media referenziati)</button>
+      <button class="btn" type="button" onclick="location.href='link.html'">Apri indice link</button>
+      <button class="btn" type="button" onclick="location.href='admin.html'">Ricarica</button>
+    </div>
+    <div style="margin-top:10px; color:rgba(255,255,255,.75); font-size:13px">
+      Ora puoi usare la tua pagina admin completa (admin.js).
     </div>
   </div>
 
-  <div class="card">
-    <div style="font-weight:1000;margin-bottom:8px">📌 Vetrine</div>
-    <div class="list" id="list"></div>
-  </div>
-
-</div>
+  <!-- qui sotto resta la tua UI admin vera -->
+  <div id="adminRoot"></div>
+</main>
 
 <script>
-/* ===================== REPO ===================== */
-const REPO_OWNER = "creamiaappsercuctech";
-const REPO_NAME  = "SerCucTech";
-const BRANCH     = "main";
+(function(){
+  const KEY = "adminUnlockedUntil";
+  const ok = document.getElementById("ok");
+  const gate = document.getElementById("gate");
+  const w1 = document.getElementById("w1");
+  const w2 = document.getElementById("w2");
+  const pin = document.getElementById("pin");
+  const enter = document.getElementById("enter");
 
-function githubPath(path){
-  return `https://github.com/${REPO_OWNER}/${REPO_NAME}/tree/${BRANCH}/${path}`;
-}
-function githubFile(path){
-  return `https://github.com/${REPO_OWNER}/${REPO_NAME}/blob/${BRANCH}/${path}`;
-}
+  // cambia PIN qui se vuoi
+  const ADMIN_PIN = "1234";
 
-/* ===================== SICUREZZA ===================== */
-const PINKEY = "sercuctech_pin";
-const ADMIN_UNLOCK_KEY = "sercuctech_admin_unlock_until";
-const DEFAULT_PIN = "1234";
+  let step = 0;
 
-function initPin(){
-  if(!localStorage.getItem(PINKEY)) localStorage.setItem(PINKEY, DEFAULT_PIN);
-}
-function getPin(){ return localStorage.getItem(PINKEY) || DEFAULT_PIN; }
-function setUnlock24h(){
-  localStorage.setItem(ADMIN_UNLOCK_KEY, String(Date.now() + 24*60*60*1000));
-}
-function isUnlocked(){
-  return Date.now() < Number(localStorage.getItem(ADMIN_UNLOCK_KEY) || "0");
-}
+  function isUnlocked(){
+    const until = parseInt(localStorage.getItem(KEY)||"0",10);
+    return Date.now() < until;
+  }
+  function setUnlocked24h(){
+    localStorage.setItem(KEY, String(Date.now() + 24*60*60*1000));
+  }
+  function showUnlocked(){
+    gate.hidden = true;
+    ok.hidden = false;
+  }
 
-let seq = [];
-const gate = document.getElementById("gate");
-const app = document.getElementById("app");
-const phrase = document.getElementById("phrase");
-const pinInput = document.getElementById("pinInput");
-const enterBtn = document.getElementById("enterBtn");
-
-phrase.addEventListener("click", (e)=>{
-  const w = e.target?.getAttribute?.("data-word");
-  if(!w) return;
-  seq.push(w);
-  if(seq.length > 2) seq.shift();
-});
-
-enterBtn.addEventListener("click", ()=>{
-  const okWords = (seq[0]==="SerCucTech" && seq[1]==="qualsiasi");
-  if(!okWords) return alert("Prima tocca: SerCucTech → qualsiasi");
-  if(String(pinInput.value||"").trim() !== String(getPin()).trim()) return alert("PIN errato");
-  setUnlock24h();
-  gate.style.display = "none";
-  app.hidden = false;
-  boot();
-});
-
-window.addEventListener("load", ()=>{
-  initPin();
   if(isUnlocked()){
-    gate.style.display = "none";
-    app.hidden = false;
-    boot();
+    showUnlocked();
   }
-});
 
-/* ===================== UI/STATE ===================== */
-const statePill = document.getElementById("statePill");
-const listEl = document.getElementById("list");
-const createMainBtn = document.getElementById("createMainBtn");
-const createCard = document.getElementById("createCard");
-const newId = document.getElementById("newId");
-const newTitle = document.getElementById("newTitle");
-const newSpeech = document.getElementById("newSpeech");
-const createBtn = document.getElementById("createBtn");
-
-const cloneFrom = document.getElementById("cloneFrom");
-const cloneTo = document.getElementById("cloneTo");
-const cloneBtn = document.getElementById("cloneBtn");
-
-const backupJsonBtn = document.getElementById("backupJsonBtn");
-const backupFullBtn = document.getElementById("backupFullBtn");
-
-/* GitHub quick buttons */
-document.getElementById("openGithubMediaBtn").addEventListener("click", ()=>{
-  window.open(githubPath("media"), "_blank");
-});
-document.getElementById("openGithubDataBtn").addEventListener("click", ()=>{
-  window.open(githubPath("data"), "_blank");
-});
-
-/* Modal indice */
-const openIndexBtn = document.getElementById("openIndexBtn");
-const indexModal = document.getElementById("indexModal");
-const closeModal = document.getElementById("closeModal");
-const indexBox = document.getElementById("indexBox");
-const copyIndexBtn = document.getElementById("copyIndexBtn");
-const downloadIndexBtn = document.getElementById("downloadIndexBtn");
-const openGithubIndexBtn = document.getElementById("openGithubIndexBtn");
-const openGithubNewJsonBtn = document.getElementById("openGithubNewJsonBtn");
-
-let vetrineIndex = [];
-let vetrineDataCache = new Map();
-
-function escapeHtml(s){
-  return String(s||"").replace(/[&<>"']/g, c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[c]));
-}
-async function fetchJson(url){
-  const res = await fetch(url, {cache:"no-store"});
-  if(!res.ok) throw new Error("HTTP " + res.status);
-  return await res.json();
-}
-function downloadJson(filename, obj){
-  const blob = new Blob([JSON.stringify(obj,null,2)], {type:"application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1200);
-}
-function openLinkPage(id){
-  window.open(`link.html?id=${encodeURIComponent(id)}`, "_blank");
-}
-function openGithubDataJson(id){
-  window.open(githubFile(`data/${id}.json`), "_blank");
-}
-
-/* ========== INDEX ========== */
-function normalizeIndex(list){
-  const map = new Map();
-  (list||[]).forEach(v=>{
-    const id = String(v.id||"").trim();
-    if(!id) return;
-    map.set(id, { id, title: String(v.title||id) });
+  w1.addEventListener("click", ()=>{
+    step = 1;
+    w1.style.opacity = "1";
+    w2.style.opacity = "0.7";
   });
-  return Array.from(map.values()).sort((a,b)=>a.id.localeCompare(b.id,"it",{numeric:true}));
-}
-function getGeneratedIndexJson(){
-  const obj = { vetrine: normalizeIndex(vetrineIndex) };
-  return JSON.stringify(obj, null, 2);
-}
-function showIndexModal(withNewId){
-  indexBox.value = getGeneratedIndexJson();
-  indexModal.classList.add("show");
 
-  if(withNewId){
-    openGithubNewJsonBtn.style.display = "";
-    openGithubNewJsonBtn.textContent = `Apri GitHub data/${withNewId}.json`;
-    openGithubNewJsonBtn.onclick = ()=> openGithubDataJson(withNewId);
-  }else{
-    openGithubNewJsonBtn.style.display = "none";
-    openGithubNewJsonBtn.onclick = null;
-  }
-}
-openIndexBtn.addEventListener("click", ()=>showIndexModal(""));
-closeModal.addEventListener("click", ()=> indexModal.classList.remove("show"));
-
-copyIndexBtn.addEventListener("click", async ()=>{
-  try{
-    await navigator.clipboard.writeText(indexBox.value);
-    alert("Copiato ✅");
-  }catch(e){
-    indexBox.focus(); indexBox.select();
-    document.execCommand("copy");
-    alert("Copiato ✅");
-  }
-});
-downloadIndexBtn.addEventListener("click", ()=>{
-  try{
-    const obj = JSON.parse(indexBox.value);
-    downloadJson("vetrine.json", obj);
-  }catch(e){
-    alert("Testo non valido (non dovrebbe succedere).");
-  }
-});
-openGithubIndexBtn.addEventListener("click", ()=>{
-  window.open(githubFile("data/vetrine.json"), "_blank");
-});
-
-/* ========== LISTA ========== */
-function renderList(){
-  listEl.innerHTML = "";
-  vetrineIndex.forEach(v=>{
-    const id = v.id;
-    const title = v.title || id;
-    const el = document.createElement("div");
-    el.className = "item";
-    el.innerHTML = `
-      <div>
-        <strong>${escapeHtml(title)}</strong><br>
-        <span class="small">id: <b>${escapeHtml(id)}</b> • data/${escapeHtml(id)}.json</span>
-      </div>
-      <div class="itemBtns">
-        <a class="linkBtn" href="link.html?id=${encodeURIComponent(id)}">Link</a>
-        <a class="linkBtn" href="vetrina.html?id=${encodeURIComponent(id)}">Vetrina</a>
-      </div>
-    `;
-    listEl.appendChild(el);
+  w2.addEventListener("click", ()=>{
+    if(step === 1){
+      step = 2;
+      w2.style.opacity = "1";
+    } else {
+      step = 0;
+      w1.style.opacity = "1";
+      w2.style.opacity = "1";
+    }
   });
-}
-function fillCloneSelect(){
-  cloneFrom.innerHTML = "";
-  vetrineIndex.forEach(v=>{
-    const opt = document.createElement("option");
-    opt.value = v.id;
-    opt.textContent = `${v.id} — ${v.title || v.id}`;
-    cloneFrom.appendChild(opt);
+
+  enter.addEventListener("click", ()=>{
+    if(step !== 2){
+      alert("Prima tocca le 2 parole in ordine.");
+      return;
+    }
+    if((pin.value||"").trim() !== ADMIN_PIN){
+      alert("PIN errato.");
+      return;
+    }
+    setUnlocked24h();
+    showUnlocked();
+    // dopo sblocco puoi caricare la UI admin completa
+    // (se admin.js esiste nel repo)
+    const s = document.createElement("script");
+    s.src = "admin.js?v=3003";
+    document.body.appendChild(s);
   });
-}
-function addToIndex(id, title){
-  const exists = vetrineIndex.some(v => v.id === id);
-  if(!exists) vetrineIndex.push({ id, title: title || id });
-  vetrineIndex = normalizeIndex(vetrineIndex);
-  renderList();
-  fillCloneSelect();
-}
-
-/* ========== CREATE/CLONE ========== */
-createMainBtn.addEventListener("click", ()=>{
-  createCard.hidden = !createCard.hidden;
-  if(!createCard.hidden) newId.focus();
-});
-
-function buildBaseVetrina(id, title, speech){
-  const now = new Date().toISOString();
-  const text = (speech||"").trim();
-  return {
-    id,
-    title: (title||id).trim() || id,
-    description: text || "Descrizione vetrina",
-    voice: { lang:"it-IT", text: text || "Benvenuto nella vetrina." },
-    tags: ["vetrina"],
-    media: [],
-    files: [],
-    pinsData: { pinSize: 28, byImage: {} },
-    createdAt: now,
-    updatedAt: now
-  };
-}
-
-createBtn.addEventListener("click", ()=>{
-  const vid = (newId.value||"").trim();
-  if(!vid) return alert("Inserisci un ID");
-  const title = (newTitle.value||"").trim() || vid;
-  const speech = (newSpeech.value||"").trim();
-
-  const json = buildBaseVetrina(vid, title, speech);
-  downloadJson(`${vid}.json`, json);
-
-  openLinkPage(vid);
-  addToIndex(vid, title);
-  showIndexModal(vid);
-  openGithubDataJson(vid);
-
-  alert(
-    "✅ Creato.\n\n" +
-    "1) GitHub data/" + vid + ".json aperto (incolla e commit)\n" +
-    "2) Modal vetrine.json pronta\n" +
-    "3) Carica immagini in GitHub cartella media\n" +
-    "4) Condividi: link.html?id=" + vid
-  );
-
-  newId.value=""; newTitle.value=""; newSpeech.value="";
-});
-
-async function getVetrinaJson(id){
-  if(vetrineDataCache.has(id)) return vetrineDataCache.get(id);
-  const j = await fetchJson(`data/${encodeURIComponent(id)}.json`);
-  vetrineDataCache.set(id, j);
-  return j;
-}
-function rewriteIdInJson(obj, fromId, toId){
-  const cloned = JSON.parse(JSON.stringify(obj));
-  cloned.id = toId;
-  cloned.title = cloned.title || toId;
-
-  if(Array.isArray(cloned.media)){
-    cloned.media = cloned.media.map(m=>{
-      if(!m || !m.url) return m;
-      const mm = {...m};
-      mm.url = String(mm.url).replaceAll(`media/${fromId}-`, `media/${toId}-`);
-      return mm;
-    });
-  }
-  if(cloned.pinsData && cloned.pinsData.byImage){
-    const by = cloned.pinsData.byImage;
-    const by2 = {};
-    for(const k of Object.keys(by)){
-      const nk = String(k).replaceAll(`media/${fromId}-`, `media/${toId}-`);
-      by2[nk] = by[k];
-    }
-    cloned.pinsData.byImage = by2;
-  }
-  cloned.updatedAt = new Date().toISOString();
-  return cloned;
-}
-
-cloneBtn.addEventListener("click", async ()=>{
-  const fromId = cloneFrom.value;
-  const toId = (cloneTo.value||"").trim();
-  if(!fromId) return alert("Seleziona sorgente");
-  if(!toId) return alert("Inserisci nuovo ID");
-
-  try{
-    statePill.textContent = "Clonazione…";
-    const src = await getVetrinaJson(fromId);
-    const out = rewriteIdInJson(src, fromId, toId);
-    downloadJson(`${toId}.json`, out);
-
-    openLinkPage(toId);
-    addToIndex(toId, out.title || toId);
-    showIndexModal(toId);
-    openGithubDataJson(toId);
-
-    alert(
-      "✅ Clonato.\n\n" +
-      "1) GitHub data/" + toId + ".json aperto (incolla e commit)\n" +
-      "2) Modal vetrine.json pronta\n" +
-      "3) Carica/ri-nomina immagini in media/" + toId + "-XXX.jpg\n" +
-      "4) Condividi: link.html?id=" + toId
-    );
-  }catch(e){
-    alert("Errore clonazione: " + e.message);
-  }finally{
-    statePill.textContent = "Pronto";
-    cloneTo.value = "";
-  }
-});
-
-/* ========== BACKUP ZIP ========== */
-function downloadBlob(filename, blob){
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-}
-async function backupZipJsonOnly(){
-  if(!window.JSZip) return alert("JSZip non caricato");
-  const zip = new JSZip();
-  for(const v of vetrineIndex){
-    const j = await getVetrinaJson(v.id);
-    zip.file(`data/${v.id}.json`, JSON.stringify(j, null, 2));
-  }
-  const blob = await zip.generateAsync({type:"blob"});
-  downloadBlob(`backup-json-${new Date().toISOString().slice(0,10)}.zip`, blob);
-}
-async function fetchAsBlob(url){
-  const res = await fetch(url, {cache:"no-store"});
-  if(!res.ok) throw new Error("HTTP " + res.status);
-  return await res.blob();
-}
-async function backupZipFull(){
-  if(!window.JSZip) return alert("JSZip non caricato");
-  const zip = new JSZip();
-
-  for(const v of vetrineIndex){
-    const j = await getVetrinaJson(v.id);
-    zip.file(`data/${v.id}.json`, JSON.stringify(j, null, 2));
-
-    const media = Array.isArray(j.media) ? j.media : [];
-    for(const m of media){
-      if(!m?.url) continue;
-      try{ zip.file(m.url, await fetchAsBlob(m.url)); }catch(e){}
-    }
-    const files = Array.isArray(j.files) ? j.files : [];
-    for(const f of files){
-      if(!f?.url) continue;
-      try{ zip.file(f.url, await fetchAsBlob(f.url)); }catch(e){}
-    }
-  }
-
-  const blob = await zip.generateAsync({type:"blob"});
-  downloadBlob(`backup-full-${new Date().toISOString().slice(0,10)}.zip`, blob);
-}
-backupJsonBtn.addEventListener("click", backupZipJsonOnly);
-backupFullBtn.addEventListener("click", backupZipFull);
-
-/* ========== BOOT ========== */
-async function boot(){
-  try{
-    statePill.textContent = "Leggo data/vetrine.json…";
-    const idx = await fetchJson("data/vetrine.json");
-    vetrineIndex = normalizeIndex(Array.isArray(idx.vetrine) ? idx.vetrine : []);
-    statePill.textContent = vetrineIndex.length ? "Pronto" : "Indice vuoto";
-    renderList();
-    fillCloneSelect();
-  }catch(e){
-    statePill.textContent = "Errore indice";
-    alert("Non trovo data/vetrine.json. Crea il file e riprova.");
-  }
-}
+})();
 </script>
+
 </body>
 </html>
