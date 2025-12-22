@@ -108,10 +108,81 @@
   let vetrina = null;
   let images = [];
   let current = 0;
+// ---------------------------
+// WhatsApp Modal (FIX DEFINITIVO CHIUDI)
+// ---------------------------
+function closeWaModal() {
+  if (!waModal) return;
 
-  // ---------------------------
-  // WhatsApp Modal (ANTI BLOCCO)
-  // ---------------------------
+  // Spegne davvero tutto
+  waModal.setAttribute("hidden", "");
+  waModal.classList.remove("open");
+  waModal.style.display = "none";
+
+  if (waModalBtns) waModalBtns.innerHTML = "";
+
+  // sicurezza: se per caso restano blocchi
+  document.body.classList.remove("modalOpen");
+}
+
+function openWaModal(text, contacts) {
+  if (!waModal) return;
+
+  if (waModalText) waModalText.textContent = text || "";
+  if (waModalBtns) waModalBtns.innerHTML = "";
+
+  (contacts || []).forEach((c) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "primary";
+    btn.textContent = `Apri WhatsApp: ${c.name}`;
+
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const phone = (c.phone || "").replace(/\s+/g, "");
+      const url = `https://wa.me/${phone.replace(/^\+/, "")}?text=${encodeURIComponent(text || "")}`;
+      window.open(url, "_blank");
+      closeWaModal();
+    }, { passive: false });
+
+    waModalBtns.appendChild(btn);
+  });
+
+  waModal.removeAttribute("hidden");
+  waModal.classList.add("open");
+  waModal.style.display = "flex";
+  document.body.classList.add("modalOpen");
+}
+
+// ✅ listener super-robusti: pointerdown + click
+if (waCloseBtn) {
+  waCloseBtn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeWaModal();
+  }, { passive: false });
+
+  waCloseBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeWaModal();
+  }, { passive: false });
+}
+
+// ✅ click fuori = chiude sempre
+if (waModal) {
+  waModal.addEventListener("pointerdown", (e) => {
+    if (e.target === waModal) closeWaModal();
+  }, { passive: true });
+
+  waModal.addEventListener("click", (e) => {
+    if (e.target === waModal) closeWaModal();
+  }, { passive: true });
+}
+
+// ✅ sicurezza all'avvio
+closeWaModal();
   function closeWaModal() {
     if (!waModal) return;
     waModal.hidden = true;
