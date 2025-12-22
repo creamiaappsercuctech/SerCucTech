@@ -431,13 +431,35 @@ body{
 /* ✅ WhatsApp modal: NON blocca per sempre */
 .waModal{
   position: fixed;
-  inset:0;
-  z-index: 70;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 18px;
   background: rgba(0,0,0,.45);
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.waModal[hidden]{
+  display:none !important;
+  pointer-events:none !important;
+}
+
+.waModalCard{
+  position: relative;
+  z-index: 10000;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+/* ✅ bottoni sempre cliccabili */
+.waModalBtns button,
+#waCloseBtn{
+  pointer-events: auto !important;
+  touch-action: manipulation;
+}
 }
 .waModalCard{
   width: min(520px, 100%);
