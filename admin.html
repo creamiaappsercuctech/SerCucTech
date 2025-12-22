@@ -69,7 +69,23 @@
   const w1 = document.getElementById("w1");
   const w2 = document.getElementById("w2");
   const pin = document.getElementById("pin");
-  const enter = document.getElementById("enter");
+  const<!-- BLOCCO FRASE SBLOCCO (VISIBILE + CLICCABILE) -->
+<div class="unlockCard" id="unlockCard">
+  <div class="unlockTitle">🔓 Accesso Admin</div>
+  <div class="unlockSub">
+    Sblocco con <b>2 parole</b> in sequenza, poi PIN. Valido 24 ore su questo dispositivo.
+  </div>
+
+  <div class="unlockPhrase" id="unlockPhrase">
+    Tocca prima
+    <button type="button" class="secretWord" id="w1">SerCucTech</button>
+    poi
+    <button type="button" class="secretWord" id="w2">qualsiasi</button>
+    (in quest’ordine).
+  </div>
+
+  <div class="unlockStatus" id="unlockStatus">Stato: blocco attivo</div>
+</div> enter = document.getElementById("enter");
 
   // cambia PIN qui se vuoi
   const ADMIN_PIN = "1234";
