@@ -465,4 +465,14 @@ body{
 @media (min-width: 900px){
   .pageTitle{ font-size: 28px; }
   .imgWrap{ height: min(62vh, 620px); }
+   /* ✅ FIX: quando il modal è hidden, non deve MAI catturare tocchi */
+.waModal[hidden]{
+  display:none !important;
+  pointer-events:none !important;
+}
+
+/* ✅ quando aperto */
+.waModal.open{
+  pointer-events:auto;
+}
 }
